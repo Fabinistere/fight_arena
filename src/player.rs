@@ -42,7 +42,6 @@ fn player_movement(
     }
 }
 
-
 fn spawn_player(
     mut commands: Commands,
     fabien: Res<FabienSheet>
@@ -52,7 +51,7 @@ fn spawn_player(
         &mut commands,
         &fabien,
         5,
-        Color::None,
+        Color::rgb(0.9,0.9,0.9),
         Vec3::new(0.0, 0.0, 900.0)
     );
     let mut sprite = TextureAtlasSprite::new(1);

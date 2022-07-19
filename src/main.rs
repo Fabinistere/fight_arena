@@ -11,10 +11,12 @@ pub const TILE_SIZE: f32 = 0.1;
 mod debug;
 mod fabien;
 mod player;
+mod tilemap;
 
 use debug::DebugPlugin;
 use fabien::{FabienPlugin, FabienSheet, spawn_fabien_sprite};
 use player::PlayerPlugin;
+use tilemap::TileMapPlugin;
 
 fn main() {
     let height = 720.0;
@@ -31,9 +33,10 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_startup_system(spawn_camera)
-        .add_plugin(PlayerPlugin)
         .add_plugin(DebugPlugin)
-        .add_plugin(FabienPlugin);
+        .add_plugin(FabienPlugin)
+        .add_plugin(PlayerPlugin)
+        .add_plugin(TileMapPlugin);
 
     app.run();
 }
