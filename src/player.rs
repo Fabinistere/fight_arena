@@ -52,7 +52,7 @@ fn spawn_player(
         &fabien,
         5,
         Color::rgb(0.9,0.9,0.9),
-        Vec3::new(0.0, 0.0, 900.0)
+        Vec3::new(0.0, 0.0, 5.0)
     );
     let mut sprite = TextureAtlasSprite::new(1);
     //sprite.color = Color::rgb(0.3, 0.3, 0.9);
