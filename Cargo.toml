@@ -14,3 +14,4 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.7", features = ["dynamic"] }
 bevy-inspector-egui = "0.10"
+bevy_rapier2d = { version = "0.13", features = ["simd-stable", "debug-render"] }
