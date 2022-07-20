@@ -1,22 +1,29 @@
 // Follow along with the tutorial serie by Logic Projects <3
 
-
 #![allow(clippy::redundant_field_names)]
 use bevy::{prelude::*, render::camera::ScalingMode};
+// use bevy_rapier2d::prelude::*;
 
-pub const CLEAR: Color = Color::rgb(0.1,0.1,0.1);
-pub const RESOLUTION: f32 = 16.0 / 9.0;
-pub const TILE_SIZE: f32 = 0.1;
-
+pub mod constants;
 mod debug;
 mod fabien;
-mod player;
-mod tilemap;
+pub mod player;
+mod locations;
 
 use debug::DebugPlugin;
 use fabien::{FabienPlugin, FabienSheet, spawn_fabien_sprite};
 use player::PlayerPlugin;
-use tilemap::TileMapPlugin;
+use locations::LocationsPlugin;
+
+pub use crate::{
+    constants::*,
+};
+
+#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+pub enum GameState {
+    Menu,
+    Playing,
+}
 
 fn main() {
     let height = 720.0;
@@ -36,7 +43,8 @@ fn main() {
         .add_plugin(DebugPlugin)
         .add_plugin(FabienPlugin)
         .add_plugin(PlayerPlugin)
-        .add_plugin(TileMapPlugin);
+        .add_plugin(LocationsPlugin)
+        .add_state(GameState::Playing);
 
     app.run();
 }
