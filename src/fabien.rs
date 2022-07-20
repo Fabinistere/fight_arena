@@ -24,6 +24,7 @@ pub fn spawn_fabien_sprite(
     index: usize,
     color: Color,
     translation: Vec3,
+    scale: Vec3
 ) -> Entity 
 {
     let mut sprite = TextureAtlasSprite::new(index);
@@ -36,6 +37,7 @@ pub fn spawn_fabien_sprite(
             texture_atlas: fabien.0.clone(),
             transform: Transform {
                 translation: translation,
+                scale: scale,
                 ..Default::default()
             },
             ..Default::default()

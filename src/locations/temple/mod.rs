@@ -1,7 +1,12 @@
 use bevy::{ecs::schedule::ShouldRun, prelude::*};
 
 // use crate::{FabienSheet, TILE_SIZE};
-use crate::{constants::locations::temple::*, player::Player, GameState};
+use crate::{
+    constants::locations::temple::*,
+    constants::TILE_SIZE,
+    GameState,
+    player::Player,
+};
 use super::{spawn_collision_cuboid, Location};
 
 pub struct TemplePlugin;
@@ -74,7 +79,7 @@ fn setup_temple(
     // let corridor_doors = asset_server.load("textures/temple/corridor_doors.png");
 
     // All the temple sprites
-    
+
     // commands.spawn_bundle(SpriteBundle {
     //     texture: background,
     //     transform: Transform::from_xyz(0.0, 0.0, BACKGROUND_Z),
@@ -84,7 +89,8 @@ fn setup_temple(
     commands
         .spawn_bundle(SpriteBundle {
             texture: main_room,
-            transform: Transform::from_xyz(0.0, 0.0, TEMPLE_Z),
+            // Transform::from_xyz(0.0, 0.0, TEMPLE_Z)
+            transform: Transform::from_scale(Vec3::splat(TILE_SIZE*0.1)),
             ..SpriteBundle::default()
         })
         .insert(Temple);
@@ -92,7 +98,8 @@ fn setup_temple(
     commands
         .spawn_bundle(SpriteBundle {
             texture: throne,
-            transform: Transform::from_translation(THRONE_POSITION.into()),
+            // Transform::from_traslation(THRONE_POSITION.into())
+            transform: Transform::from_scale(Vec3::splat(TILE_SIZE*0.1)),
             ..SpriteBundle::default()
         })
         .insert(Throne);

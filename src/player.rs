@@ -52,11 +52,9 @@ fn spawn_player(
         &fabien,
         5,
         Color::rgb(0.9,0.9,0.9),
-        Vec3::new(0.0, 0.0, 5.0)
+        Vec3::new(0.0, 0.0, 5.0),
+        Vec3::new(2.0,2.0,0.0)
     );
-    let mut sprite = TextureAtlasSprite::new(1);
-    //sprite.color = Color::rgb(0.3, 0.3, 0.9);
-    sprite.custom_size = Some(Vec2::splat(TILE_SIZE));
 
     commands
         .entity(player)
