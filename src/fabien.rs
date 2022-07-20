@@ -49,16 +49,16 @@ fn load_fabien(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>
 )
 {
-        let image = assets.load("big_sprite_sheet.png");
-        let atlas = TextureAtlas::from_grid(
-            image,
-            Vec2::splat(25.0),
-            4,
-            7,
-        );
+    let image = assets.load("big_sprite_sheet.png");
+    let atlas = TextureAtlas::from_grid(
+        image,
+        Vec2::splat(25.0),
+        4,
+        7,
+    );
 
-        let atlas_handle
-            = texture_atlases.add(atlas);
-        
-        commands.insert_resource(FabienSheet(atlas_handle));
+    let atlas_handle
+        = texture_atlases.add(atlas);
+    
+    commands.insert_resource(FabienSheet(atlas_handle));
 }
