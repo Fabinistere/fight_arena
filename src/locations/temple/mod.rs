@@ -89,8 +89,11 @@ fn setup_temple(
     commands
         .spawn_bundle(SpriteBundle {
             texture: main_room,
-            // Transform::from_xyz(0.0, 0.0, TEMPLE_Z)
-            transform: Transform::from_scale(Vec3::splat(TILE_SIZE*0.1)),
+            transform: Transform {
+                translation: Vec3::new(0.0, 0.0, TEMPLE_Z),
+                scale: Vec3::splat(TILE_SIZE*0.1),
+                ..Default::default()
+            },
             ..SpriteBundle::default()
         })
         .insert(Temple);
@@ -98,8 +101,11 @@ fn setup_temple(
     commands
         .spawn_bundle(SpriteBundle {
             texture: throne,
-            // Transform::from_traslation(THRONE_POSITION.into())
-            transform: Transform::from_scale(Vec3::splat(TILE_SIZE*0.1)),
+            transform: Transform {
+                translation: THRONE_POSITION.into(),
+                scale: Vec3::splat(TILE_SIZE*0.1),
+                ..Default::default()
+            },
             ..SpriteBundle::default()
         })
         .insert(Throne);

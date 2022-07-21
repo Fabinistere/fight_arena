@@ -17,7 +17,7 @@ pub mod locations {
 
         pub const THRONE_Z_BACK: f32 = 3.0;
         pub const THRONE_Z_FRONT: f32 = 6.0;
-        pub const THRONE_POSITION: (f32, f32, f32) = (-230.0, 900.0, THRONE_Z_BACK);
+        pub const THRONE_POSITION: (f32, f32, f32) = (0.0, 0.0, THRONE_Z_BACK);
     }
 }
 
