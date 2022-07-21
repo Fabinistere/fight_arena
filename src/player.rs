@@ -16,9 +16,22 @@ impl Plugin  for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_player)
+            .add_system(camera_follow)
             .add_system(player_movement);
 
     }
+}
+
+fn camera_follow(
+    player_query: Query<&Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (Without<Player>, With<Camera>)>,
+){
+    let player_transform = player_query.single();
+    let mut camera_transform = camera_query.single_mut();
+
+    camera_transform.translation.x = player_transform.translation.x;
+    camera_transform.translation.y = player_transform.translation.y;
+    
 }
 
 fn player_movement(
