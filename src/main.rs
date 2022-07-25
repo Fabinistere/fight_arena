@@ -7,13 +7,17 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 pub mod constants;
 mod debug;
 mod fabien;
-pub mod player;
 mod locations;
+pub mod player;
+mod npc;
+
 
 use debug::DebugPlugin;
 use fabien::{FabienPlugin, FabienSheet, spawn_fabien_sprite};
-use player::PlayerPlugin;
 use locations::LocationsPlugin;
+use npc::NPCPlugin;
+use player::PlayerPlugin;
+
 
 pub use crate::{
     constants::*,
@@ -39,12 +43,13 @@ fn main() {
             ..WindowDescriptor::default()
         })
         .add_plugins(DefaultPlugins)
-        .add_startup_system(spawn_camera)
         .add_plugin(DebugPlugin)
         .add_plugin(FabienPlugin)
-        .add_plugin(PlayerPlugin)
         .add_plugin(LocationsPlugin)
-        .add_state(GameState::Playing);
+        .add_plugin(NPCPlugin)
+        .add_plugin(PlayerPlugin)
+        .add_state(GameState::Playing)
+        .add_startup_system(spawn_camera);
 
     app.run();
 }
