@@ -49,7 +49,8 @@ fn main() {
         .add_plugin(NPCPlugin)
         .add_plugin(PlayerPlugin)
         .add_state(GameState::Playing)
-        .add_startup_system(spawn_camera);
+        .add_startup_system(spawn_camera)
+        .add_startup_system(setup);
 
     app.run();
 }
@@ -68,4 +69,13 @@ fn spawn_camera(
     camera.orthographic_projection.scaling_mode = ScalingMode::None;
 
     commands.spawn_bundle(camera);
+}
+
+fn setup(
+    asset_server: Res<AssetServer>, audio: Res<Audio>
+) {
+    let music = asset_server.load("sounds/Musique_Fabien-Dracula.ogg");
+    audio.play(music);
+
+    println!("audio playing...");
 }
