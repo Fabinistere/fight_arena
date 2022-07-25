@@ -38,9 +38,9 @@ pub fn spawn_fabien_sprite(
             transform: Transform {
                 translation: translation,
                 scale: scale,
-                ..Default::default()
+                ..default()
             },
-            ..Default::default()
+            ..default()
         })
         .id()
 }
@@ -54,7 +54,7 @@ fn load_fabien(
     let image = assets.load("big_sprite_sheet.png");
     let atlas = TextureAtlas::from_grid(
         image,
-        Vec2::splat(25.0),
+        Vec2::splat(30.0),
         4,
         7,
     );
