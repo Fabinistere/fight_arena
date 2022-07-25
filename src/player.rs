@@ -63,7 +63,7 @@ fn spawn_player(
     let player = spawn_fabien_sprite(
         &mut commands,
         &fabien,
-        5,
+        4,
         Color::rgb(0.9,0.9,0.9),
         Vec3::new(0.0, 0.0, 5.0),
         Vec3::new(2.0,2.0,0.0)
