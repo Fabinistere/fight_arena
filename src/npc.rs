@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
+// use std::time::Duration;
 
 use crate::{FabienSheet, TILE_SIZE};
 use crate::spawn_fabien_sprite;
@@ -28,10 +29,14 @@ fn character_movement(
 
     let (npc, mut transform) = npc_query.single_mut();
 
+    // while(destination!=position)
+    // timer
+    // https://bevy-cheatbook.github.io/features/time.html
+
     let direction = give_a_direction();
 
     // if direction ... {}
-    // transform.translation.y += npc.speed * TILE_SIZE * time.delta_seconds();
+    transform.translation.y += npc.speed * TILE_SIZE * time.delta_seconds();
     // transform.translation.x += npc.speed * TILE_SIZE * time.delta_seconds();
 }
 
