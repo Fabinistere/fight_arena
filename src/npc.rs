@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
-// use std::time::Duration;
+use std::time::Duration;
 
 use crate::{FabienSheet, TILE_SIZE};
 use crate::spawn_fabien_sprite;
@@ -12,32 +12,90 @@ pub struct NPC {
     speed: f32
 }
 
+enum NPCState {
+    Running,
+    Following,
+    Rest,
+    Talking
+}
+
 impl Plugin  for NPCPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_character)
-            .add_system(character_movement);
+            // .add_system(character_movement)
+            ;
 
     }
 }
 
+#[derive(Component)]
+struct FuseTime {
+    /// track when the npc should stop rest (non-repeating timer)
+    timer: Timer,
+}
+
+/// repos: timer
 fn character_movement(
     mut npc_query: Query<(&mut NPC, &mut Transform)>,
     time: Res<Time>,
 ){
-    // like my brain empty
+
+    // , &mut FuseTime)>
+    
+
+    // like my brain BIG but not so usefull
 
     let (npc, mut transform) = npc_query.single_mut();
 
-    // while(destination!=position)
-    // timer
+    let direction = give_a_direction();
+    println!("npc just got a way to go");
+    println!("x: {} y: {} z: {}", direction.x, direction.y, direction.z);
+    // destination.y
+    while direction.y != transform.translation.y &&
+          direction.x != transform.translation.x {
+
+        if direction.y > transform.translation.y {
+            transform.translation.y += npc.speed * TILE_SIZE * time.delta_seconds();
+        }
+        
+        if direction.y < transform.translation.y {
+            transform.translation.y -= npc.speed * TILE_SIZE * time.delta_seconds();
+        }
+
+        if direction.x > transform.translation.x {
+            transform.translation.x += npc.speed * TILE_SIZE * time.delta_seconds();
+        }
+        
+        if direction.x < transform.translation.x {
+            transform.translation.x -= npc.speed * TILE_SIZE * time.delta_seconds();
+        }
+    }
+
+    // insert state: Rest
+
+    println!("npc just wanna rest");
+
+    // commands.entity(npc)
+    //         .insert(FuseTime {
+    //             // create the non-repeating fuse timer
+    //             timer: Timer::new(Duration::from_secs(5), false),
+    //         });
+
+    // for (_, _, mut fuse_timer) in npc_query.iter_mut() {
+    //     // timers gotta be ticked, to work
+    //     fuse_timer.timer.tick(time.delta());
+
+    //     if fuse_timer.timer.finished() {
+    //         // consider this as death
+    //         commands.entity(npc).despawn();
+    //         println!("npc just despawn");
+    //     }
+
+    // }
+
     // https://bevy-cheatbook.github.io/features/time.html
 
-    let direction = give_a_direction();
-
-    // if direction ... {}
-    transform.translation.y += npc.speed * TILE_SIZE * time.delta_seconds();
-    // transform.translation.x += npc.speed * TILE_SIZE * time.delta_seconds();
 }
 
 /**
