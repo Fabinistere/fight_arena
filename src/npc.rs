@@ -23,7 +23,7 @@ impl Plugin  for NPCPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_character)
-            // .add_system(character_movement)
+            .add_system(character_movement)
             ;
 
     }
@@ -44,7 +44,7 @@ fn character_movement(
     // , &mut FuseTime)>
     
 
-    // like my brain BIG but not so usefull
+    // like my brain BIG but not so usefull (lie?)
 
     let (npc, mut transform) = npc_query.single_mut();
 
@@ -52,6 +52,8 @@ fn character_movement(
     println!("npc just got a way to go");
     println!("x: {} y: {} z: {}", direction.x, direction.y, direction.z);
     // destination.y
+
+    /*
     while direction.y != transform.translation.y &&
           direction.x != transform.translation.x {
 
@@ -71,6 +73,8 @@ fn character_movement(
             transform.translation.x -= npc.speed * TILE_SIZE * time.delta_seconds();
         }
     }
+
+     */
 
     // insert state: Rest
 
@@ -107,8 +111,8 @@ fn character_movement(
  */
 fn give_a_direction() -> Vec3
 {
-    let x = (rand::thread_rng().gen_range(-10..10) / 10) as f32 ;
-    let y = (rand::thread_rng().gen_range(-10..10) / 10)  as f32;
+    let x = rand::thread_rng().gen_range(-10..10) as f32 / 10.0;
+    let y = rand::thread_rng().gen_range(-10..10) as f32 / 10.0;
     // let z = rand::thread_rng().gen_range(1..101);
 
     let direction = Vec3::new(x, y, 0.0);
