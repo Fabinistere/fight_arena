@@ -52,9 +52,8 @@ fn character_movement(
     println!("npc just got a way to go");
     println!("x: {} y: {} z: {}", direction.x, direction.y, direction.z);
     // destination.y
-
-    /*
-    while direction.y != transform.translation.y &&
+    
+    if direction.y != transform.translation.y &&
           direction.x != transform.translation.x {
 
         if direction.y > transform.translation.y {
@@ -73,8 +72,6 @@ fn character_movement(
             transform.translation.x -= npc.speed * TILE_SIZE * time.delta_seconds();
         }
     }
-
-     */
 
     // insert state: Rest
 
@@ -111,8 +108,8 @@ fn character_movement(
  */
 fn give_a_direction() -> Vec3
 {
-    let x = rand::thread_rng().gen_range(-10..10) as f32 / 10.0;
-    let y = rand::thread_rng().gen_range(-10..10) as f32 / 10.0;
+    let x = rand::thread_rng().gen_range(-10..10) as f32 / 100.0;
+    let y = rand::thread_rng().gen_range(-10..10) as f32 / 100.0;
     // let z = rand::thread_rng().gen_range(1..101);
 
     let direction = Vec3::new(x, y, 0.0);
