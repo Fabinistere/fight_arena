@@ -26,25 +26,7 @@ enum NPCState {
     // Talking
 }
 
-impl Plugin  for NPCPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_state(NPCState::Running)
-            .add_startup_system(spawn_character)
-            .insert_resource(RestTime {
-                timer: Timer::from_seconds(10.0, false)
-            })
-            .insert_resource(RunningTime {
-                timer: Timer::from_seconds(30.0, false)
-            })
-            .add_system(stroll)
-            .add_system(rest)
-            ;
-    }
-}
-
-
-/*
+/**
  * NPC has hobbies
  *  - landwark
  *    - index in const, with free: bol
@@ -68,11 +50,25 @@ impl Plugin  for NPCPlugin {
  *  - should npc avoid hit other entity
  *  - turn false the free param from a landmark position taken by the MC
  */
+impl Plugin  for NPCPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_state(NPCState::Running)
+            .add_startup_system(spawn_character)
+            .insert_resource(RestTime {
+                timer: Timer::from_seconds(10.0, false)
+            })
+            .add_system(stroll)
+            .add_system(rest)
+            ;
+    }
+}
 
 fn stroll(
     mut npc_query: Query<(&mut NPC, &mut Transform)>,
     time: Res<Time>,
     mut npc_state: ResMut<State<NPCState>>,
+    mut commands: Commands,
 ) {
     for (mut npc, mut transform) in npc_query.iter_mut() {
 
@@ -81,6 +77,7 @@ fn stroll(
 
             let direction = npc.direction;
 
+            // TODO Approximation Louche
             if ((direction.y*100.0) as i32 != (transform.translation.y*100.0) as i32     &&
                 (direction.y*100.0) as i32 != (transform.translation.y*100.0) as i32 + 1 &&
                 (direction.y*100.0) as i32 != (transform.translation.y*100.0) as i32 - 1)
@@ -111,24 +108,29 @@ fn stroll(
                     npc.name
                 );
                 npc.state = NPCState::Rest;
+                // ne sert a R atm
+                commands.spawn()
+                        .insert(RestTime {
+                            // create the non-repeating fuse timer
+                            timer: Timer::new(Duration::from_secs(10), false),
+                        });
             }
 
-            /*println!(
-                "direction: {}, {} pos: {}
-                \n pos+1: [{}, {}, {}]
-                \n pos-1: [{}, {}, {}]",
-                direction,
-                npc.name,
-                transform.translation,
-                (transform.translation.x*100.0) as i32 +1,
-                (transform.translation.y*100.0) as i32 +1,
-                transform.translation.z,
-                (transform.translation.x*100.0) as i32 -1,
-                (transform.translation.y*100.0) as i32 -1,
-                transform.translation.z,
+            // println!(
+            //     "direction: {}, {} pos: {}
+            //     \n pos+1: [{}, {}, {}]
+            //     \n pos-1: [{}, {}, {}]",
+            //     direction,
+            //     npc.name,
+            //     transform.translation,
+            //     (transform.translation.x*100.0) as i32 +1,
+            //     (transform.translation.y*100.0) as i32 +1,
+            //     transform.translation.z,
+            //     (transform.translation.x*100.0) as i32 -1,
+            //     (transform.translation.y*100.0) as i32 -1,
+            //     transform.translation.z,
 
-            );
-            */
+            // );
 
             /*
              direction: [-1, 0.8, 0], Admiral pos: [-1.0008445, 0.79996014, 5]
@@ -141,26 +143,30 @@ fn stroll(
 
 fn rest(
     time: Res<Time>,
+    mut npc_query: Query<(&mut NPC, &mut RestTime)>,
 ) {
 
-    // flexing animation
+    for (mut npc, mut rest_time) in npc_query.iter_mut() {
 
-
-
+        if npc.state == NPCState::Rest {
+            // flexing animation
+    
+            println!("{} is resting", npc.name);
+            rest_time.timer.tick(time.delta());
+            println!("rest time: {}", rest_time.timer.elapsed_secs());
+    
+            if rest_time.timer.finished() {
+                npc.state = NPCState::Running;
+                npc.direction = give_a_direction();
+            }
+        }
+    }
 }
             
 
 #[derive(Component)]
 struct RestTime {
     /// track when the npc should stop rest (non-repeating timer)
-    timer: Timer,
-}
-
-#[derive(Component)]
-struct RunningTime {
-    /// whenever destination is reached or not
-    /// he will stop moving after this timer ends
-    /// track when the npc should stop run (non-repeating timer)
     timer: Timer,
 }
 
