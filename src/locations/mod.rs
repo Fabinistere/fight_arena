@@ -17,7 +17,13 @@ impl Plugin for LocationsPlugin {
     }
 }
 
-pub fn spawn_collision_cuboid(commands: &mut Commands, x: f32, y: f32, width: f32, height: f32) {
+pub fn spawn_collision_cuboid(
+    commands: &mut Commands,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32
+) {
     commands
         .spawn()
         .insert(Collider::cuboid(width, height))
