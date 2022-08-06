@@ -73,8 +73,17 @@ impl Plugin  for NPCPlugin {
             //         .with_run_criteria(run_if_rest)
             //         .with_system(rest)
             // )
-            .add_system(stroll)
-            .add_system(rest)
+            .add_system_set(
+                SystemSet::new()
+                    .label("stroll")
+                    .with_system(stroll)
+            )
+            .add_system_set(
+                SystemSet::new()
+                    .label("rest")
+                    .before("stroll")
+                    .with_system(rest)
+            )
             // .insert_resource(RestTime {
             //     timer: Timer::from_seconds(10.0, false)
             // })
