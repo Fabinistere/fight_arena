@@ -1,13 +1,12 @@
 use bevy::prelude::*;
-
-// use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+use bevy_inspector_egui::{Inspectable};
 
 use crate::{FabienSheet, TILE_SIZE};
 use crate::spawn_fabien_sprite;
 
 pub struct PlayerPlugin;
 
-#[derive(Component)] // Inspectable
+#[derive(Component, Inspectable)]
 pub struct Player{
     speed: f32
 }
@@ -16,8 +15,8 @@ impl Plugin  for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_player)
-            .add_system(camera_follow)
-            .add_system(player_movement);
+            .add_system(camera_follow.after("movement"))
+            .add_system(player_movement.label("movement"));
 
     }
 }
@@ -66,7 +65,7 @@ fn spawn_player(
         4,
         Color::rgb(0.9,0.9,0.9),
         Vec3::new(0.0, 0.0, 5.0),
-        Vec3::new(2.0,2.0,0.0)
+        Vec3::new(2.0, 2.0, 0.0)
     );
 
     commands
