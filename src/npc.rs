@@ -186,7 +186,6 @@ fn rest(
     mut npc_query: Query<&mut NPC>,
     mut time_query: Query<(Entity, &mut RestTime)>,
 ) {
-    // rentre pas dedans, timer's fault
     for (entity, mut rest_timer) in time_query.iter_mut() {
 
         rest_timer.timer.tick(time.delta());
