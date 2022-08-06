@@ -91,7 +91,7 @@ fn setup_temple(
             texture: main_room,
             transform: Transform {
                 translation: Vec3::new(0.0, 0.0, TEMPLE_Z),
-                scale: Vec3::splat(TILE_SIZE*0.1),
+                scale: Vec3::new(-TILE_SIZE*0.1, TILE_SIZE*0.1, 0.0),
                 ..Default::default()
             },
             ..SpriteBundle::default()
@@ -136,7 +136,7 @@ fn setup_temple(
 
 fn spawn_hitboxes(mut commands: Commands) {
     // Left wall
-    spawn_collision_cuboid(&mut commands, -1320.0, 80.0, 10.0, 1455.0);
+    spawn_collision_cuboid(&mut commands, 0.01, 0.01, 10.0, 10.0);
     // Right wall
     spawn_collision_cuboid(&mut commands, 860.0, 80.0, 10.0, 1455.0);
     // Left side of top wall
