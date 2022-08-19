@@ -5,11 +5,13 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 // use bevy_rapier2d::prelude::*;
 
 pub mod constants;
+mod combat;
 mod debug;
 mod fabien;
 mod locations;
-pub mod player;
+mod movement;
 mod npc;
+pub mod player;
 
 
 use debug::DebugPlugin;
@@ -74,7 +76,7 @@ fn spawn_camera(
 fn setup(
     asset_server: Res<AssetServer>, audio: Res<Audio>
 ) {
-    let music = asset_server.load("sounds/Musique_Fabien-Dracula.ogg");
+    let music = asset_server.load("sounds/FTO_Dracula_theme.wav");
     audio.play(music);
 
     println!("audio playing...");

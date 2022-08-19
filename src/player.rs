@@ -1,15 +1,17 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable};
 
-use crate::{FabienSheet, TILE_SIZE};
-use crate::spawn_fabien_sprite;
+use crate::{
+    FabienSheet,
+    movement::*,
+    TILE_SIZE,
+    spawn_fabien_sprite
+};
 
 pub struct PlayerPlugin;
 
 #[derive(Component, Inspectable)]
-pub struct Player{
-    speed: f32
-}
+pub struct Player;
 
 impl Plugin  for PlayerPlugin {
     fn build(&self, app: &mut App) {
@@ -34,23 +36,27 @@ fn camera_follow(
 }
 
 fn player_movement(
-    mut player_query: Query<(&mut Player, &mut Transform)>,
+    mut player_query: Query<(
+        &mut Player,
+        &mut Transform,
+        &Speed
+    )>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
 ){
-    let (player, mut transform) = player_query.single_mut();
+    let (_player, mut transform, speed) = player_query.single_mut();
 
     if keyboard.pressed(KeyCode::Z) {
-        transform.translation.y += player.speed * TILE_SIZE * time.delta_seconds();
+        transform.translation.y += speed.0 * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::S) {
-        transform.translation.y -= player.speed * TILE_SIZE * time.delta_seconds();
+        transform.translation.y -= speed.0 * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::Q) {
-        transform.translation.x += player.speed * TILE_SIZE * time.delta_seconds();
+        transform.translation.x += speed.0 * TILE_SIZE * time.delta_seconds();
     }
     if keyboard.pressed(KeyCode::D) {
-        transform.translation.x -= player.speed * TILE_SIZE * time.delta_seconds();
+        transform.translation.x -= speed.0 * TILE_SIZE * time.delta_seconds();
     }
 }
 
@@ -71,5 +77,8 @@ fn spawn_player(
     commands
         .entity(player)
         .insert(Name::new("Player"))
-        .insert(Player { speed: 3.0 });
+        .insert(Player)
+        .insert_bundle(MovementBundle {
+            speed: Speed::default(),
+        });
 }
