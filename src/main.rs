@@ -2,7 +2,7 @@
 
 #![allow(clippy::redundant_field_names)]
 use bevy::{prelude::*, render::camera::ScalingMode};
-// use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 pub mod constants;
 mod combat;
@@ -44,7 +44,12 @@ fn main() {
             resizable: false,
             ..WindowDescriptor::default()
         })
+        .insert_resource(RapierConfiguration {
+            gravity: Vec2::ZERO,
+            ..default()
+        })
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.0))
         .add_plugin(DebugPlugin)
         .add_plugin(FabienPlugin)
         .add_plugin(LocationsPlugin)

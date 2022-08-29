@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Deref, DerefMut)]
 pub struct Speed(pub f32);
 
 impl Default for Speed {
