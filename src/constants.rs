@@ -24,3 +24,9 @@ pub mod locations {
     }
 }
 
+pub mod npc {
+    pub mod movement {
+        pub const REST_TIMER: u64 = 3;
+    }
+}
+

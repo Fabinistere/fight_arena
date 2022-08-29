@@ -9,8 +9,11 @@ use crate::npc::idle::{
     IdleBehavior,
     RestTime
 };
-use crate::movement::Speed;
-use crate::TILE_SIZE;
+use crate::{
+    constants::npc::movement::*,
+    movement::Speed,
+    TILE_SIZE
+};
 
 /// Indicates that an entity should run towards a destination.
 #[derive(Default, Component)]
@@ -58,10 +61,10 @@ pub fn run_to_destination(
                 transform.translation.x -= speed.0 * TILE_SIZE * time.delta_seconds();
             }
         } else {
-            println!(
-                "I'm {} and I'm gonna rest for a while",
-                npc.type_name()
-            );
+            // println!(
+            //     "I'm {} and I'm gonna rest for a while",
+            //     npc.type_name()
+            // );
             commands.entity(npc)
                     .remove::<RunToDestinationBehavior>();
             commands.entity(npc)
@@ -71,7 +74,7 @@ pub fn run_to_destination(
             commands.entity(npc)
                     .insert(RestTime {
                         // create the non-repeating rest timer
-                        timer: Timer::new(Duration::from_secs(10), false),
+                        timer: Timer::new(Duration::from_secs(REST_TIMER), false),
                     });
         }
     }
