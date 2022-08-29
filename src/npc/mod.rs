@@ -8,7 +8,8 @@ use crate::{
     movement::*,
     npc::{
         idle::IdleBehavior,
-        movement::RunToDestinationBehavior
+        movement::RunToDestinationBehavior,
+        movement::give_a_direction
     },
     spawn_fabien_sprite
 };
@@ -128,7 +129,7 @@ fn spawn_character(
         })
         .insert(IdleBehavior)
         .insert(RunToDestinationBehavior {
-                destination: Vec3::default(),
+                destination: give_a_direction(),
             });
 
     commands
@@ -140,7 +141,7 @@ fn spawn_character(
         })
         .insert(IdleBehavior)
         .insert(RunToDestinationBehavior {
-                destination: Vec3::default(),
+                destination: give_a_direction(),
             });
 }
 
