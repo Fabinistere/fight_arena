@@ -18,35 +18,30 @@ pub fn do_flexing(
     mut commands: Commands,
     time: Res<Time>,
     mut npc_query: Query<
-        (Entity, &mut RestTime), 
+        (Entity, &mut RestTime, &Name), 
         (With<IdleBehavior>, Without<FollowBehavior>)
     >
 ) {
-    for (npc, mut rest_timer) in npc_query.iter_mut() {
+    for (npc, mut rest_timer, name) in npc_query.iter_mut() {
 
         rest_timer.timer.tick(time.delta());
 
-        // println!("npc's state: {:#?}", npc.state);
+        // flexing animation                 
 
-        // flexing animation
-
-        // println!(
-        //     "{} is resting, rem time: {}",
-        //     npc.name,
-        //     rest_timer.timer.elapsed_secs()
-        // );                      
-
-        // TODO check it.
-        // When ONE timer is finished
-        // all npc goes to work (walk)
-        // the others timer still live
         if rest_timer.timer.finished() {
+
+            println!(
+                "{} got a way to go",
+                name
+            );
 
             commands.entity(npc)
                     .insert(
                         RunToDestinationBehavior {
                             destination: give_a_direction()
                     });
+            commands.entity(npc)
+                    .remove::<IdleBehavior>();
             commands.entity(npc)
                     .remove::<RestTime>();
         }          
