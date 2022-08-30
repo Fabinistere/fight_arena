@@ -5,7 +5,6 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     FabienSheet,
     movement::*,
-    TILE_SIZE,
     spawn_fabien_sprite
 };
 
@@ -83,12 +82,12 @@ fn spawn_player(
         .insert(Player)
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(Velocity {
-            linvel: Vec2::default(),
-            angvel: 0.0,
-        })
         .insert_bundle(MovementBundle {
             speed: Speed::default(),
+            velocity: Velocity {
+                linvel: Vec2::default(),
+                angvel: 0.0,
+            }
         })
         ;
 }
