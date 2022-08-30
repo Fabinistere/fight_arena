@@ -1,6 +1,7 @@
 //! Implements Npc for moving and steering entities.
 
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::Velocity;
 use std::time::Duration;
 use rand::Rng;
 
@@ -32,39 +33,56 @@ pub fn run_to_destination(
         Entity,
         &RunToDestinationBehavior,
         &mut Transform,
-        &Speed
-    )>,
-    time: Res<Time>,
+        &Speed,
+        &mut Velocity,
+        &Name
+    ), (With<RunToDestinationBehavior>, Without<IdleBehavior>)>
 ) {
-    for (npc, behavior, mut transform, speed) in query.iter_mut() {
+    for (npc, behavior, transform, speed, mut rb_vel, name) in query.iter_mut() {
         let direction: Vec3 = behavior.destination;
 
         // TODO Approximation Louche
         if !close(transform.translation, direction)
         {
 
-            // TODO : Use viscosity (rapier) instead of teleportation
+//             println!(
+//                 "{} direction: ({},{})
+// position: ({},{})",
+//                 name, direction.x, direction.y,
+//                 transform.translation.x, transform.translation.y
+//             );
 
-            if direction.y > transform.translation.y {
-                transform.translation.y += speed.0 * TILE_SIZE * time.delta_seconds();
+            let up = direction.y > transform.translation.y;
+            let down = direction.y < transform.translation.y;
+            let left = direction.x < transform.translation.x;
+            let right = direction.x > transform.translation.x;
+
+            let x_axis = -(left as i8) + right as i8;
+            let y_axis = -(down as i8) + up as i8;
+
+            // println!("x: {}, y: {}", x_axis, y_axis);
+    
+            let mut vel_x = x_axis as f32 * **speed;
+            let mut vel_y = y_axis as f32 * **speed;
+    
+            if x_axis != 0 && y_axis != 0 {
+                vel_x *= (std::f32::consts::PI / 4.0).cos();
+                vel_y *= (std::f32::consts::PI / 4.0).cos();
             }
-        
-            if direction.y < transform.translation.y {
-                transform.translation.y -= speed.0 * TILE_SIZE * time.delta_seconds();
-            }
-        
-            if direction.x > transform.translation.x {
-                transform.translation.x += speed.0 * TILE_SIZE * time.delta_seconds();
-            }
-        
-            if direction.x < transform.translation.x {
-                transform.translation.x -= speed.0 * TILE_SIZE * time.delta_seconds();
-            }
+    
+            rb_vel.linvel.x = vel_x;
+            rb_vel.linvel.y = vel_y;
+
         } else {
-            // println!(
-            //     "I'm {} and I'm gonna rest for a while",
-            //     npc.type_name()
-            // );
+            println!(
+                "I'm {} and I'm gonna rest for a while",
+                name
+            );
+
+            // Stop the npc after reaching the destination
+            rb_vel.linvel.x = 0.0;
+            rb_vel.linvel.y = 0.0;
+
             commands.entity(npc)
                     .remove::<RunToDestinationBehavior>();
             commands.entity(npc)

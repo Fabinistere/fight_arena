@@ -1,6 +1,7 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 // use bevy::time::FixedTimestep;
+use bevy_rapier2d::prelude::*;
 
 use crate::{
     constants::FIXED_TIME_STEP,
@@ -124,10 +125,15 @@ fn spawn_character(
         .entity(admiral)
         .insert(Name::new("NPC Admiral"))
         .insert(NPC)
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
-            speed: Speed::default()
+            speed: Speed::default(),
+            velocity: Velocity {
+                linvel: Vec2::default(),
+                angvel: 0.0,
+            }
         })
-        .insert(IdleBehavior)
         .insert(RunToDestinationBehavior {
                 destination: give_a_direction(),
             });
@@ -136,10 +142,15 @@ fn spawn_character(
         .entity(olf)
         .insert(Name::new("NPC Olf"))
         .insert(NPC)
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
-            speed: Speed::default()
+            speed: Speed::default(),
+            velocity: Velocity {
+                linvel: Vec2::default(),
+                angvel: 0.0,
+            }
         })
-        .insert(IdleBehavior)
         .insert(RunToDestinationBehavior {
                 destination: give_a_direction(),
             });
