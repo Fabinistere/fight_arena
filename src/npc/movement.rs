@@ -43,7 +43,7 @@ pub fn just_walk(
         let direction: Vec3 = behavior.destination;
 
         // TODO Approximation Louche
-        if !close(transform.translation, direction)
+        if !close(transform.translation, direction, TILE_SIZE/2.0)
         {
 
 //             println!(
@@ -115,7 +115,7 @@ pub fn follow(
         let player_transform = player_query.single();
 
         // TODO Approximation Louche
-        if !close(transform.translation, player_transform.translation)
+        if !close(transform.translation, player_transform.translation, TILE_SIZE*2.0)
         {
 
             let up = player_transform.translation.y > transform.translation.y;
@@ -139,6 +139,9 @@ pub fn follow(
             rb_vel.linvel.x = vel_x;
             rb_vel.linvel.y = vel_y;
 
+        } else {
+            rb_vel.linvel.x = 0.0;
+            rb_vel.linvel.y = 0.0;
         }
 
         // target does not have position. Go to idle state
@@ -160,6 +163,7 @@ pub fn follow(
 fn close(
     position: Vec3,
     direction: Vec3,
+    range: f32
 ) -> bool
 {
     // direction.x == position.x &&
@@ -167,15 +171,15 @@ fn close(
     
     let a = 
         Vec3::new(
-            direction.x-TILE_SIZE/2.0,
-            direction.y+TILE_SIZE/2.0,
+            direction.x-range,
+            direction.y+range,
             direction.z
         );
 
     let c = 
         Vec3::new(
-            direction.x+TILE_SIZE/2.0,
-            direction.y-TILE_SIZE/2.0,
+            direction.x+range,
+            direction.y-range,
             direction.z
         );
     
