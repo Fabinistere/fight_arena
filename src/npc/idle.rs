@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::npc::movement::{
-    RunToDestinationBehavior,
+    JustWalkBehavior,
     FollowBehavior,
     give_a_direction
 };
@@ -37,7 +37,7 @@ pub fn do_flexing(
 
             commands.entity(npc)
                     .insert(
-                        RunToDestinationBehavior {
+                        JustWalkBehavior {
                             destination: give_a_direction()
                     });
             commands.entity(npc)
@@ -48,3 +48,23 @@ pub fn do_flexing(
 
     }
 }
+
+// pub fn wait_leader(
+//     mut commands: Commands,
+//     mut npc_query: Query<
+//         (Entity, &Name), 
+//         (With<IdleBehavior>, With<FollowBehavior>)
+//     >
+// ) {
+//     for (npc, name) in npc_query.iter_mut() {
+
+//         // flexing animation                 
+
+//         commands.entity(npc)
+//                 .insert(
+//                     FollowBehavior);
+//         commands.entity(npc)
+//                 .remove::<IdleBehavior>();      
+
+//     }
+// }

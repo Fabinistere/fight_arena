@@ -8,8 +8,9 @@ use crate::{
     FabienSheet,
     movement::*,
     npc::{
-        idle::IdleBehavior,
-        movement::RunToDestinationBehavior,
+        // idle::IdleBehavior,
+        movement::FollowBehavior,
+        movement::JustWalkBehavior,
         movement::give_a_direction
     },
     spawn_fabien_sprite
@@ -27,7 +28,7 @@ pub struct NPCPlugin;
 #[derive(PartialEq, Clone, Hash, Debug, Eq, SystemLabel)]
 pub enum NPCSystems {
     Stroll,
-    // Following,
+    Following,
     // FindLandmark,
     // FindTargets,
     // UpdateAggressionSource,
@@ -66,16 +67,16 @@ impl Plugin  for NPCPlugin {
             // .add_startup_system(show_ieud_grid)
             .add_system_to_stage(
                 CoreStage::Update,
-                movement::run_to_destination
+                movement::just_walk
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(NPCSystems::Stroll)
             )
-            // .add_system_to_stage(
-            //     CoreStage::Update,
-            //     movement::follow
-            //         .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-            //         .label(NPCSystems::Following)
-            // )
+            .add_system_to_stage(
+                CoreStage::Update,
+                movement::follow
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .label(NPCSystems::Following)
+            )
             // .add_system_to_stage(
             //     CoreStage::Update,
             //     movement::find_landmark
@@ -134,9 +135,10 @@ fn spawn_character(
                 angvel: 0.0,
             }
         })
-        .insert(RunToDestinationBehavior {
-                destination: give_a_direction(),
-            });
+        // .insert(JustWalkBehavior {
+        //         destination: give_a_direction(),
+        // })
+        .insert(FollowBehavior);
 
     commands
         .entity(olf)
@@ -151,12 +153,13 @@ fn spawn_character(
                 angvel: 0.0,
             }
         })
-        .insert(RunToDestinationBehavior {
-                destination: give_a_direction(),
-            });
+        // .insert(JustWalkBehavior {
+        //         destination: give_a_direction(),
+        //     })
+        .insert(FollowBehavior);
 }
 
-fn show_ieud_grid(
+fn _show_ieud_grid(
     mut commands: Commands,
     fabien: Res<FabienSheet>
 ) {
