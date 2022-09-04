@@ -24,13 +24,13 @@ pub mod locations {
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
 
         pub const THRONE_Z_BACK: f32 = 3.0;
-        pub const THRONE_Z_FRONT: f32 = 6.0;
+        pub const THRONE_Z_FRONT: f32 = 7.0;
         pub const THRONE_POSITION: (f32, f32, f32) = (0.23, 0.74, THRONE_Z_BACK);
         
         pub const BANNERS_POSITION: (f32, f32, f32) = (0.23, 0.935, THRONE_Z_BACK);
 
         pub const PILLAR_Z_BACK: f32 = 3.0;
-        pub const PILLAR_Z_FRONT: f32 = 6.0;
+        pub const PILLAR_Z_FRONT: f32 = 7.0;
 
         pub const PILLAR_POSITION_1: (f32, f32, f32) = (0.485, 0.28, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_2: (f32, f32, f32) = (0.485, -0.12, PILLAR_Z_BACK);
