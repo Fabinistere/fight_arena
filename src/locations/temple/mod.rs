@@ -20,21 +20,34 @@ impl Plugin for TemplePlugin {
             .add_system_set(
                 SystemSet::on_enter(Location::Temple)
                     .with_system(setup_temple)
-                    // .with_system(spawn_hitboxes)
+                    .with_system(spawn_pillars)
             )
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
                 SystemSet::new()
                     .with_run_criteria(run_if_in_temple)
-                    .with_system(throne_position),
+                    .with_system(throne_position)
+
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::new()
+                    .with_run_criteria(run_if_in_temple)
+                    .with_system(pillar_position)
+
             );
     }
 }
 
 #[derive(Component)]
 pub struct Temple;
+
 #[derive(Component)]
 struct Throne;
+
+#[derive(Component)]
+struct Pillar;
+
 #[derive(Component, Deref, DerefMut)]
 pub struct ZPosition(f32);
 
@@ -88,40 +101,16 @@ fn setup_temple(
     // let museum = asset_server.load("textures/temple/temple_museum.png");
     let huge_throne = asset_server.load("textures/temple/temple_huge_throne.png");
 
-
     // All the temple sprites
 
     // let mut elements = Vec::new();
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: banners.clone(),
-            transform: Transform {
-                translation: Vec3::new(0.23, 0.935, PLAYER_Z),
-                scale: TEMPLE_SCALE.into(),
-                ..default()
-            },
-            ..SpriteBundle::default()
-        })
-        .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: banners.clone(),
-            // tesselator_config: TesselatedColliderConfig {
-            //     // We want the collision shape for the banners to be highly accurate?
-            //     vertice_separation: 0.,
-            //     ..default()
-            // },
-            ..default()
-        })
-        .insert(Name::new("banners"));
-
     // elements.push(t_banners);
 
     commands
         .spawn_bundle(SpriteBundle {
             texture: wall.clone(),
             transform: Transform {
-                translation: Vec3::new(0., 0., PLAYER_Z),
+                translation: Vec3::new(0., 0., TEMPLE_Z),
                 scale: TEMPLE_SCALE.into(),
                 ..default()
             },
@@ -130,10 +119,6 @@ fn setup_temple(
         .insert(RigidBody::Fixed)
         .insert(TesselatedCollider {
             texture: wall.clone(),
-            // tesselator_config: TesselatedColliderConfig {
-            //     vertice_separation: 0.,
-            //     ..default()
-            // },
             ..default()
         })
         .insert(Name::new("wall"));
@@ -165,38 +150,193 @@ fn setup_temple(
         .insert(RigidBody::Fixed)
         .insert(TesselatedCollider {
             texture: huge_throne.clone(),
-            // tesselator_config: TesselatedColliderConfig {
-            //     // We want the collision shape for the banners to be highly accurate?
-            //     vertice_separation: 0.,
-            //     ..default()
-            // },
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
             ..default()
         })
+        .insert(Throne)
         .insert(Name::new("throne"));
 
-    // commands.spawn_bundle(SpriteBundle {
-    //     texture: corridor_doors,
-    //     transform: Transform::from_xyz(0.0, 0.0, CORRIDOR_DOORS_Z),
-    //     ..SpriteBundle::default()
-    // });
-    
-    // TODO to spawn pillar create a super layer on top of floor to visualize where it goes
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: banners.clone(),
+            transform: Transform {
+                translation: BANNERS_POSITION.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: banners.clone(),
+            ..default()
+        })
+        .insert(Name::new("banners"));
 
-    // for pos in PILLAR_POSITIONS {
-    //     commands
-    //         .spawn_bundle(SpriteBundle {
-    //             texture: pillar.clone(),
-    //             transform: Transform::from_translation(pos.into()),
-    //             ..SpriteBundle::default()
-    //         })
-    //         .insert(Pillar)
-    //         .with_children(|parent| {
-    //             parent
-    //                 .spawn()
-    //                 .insert(Collider::cuboid(60.0, 20.0))
-    //                 .insert(Transform::from_xyz(pos.0, pos.1 - 110.0, 0.0));
-    //         });
-    // }
+}
+
+fn pillar_position(
+    player_query: Query<&GlobalTransform, With<Player>>,
+    mut pillar_query: Query<&mut Transform, With<Pillar>>,
+) {
+    if let Ok(player_transform) = player_query.get_single() {
+        for mut pillar_transform in pillar_query.iter_mut() {
+            if player_transform.translation.y > pillar_transform.translation.y {
+                pillar_transform.translation.z = PILLAR_Z_FRONT;
+            } else {
+                pillar_transform.translation.z = PILLAR_Z_BACK;
+            }
+        }
+    }
+}
+
+fn spawn_pillars(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>
+) {
+    let column = asset_server.load("textures/temple/column.png");
+
+    // let mut elements = Vec::new();
+    // elements.push(t_banners);
+
+    // All 6 PILLARS
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: column.clone(),
+            transform: Transform {
+                translation: PILLAR_POSITION_1.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: column.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Pillar)
+        .insert(Name::new("column 1"));
+
+        commands
+        .spawn_bundle(SpriteBundle {
+            texture: column.clone(),
+            transform: Transform {
+                translation: PILLAR_POSITION_2.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: column.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Pillar)
+        .insert(Name::new("column 2"));
+        
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: column.clone(),
+            transform: Transform {
+                translation: PILLAR_POSITION_3.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: column.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Pillar)
+        .insert(Name::new("column 3"));
+
+    
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: column.clone(),
+            transform: Transform {
+                translation: PILLAR_POSITION_4.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: column.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Pillar)
+        .insert(Name::new("column 4"));
+
+    
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: column.clone(),
+            transform: Transform {
+                translation: PILLAR_POSITION_5.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: column.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Pillar)
+        .insert(Name::new("column 5"));
+
+        
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: column.clone(),
+            transform: Transform {
+                translation: PILLAR_POSITION_6.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: column.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Pillar)
+        .insert(Name::new("column 6"));
 }
 
 

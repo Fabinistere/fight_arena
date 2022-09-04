@@ -18,14 +18,26 @@ pub mod locations {
 
         pub const BACKGROUND_Z: f32 = 0.;
 
+        // Vec3::splat(TILE_SIZE*0.1)
         pub const TEMPLE_SCALE: (f32, f32, f32) = (-TILE_SIZE*0.1, TILE_SIZE*0.1, 0.);
         pub const TEMPLE_Z: f32 = 2.0;
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
 
         pub const THRONE_Z_BACK: f32 = 3.0;
         pub const THRONE_Z_FRONT: f32 = 6.0;
-        pub const THRONE_POSITION: (f32, f32, f32) = (0.0, 0.0, THRONE_Z_BACK);
-        // Vec3::splat(TILE_SIZE*0.1)
+        pub const THRONE_POSITION: (f32, f32, f32) = (0.23, 0.74, THRONE_Z_BACK);
+        
+        pub const BANNERS_POSITION: (f32, f32, f32) = (0.23, 0.935, THRONE_Z_BACK);
+
+        pub const PILLAR_Z_BACK: f32 = 3.0;
+        pub const PILLAR_Z_FRONT: f32 = 6.0;
+
+        pub const PILLAR_POSITION_1: (f32, f32, f32) = (0.485, 0.28, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_2: (f32, f32, f32) = (0.485, -0.12, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_3: (f32, f32, f32) = (0.485, -0.52, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_4: (f32, f32, f32) = (-0.025, 0.28, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_5: (f32, f32, f32) = (-0.025, -0.12, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_6: (f32, f32, f32) = (-0.025, -0.52, PILLAR_Z_BACK);
     }
 }
 
