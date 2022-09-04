@@ -14,19 +14,29 @@ pub const TILE_SIZE: f32 = 0.1;
 
 pub mod locations {
     pub mod temple {
-        pub const BACKGROUND_Z: f32 = 0.0;
+        use crate::TILE_SIZE;
 
+        pub const BACKGROUND_Z: f32 = 0.;
+
+        pub const TEMPLE_SCALE: (f32, f32, f32) = (-TILE_SIZE*0.1, TILE_SIZE*0.1, 0.);
         pub const TEMPLE_Z: f32 = 2.0;
+        pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
 
         pub const THRONE_Z_BACK: f32 = 3.0;
         pub const THRONE_Z_FRONT: f32 = 6.0;
         pub const THRONE_POSITION: (f32, f32, f32) = (0.0, 0.0, THRONE_Z_BACK);
+        // Vec3::splat(TILE_SIZE*0.1)
     }
 }
 
 pub mod npc {
     pub mod movement {
         pub const REST_TIMER: u64 = 3;
+        pub const NPC_SPEED: f32 = 0.5;
     }
+}
+
+pub mod player {
+    pub const PLAYER_Z: f32 = 6.;
 }
 

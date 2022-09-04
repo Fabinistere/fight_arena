@@ -1,9 +1,12 @@
 use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use bevy_rapier2d::prelude::*;
+use bevy_retrograde::prelude::{TesselatedCollider, TesselatedColliderConfig};
 
 // use crate::{FabienSheet, TILE_SIZE};
 use crate::{
     constants::locations::temple::*,
-    constants::TILE_SIZE,
+    constants::player::PLAYER_Z,
+    // constants::TILE_SIZE,
     GameState,
     player::Player,
 };
@@ -72,49 +75,112 @@ fn setup_temple(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
-    // let background = asset_server.load("textures/temple/background.png");
-    let main_room = asset_server.load("textures/temple/main_room.png");
-    // let pillar = asset_server.load("textures/temple/pillar.png");
-    let throne = asset_server.load("textures/temple/throne.png");
-    // let corridor_doors = asset_server.load("textures/temple/corridor_doors.png");
+    // let main_room = asset_server.load("textures/temple/main_room.png");
+    // let throne = asset_server.load("textures/temple/throne.png");
+
+    // let background = asset_server.load("textures/temple/bckgrd_credits.png");
+
+    let banners = asset_server.load("textures/temple/temple_banners.png");
+    let floor = asset_server.load("textures/temple/temple_floor.png");
+    let wall = asset_server.load("textures/temple/temple_wall.png");
+    // let light_off = asset_server.load("textures/temple/temple_light_off.png");
+    // let light_on = asset_server.load("textures/temple/temple_light_on.png");
+    // let museum = asset_server.load("textures/temple/temple_museum.png");
+    let huge_throne = asset_server.load("textures/temple/temple_huge_throne.png");
+
 
     // All the temple sprites
 
-    // commands.spawn_bundle(SpriteBundle {
-    //     texture: background,
-    //     transform: Transform::from_xyz(0.0, 0.0, BACKGROUND_Z),
-    //     ..SpriteBundle::default()
-    // });
+    // let mut elements = Vec::new();
 
     commands
         .spawn_bundle(SpriteBundle {
-            texture: main_room,
+            texture: banners.clone(),
             transform: Transform {
-                translation: Vec3::new(0.0, 0.0, TEMPLE_Z),
-                scale: Vec3::new(-TILE_SIZE*0.1, TILE_SIZE*0.1, 0.0),
-                ..Default::default()
+                translation: Vec3::new(0.23, 0.935, PLAYER_Z),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
             },
             ..SpriteBundle::default()
         })
-        .insert(Temple);
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: banners.clone(),
+            // tesselator_config: TesselatedColliderConfig {
+            //     // We want the collision shape for the banners to be highly accurate?
+            //     vertice_separation: 0.,
+            //     ..default()
+            // },
+            ..default()
+        })
+        .insert(Name::new("banners"));
+
+    // elements.push(t_banners);
 
     commands
         .spawn_bundle(SpriteBundle {
-            texture: throne,
+            texture: wall.clone(),
             transform: Transform {
-                translation: THRONE_POSITION.into(),
-                scale: Vec3::splat(TILE_SIZE*0.1),
-                ..Default::default()
+                translation: Vec3::new(0., 0., PLAYER_Z),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
             },
             ..SpriteBundle::default()
         })
-        .insert(Throne);
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: wall.clone(),
+            // tesselator_config: TesselatedColliderConfig {
+            //     vertice_separation: 0.,
+            //     ..default()
+            // },
+            ..default()
+        })
+        .insert(Name::new("wall"));
+
+    
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: floor.clone(),
+            transform: Transform {
+                translation: TEMPLE_POSITION.into(),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(Name::new("floor"));
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: huge_throne.clone(),
+            transform: Transform {
+                translation: Vec3::new(0.23, 0.74, PLAYER_Z),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(TesselatedCollider {
+            texture: huge_throne.clone(),
+            // tesselator_config: TesselatedColliderConfig {
+            //     // We want the collision shape for the banners to be highly accurate?
+            //     vertice_separation: 0.,
+            //     ..default()
+            // },
+            ..default()
+        })
+        .insert(Name::new("throne"));
 
     // commands.spawn_bundle(SpriteBundle {
     //     texture: corridor_doors,
     //     transform: Transform::from_xyz(0.0, 0.0, CORRIDOR_DOORS_Z),
     //     ..SpriteBundle::default()
     // });
+    
+    // TODO to spawn pillar create a super layer on top of floor to visualize where it goes
 
     // for pos in PILLAR_POSITIONS {
     //     commands
