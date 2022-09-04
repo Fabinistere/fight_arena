@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable};
 use bevy_rapier2d::prelude::*;
+use bevy_retrograde::prelude::{TesselatedCollider, TesselatedColliderConfig};
 
 use crate::{
     FabienSheet,
@@ -64,7 +65,8 @@ fn player_movement(
 
 fn spawn_player(
     mut commands: Commands,
-    fabien: Res<FabienSheet>
+    fabien: Res<FabienSheet>,
+    asset_server: Res<AssetServer>
 )
 {
     let player = spawn_fabien_sprite(
@@ -72,9 +74,12 @@ fn spawn_player(
         &fabien,
         4,
         Color::rgb(0.9,0.9,0.9),
-        Vec3::new(0.0, 0.0, 5.0),
+        Vec3::new(0.0, 0.0, 6.),
         Vec3::new(2.0, 2.0, 0.0)
     );
+
+    // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
+    let morgan_hitbox = asset_server.load("textures/character/Morgan.png");
 
     commands
         .entity(player)
@@ -88,6 +93,15 @@ fn spawn_player(
                 linvel: Vec2::default(),
                 angvel: 0.0,
             }
+        })
+        .insert(TesselatedCollider {
+            texture: morgan_hitbox.clone(),
+            // tesselator_config: TesselatedColliderConfig {
+            //     // We want the collision shape for the player to be highly accurate
+            //     vertice_separation: 0.,
+            //     ..default()
+            // },
+            ..default()
         })
         ;
 }

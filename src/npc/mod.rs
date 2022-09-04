@@ -1,17 +1,19 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-// use bevy::time::FixedTimestep;
+use bevy_inspector_egui::Inspectable;
 use bevy_rapier2d::prelude::*;
+use bevy_retrograde::prelude::{TesselatedCollider, TesselatedColliderConfig};
 
 use crate::{
     constants::FIXED_TIME_STEP,
+    constants::npc::movement::NPC_SPEED,
     FabienSheet,
     movement::*,
     npc::{
         // idle::IdleBehavior,
         movement::FollowBehavior,
-        movement::JustWalkBehavior,
-        movement::give_a_direction
+        // movement::JustWalkBehavior,
+        // movement::give_a_direction
     },
     spawn_fabien_sprite
 };
@@ -19,7 +21,7 @@ use crate::{
 pub mod movement;
 pub mod idle;
 
-#[derive(Component)] // Inspectable
+#[derive(Component, Inspectable)]
 pub struct NPC;
 
 #[derive(Default)]
@@ -100,9 +102,10 @@ impl Plugin  for NPCPlugin {
 
 fn spawn_character(
     mut commands: Commands,
-    fabien: Res<FabienSheet>
+    fabien: Res<FabienSheet>,
+    asset_server: Res<AssetServer>
 ) {
-    let position = Vec3::new(-0.2, 0.35, 6.0);
+    let position = Vec3::new(-0.2, 0.35, 5.);
 
     let admiral = spawn_fabien_sprite(
         &mut commands,
@@ -118,9 +121,13 @@ fn spawn_character(
         &fabien,
         12,
         Color::rgb(0.9,0.9,0.9),
-        Vec3::new(-0.2, 0.55, 6.0),
+        Vec3::new(-0.2, 0.55, 5.),
         Vec3::new(2.0,2.0,0.0)
     );
+
+    // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
+    let admiral_hitbox = asset_server.load("textures/character/admiral.png");
+    let olf_hitbox = asset_server.load("textures/character/Olf.png");
 
     commands
         .entity(admiral)
@@ -129,15 +136,21 @@ fn spawn_character(
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
-            speed: Speed::default(),
+            speed: Speed(NPC_SPEED),
             velocity: Velocity {
                 linvel: Vec2::default(),
                 angvel: 0.0,
             }
         })
-        // .insert(JustWalkBehavior {
-        //         destination: give_a_direction(),
-        // })
+        .insert(TesselatedCollider {
+            texture: admiral_hitbox.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                // We want the collision shape for the player to be highly accurate
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
         .insert(FollowBehavior);
 
     commands
@@ -147,15 +160,21 @@ fn spawn_character(
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
-            speed: Speed::default(),
+            speed: Speed(NPC_SPEED),
             velocity: Velocity {
                 linvel: Vec2::default(),
                 angvel: 0.0,
             }
         })
-        // .insert(JustWalkBehavior {
-        //         destination: give_a_direction(),
-        //     })
+        .insert(TesselatedCollider {
+            texture: olf_hitbox.clone(),
+            tesselator_config: TesselatedColliderConfig {
+                // We want the collision shape for the player to be highly accurate
+                vertice_separation: 0.,
+                ..default()
+            },
+            ..default()
+        })
         .insert(FollowBehavior);
 }
 

@@ -57,7 +57,8 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_state(GameState::Playing)
         .add_startup_system(spawn_camera)
-        .add_startup_system(setup);
+        .add_startup_system(setup)
+        ;
 
     app.run();
 }

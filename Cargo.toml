@@ -15,6 +15,8 @@ opt-level = 3
 
 bevy = { version = "0.7", features = ["dynamic"] }
 bevy-inspector-egui = "0.10"
+# bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" } # for bevy 0.8
 bevy_rapier2d = { version = "0.13", features = ["simd-stable", "debug-render"] }
+bevy_retrograde = { git = "https://github.com/katharostech/bevy_retrograde.git" }
 
 rand = "0.8.5"
