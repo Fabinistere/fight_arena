@@ -2,9 +2,11 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier2d::prelude::*;
-use bevy_retrograde::prelude::{TesselatedCollider, TesselatedColliderConfig};
+
 
 use crate::{
+    // collisions::{TesselatedCollider, TesselatedColliderConfig},
+    combat::stats::*,
     constants::FIXED_TIME_STEP,
     constants::npc::movement::NPC_SPEED,
     FabienSheet,
@@ -36,6 +38,7 @@ pub enum NPCSystems {
     // UpdateAggressionSource,
     // Talking,
     Idle,
+    // Combat,
 }
 
 /**
@@ -79,18 +82,6 @@ impl Plugin  for NPCPlugin {
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(NPCSystems::Following)
             )
-            // .add_system_to_stage(
-            //     CoreStage::Update,
-            //     movement::find_landmark
-            //         .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-            //         .label(NPCSystems::FindLandmark)
-            // )
-            // .add_system_to_stage(
-            //     CoreStage::Update,
-            //     idle::talking
-            //         .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-            //         .label(NPCSystems::Talking)
-            // )
             .add_system_to_stage(
                 CoreStage::Update,
                 idle::do_flexing
@@ -103,7 +94,7 @@ impl Plugin  for NPCPlugin {
 fn spawn_character(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    asset_server: Res<AssetServer>
+    // asset_server: Res<AssetServer>
 ) {
     let position = Vec3::new(-0.2, 0.35, 5.);
 
@@ -126,8 +117,8 @@ fn spawn_character(
     );
 
     // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    let admiral_hitbox = asset_server.load("textures/character/admiral.png");
-    let olf_hitbox = asset_server.load("textures/character/Olf.png");
+    // let admiral_hitbox = asset_server.load("textures/character/admiral.png");
+    // let olf_hitbox = asset_server.load("textures/character/Olf.png");
 
     commands
         .entity(admiral)
@@ -142,15 +133,23 @@ fn spawn_character(
                 angvel: 0.0,
             }
         })
-        .insert(TesselatedCollider {
-            texture: admiral_hitbox.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                // We want the collision shape for the player to be highly accurate
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
+        .insert_bundle(CombatBundle {
+            hp: HP::default(),
+            mana: MANA::default(),
+            initiative: Initiative::default(),
+            attack: Attack::default(),
+            attack_spe: AttackSpe::default(),
+            defense: Defense::default(),
+            defense_spe: DefenseSpe::default()
         })
+        // .insert(TesselatedCollider {
+        //     texture: admiral_hitbox.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_radius: 0.4,
+        //         vertice_separation: 0.0,
+        //         extrusion: 0.1,
+        //     },
+        // })
         .insert(FollowBehavior);
 
     commands
@@ -166,15 +165,23 @@ fn spawn_character(
                 angvel: 0.0,
             }
         })
-        .insert(TesselatedCollider {
-            texture: olf_hitbox.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                // We want the collision shape for the player to be highly accurate
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
+        .insert_bundle(CombatBundle {
+            hp: HP::default(),
+            mana: MANA::default(),
+            initiative: Initiative::default(),
+            attack: Attack::default(),
+            attack_spe: AttackSpe::default(),
+            defense: Defense::default(),
+            defense_spe: DefenseSpe::default()
         })
+        // .insert(TesselatedCollider {
+        //     texture: olf_hitbox.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_radius: 0.4,
+        //         vertice_separation: 0.0,
+        //         extrusion: 0.1,
+        //     },
+        // })
         .insert(FollowBehavior);
 }
 

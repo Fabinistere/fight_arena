@@ -1,4 +1,6 @@
-// Follow along with the tutorial serie by Logic Projects <3
+//! Fight Arena is a test repertory where I can develop the NPC and Combat system for our FTO game
+//! 
+//! Follow along with the tutorial serie by Logic Projects <3
 
 #![allow(clippy::redundant_field_names)]
 use bevy::{prelude::*, render::camera::ScalingMode};
@@ -13,7 +15,7 @@ mod movement;
 mod npc;
 pub mod player;
 
-
+use combat::CombatPlugin;
 use debug::DebugPlugin;
 use fabien::{FabienPlugin, FabienSheet, spawn_fabien_sprite};
 use locations::LocationsPlugin;
@@ -29,6 +31,7 @@ pub use crate::{
 pub enum GameState {
     Menu,
     Playing,
+    Combat,
 }
 
 fn main() {
@@ -55,6 +58,7 @@ fn main() {
         .add_plugin(LocationsPlugin)
         .add_plugin(NPCPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(CombatPlugin)
         .add_state(GameState::Playing)
         .add_startup_system(spawn_camera)
         .add_startup_system(setup)
@@ -77,13 +81,15 @@ fn spawn_camera(
     camera.orthographic_projection.scaling_mode = ScalingMode::None;
 
     commands.spawn_bundle(camera);
+
 }
 
 fn setup(
     asset_server: Res<AssetServer>, audio: Res<Audio>
 ) {
-    let music = asset_server.load("sounds/FTO_Dracula_theme.wav");
+    let music = asset_server.load("sounds/FTO_Dracula_theme.ogg");
     audio.play(music);
+    // audio.play_with_settings(music, PlaybackSettings::LOOP.with_volume(0.10));
 
     println!("audio playing...");
 }

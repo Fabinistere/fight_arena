@@ -1,12 +1,16 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable};
 use bevy_rapier2d::prelude::*;
-use bevy_retrograde::prelude::{TesselatedCollider, TesselatedColliderConfig};
+
 
 use crate::{
+    // collisions::{TesselatedCollider, TesselatedColliderConfig},
+    combat::stats::*,
+    constants::player::*,
     FabienSheet,
     movement::*,
-    spawn_fabien_sprite
+    spawn_fabien_sprite,
+
 };
 
 pub struct PlayerPlugin;
@@ -66,7 +70,7 @@ fn player_movement(
 fn spawn_player(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    asset_server: Res<AssetServer>
+    // asset_server: Res<AssetServer>
 )
 {
     let player = spawn_fabien_sprite(
@@ -79,7 +83,7 @@ fn spawn_player(
     );
 
     // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    let morgan_hitbox = asset_server.load("textures/character/Morgan.png");
+    // let morgan_hitbox = asset_server.load("textures/character/Morgan.png");
 
     commands
         .entity(player)
@@ -94,14 +98,38 @@ fn spawn_player(
                 angvel: 0.0,
             }
         })
-        .insert(TesselatedCollider {
-            texture: morgan_hitbox.clone(),
-            // tesselator_config: TesselatedColliderConfig {
-            //     // We want the collision shape for the player to be highly accurate
-            //     vertice_separation: 0.,
-            //     ..default()
-            // },
-            ..default()
+        .insert_bundle(CombatBundle {
+            hp: HP {
+                current_hp: PLAYER_HP,
+                max_hp: PLAYER_HP
+            },
+            mana: MANA {
+                current_mana: PLAYER_MANA,
+                max_mana: PLAYER_MANA
+            },
+            initiative: Initiative {
+                initiative: PLAYER_INITIATIVE
+            },
+            attack: Attack {
+                attack: PLAYER_ATTACK
+            },
+            attack_spe: AttackSpe {
+                attack_spe: PLAYER_ATTACK_SPE
+            },
+            defense: Defense {
+                defense: PLAYER_DEFENSE
+            },
+            defense_spe: DefenseSpe {
+                defense_spe: PLAYER_DEFENSE_SPE
+            }
         })
+        // .insert(TesselatedCollider {
+        //     texture: morgan_hitbox.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_radius: 0.4,
+        //         vertice_separation: 0.0,
+        //         extrusion: 0.1,
+        //     },
+        // })
         ;
 }

@@ -22,15 +22,18 @@ pub mod locations {
         pub const TEMPLE_SCALE: (f32, f32, f32) = (-TILE_SIZE*0.1, TILE_SIZE*0.1, 0.);
         pub const TEMPLE_Z: f32 = 2.0;
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
+        
+        pub const BANNERS_POSITION: (f32, f32, f32) = (0.23, 0.935, THRONE_Z_BACK);
 
         pub const THRONE_Z_BACK: f32 = 3.0;
         pub const THRONE_Z_FRONT: f32 = 7.0;
         pub const THRONE_POSITION: (f32, f32, f32) = (0.23, 0.74, THRONE_Z_BACK);
-        
-        pub const BANNERS_POSITION: (f32, f32, f32) = (0.23, 0.935, THRONE_Z_BACK);
 
         pub const PILLAR_Z_BACK: f32 = 3.0;
         pub const PILLAR_Z_FRONT: f32 = 7.0;
+
+        // make the pillar above and on coherence with the pillar hitbox
+        pub const PILLAR_ADJUST: f32 = 0.01;
 
         pub const PILLAR_POSITION_1: (f32, f32, f32) = (0.485, 0.28, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_2: (f32, f32, f32) = (0.485, -0.12, PILLAR_Z_BACK);
@@ -50,5 +53,17 @@ pub mod npc {
 
 pub mod player {
     pub const PLAYER_Z: f32 = 6.;
+    
+    pub const PLAYER_HP: i32 = 50;
+    pub const PLAYER_MANA: i32 = 100;
+    pub const PLAYER_INITIATIVE: i32 = 40;
+    pub const PLAYER_ATTACK: i32 = 10;
+    pub const PLAYER_ATTACK_SPE: i32 = 30;
+    pub const PLAYER_DEFENSE: i32 = 0;
+    pub const PLAYER_DEFENSE_SPE: i32 = 10;
+}
+
+pub mod combat {
+    
 }
 

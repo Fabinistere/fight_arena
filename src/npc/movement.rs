@@ -27,6 +27,8 @@ pub struct JustWalkBehavior {
 pub struct FollowBehavior;
 // pub const PROXIMITY_RADIUS: f32 = 64.0;
 
+// TODO use ColliderType::Sensor to delimiter zone
+
 /// For a certain destination contained in [RunToDestinationbehavior], make the npc run towards it
 pub fn just_walk(
     mut commands: Commands,
@@ -140,6 +142,7 @@ pub fn follow(
             rb_vel.linvel.y = vel_y;
 
         } else {
+            // TODO AVOID npc to merge
             rb_vel.linvel.x = 0.0;
             rb_vel.linvel.y = 0.0;
         }

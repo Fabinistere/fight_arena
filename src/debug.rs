@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
 
 use crate::player::Player;
-// cause crate::npc::NPC;
+use crate::npc::NPC;
 
 pub struct DebugPlugin;
 
@@ -12,7 +12,7 @@ impl Plugin for DebugPlugin {
             app
                 .add_plugin(WorldInspectorPlugin::new())
                 .register_inspectable::<Player>()
-                // .register_inspectable::<NPC>()
+                .register_inspectable::<NPC>()
                 ;
         }
     }
