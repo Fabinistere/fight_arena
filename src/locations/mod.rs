@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+// use bevy_rapier2d::prelude::*;
 
 mod temple;
 
@@ -17,17 +17,3 @@ impl Plugin for LocationsPlugin {
     }
 }
 
-pub fn spawn_collision_cuboid(
-    commands: &mut Commands,
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32
-) {
-    commands
-        .spawn()
-        .insert(Collider::cuboid(width, height))
-        .insert(Transform::from_xyz(x, y, 0.0))
-        .insert(Friction::coefficient(0.0))
-        .insert(Restitution::coefficient(0.0));
-}

@@ -1,16 +1,15 @@
 use bevy::{ecs::schedule::ShouldRun, prelude::*};
 use bevy_rapier2d::prelude::*;
-use bevy_retrograde::prelude::{TesselatedCollider, TesselatedColliderConfig};
 
 // use crate::{FabienSheet, TILE_SIZE};
 use crate::{
     constants::locations::temple::*,
     constants::player::PLAYER_Z,
     // constants::TILE_SIZE,
-    GameState,
+    // collisions::{TesselatedCollider, TesselatedColliderConfig},
     player::Player,
 };
-use super::{spawn_collision_cuboid, Location};
+use super::{Location};
 
 pub struct TemplePlugin;
 
@@ -27,14 +26,12 @@ impl Plugin for TemplePlugin {
                 SystemSet::new()
                     .with_run_criteria(run_if_in_temple)
                     .with_system(throne_position)
-
             )
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
                 SystemSet::new()
                     .with_run_criteria(run_if_in_temple)
                     .with_system(pillar_position)
-
             );
     }
 }
@@ -59,9 +56,8 @@ pub enum PlayerLocation {
 
 fn run_if_in_temple(
     location: Res<State<Location>>,
-    game_state: Res<State<GameState>>,
 ) -> ShouldRun {
-    if location.current() == &Location::Temple && game_state.current() == &GameState::Playing {
+    if location.current() == &Location::Temple {
         ShouldRun::Yes
     } else {
         ShouldRun::No
@@ -117,10 +113,10 @@ fn setup_temple(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: wall.clone(),
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: wall.clone(),
+        //     ..default()
+        // })
         .insert(Name::new("wall"));
 
     
@@ -148,14 +144,14 @@ fn setup_temple(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: huge_throne.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: huge_throne.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Throne)
         .insert(Name::new("throne"));
 
@@ -170,10 +166,10 @@ fn setup_temple(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: banners.clone(),
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: banners.clone(),
+        //     ..default()
+        // })
         .insert(Name::new("banners"));
 
 }
@@ -184,7 +180,7 @@ fn pillar_position(
 ) {
     if let Ok(player_transform) = player_query.get_single() {
         for mut pillar_transform in pillar_query.iter_mut() {
-            if player_transform.translation.y > pillar_transform.translation.y {
+            if player_transform.translation.y >= (pillar_transform.translation.y-PILLAR_ADJUST) {
                 pillar_transform.translation.z = PILLAR_Z_FRONT;
             } else {
                 pillar_transform.translation.z = PILLAR_Z_BACK;
@@ -214,14 +210,14 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: column.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: column.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Pillar)
         .insert(Name::new("column 1"));
 
@@ -236,14 +232,14 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: column.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: column.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Pillar)
         .insert(Name::new("column 2"));
         
@@ -258,14 +254,14 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: column.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: column.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Pillar)
         .insert(Name::new("column 3"));
 
@@ -281,14 +277,14 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: column.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: column.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Pillar)
         .insert(Name::new("column 4"));
 
@@ -304,14 +300,14 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: column.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: column.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Pillar)
         .insert(Name::new("column 5"));
 
@@ -327,52 +323,14 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        .insert(TesselatedCollider {
-            texture: column.clone(),
-            tesselator_config: TesselatedColliderConfig {
-                vertice_separation: 0.,
-                ..default()
-            },
-            ..default()
-        })
+        // .insert(TesselatedCollider {
+        //     texture: column.clone(),
+        //     tesselator_config: TesselatedColliderConfig {
+        //         vertice_separation: 0.,
+        //         ..default()
+        //     },
+        //     ..default()
+        // })
         .insert(Pillar)
         .insert(Name::new("column 6"));
-}
-
-
-fn spawn_hitboxes(mut commands: Commands) {
-    // Left wall
-    spawn_collision_cuboid(&mut commands, 0.01, 0.01, 10.0, 10.0);
-    // Right wall
-    spawn_collision_cuboid(&mut commands, 860.0, 80.0, 10.0, 1455.0);
-    // Left side of top wall
-    spawn_collision_cuboid(&mut commands, -895.0, 975.0, 415.0, 30.0);
-    // Right side of top wall
-    spawn_collision_cuboid(&mut commands, 225.0, 975.0, 625.0, 30.0);
-    // Left side of bottom wall
-    spawn_collision_cuboid(&mut commands, -815.0, -805.0, 495.0, 30.0);
-    // Right side of bottom wall
-    spawn_collision_cuboid(&mut commands, 355.0, -805.0, 495.0, 30.0);
-    // Throne seat
-    spawn_collision_cuboid(&mut commands, -230.0, 860.0, 70.0, 40.0);
-    // Throne front of seat
-    spawn_collision_cuboid(&mut commands, -230.0, 810.0, 50.0, 10.0);
-    // Throne front of front of seat
-    spawn_collision_cuboid(&mut commands, -230.0, 790.0, 30.0, 10.0);
-    // Throne bump left 1
-    spawn_collision_cuboid(&mut commands, -560.0, 875.0, 1.0, 60.0);
-    // Throne bump right 1
-    spawn_collision_cuboid(&mut commands, 100.0, 875.0, 1.0, 60.0);
-    // Throne bump left 2
-    spawn_collision_cuboid(&mut commands, -540.0, 785.0, 1.0, 30.0);
-    // Throne bump right 2
-    spawn_collision_cuboid(&mut commands, 80.0, 785.0, 1.0, 30.0);
-    // Throne bump left 3
-    spawn_collision_cuboid(&mut commands, -520.0, 710.0, 1.0, 45.0);
-    // Throne bump right 3
-    spawn_collision_cuboid(&mut commands, 60.0, 710.0, 1.0, 45.0);
-    // Throne bump left 4
-    spawn_collision_cuboid(&mut commands, -460.0, 635.0, 1.0, 30.0);
-    // Throne bump right 4
-    spawn_collision_cuboid(&mut commands, 0.0, 635.0, 1.0, 30.0);
 }
