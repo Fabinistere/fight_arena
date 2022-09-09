@@ -98,15 +98,11 @@ pub fn show_mana(
 /// Can be modified by level, item, buff, debuff, technics.
 /// This statistic is fix, it increment the martial technic's power.
 #[derive(Component)]
-pub struct Attack {
-    pub attack: i32
-}
+pub struct Attack (pub i32);
 
 impl Default for Attack {
     fn default() -> Self {
-        Attack {
-            attack: 10
-        }
+        Attack(10)
     }
 }
 
@@ -115,15 +111,11 @@ impl Default for Attack {
 /// Can be modified by level, item, buff, debuff, technics.
 /// This statistic is fix, it increment the magic technic's power.
 #[derive(Component)]
-pub struct AttackSpe {
-    pub attack_spe: i32
-}
+pub struct AttackSpe (pub i32);
 
 impl Default for AttackSpe {
     fn default() -> Self {
-        AttackSpe {
-            attack_spe: 0
-        }
+        AttackSpe (0)
     }
 }
 
@@ -135,15 +127,11 @@ impl Default for AttackSpe {
 /// taken from basic attacks and abilities that deal physical damage.
 /// Calculated by armor ÷ (armor + 100).
 #[derive(Component)]
-pub struct Defense {
-    pub defense: i32
-}
+pub struct Defense (pub i32);
 
 impl Default for Defense {
     fn default() -> Self {
-        Defense {
-            defense: 10
-        }
+        Defense (10)
     }
 }
 
@@ -155,15 +143,11 @@ impl Default for Defense {
 /// taken from basic attacks and abilities that deal magical damage.
 /// Calculated by MR ÷ (MR + 100).
 #[derive(Component)]
-pub struct DefenseSpe {
-    pub defense_spe: i32
-}
+pub struct DefenseSpe (pub i32);
 
 impl Default for DefenseSpe {
     fn default() -> Self {
-        DefenseSpe {
-            defense_spe: 0
-        }
+        DefenseSpe (0)
     }
 }
 
@@ -172,15 +156,11 @@ impl Default for DefenseSpe {
 /// Indicate the speed of initiative, the entity has.
 /// The more he has, the more likly he will start his turn first.
 #[derive(Component)]
-pub struct Initiative {
-    pub initiative: i32
-}
+pub struct Initiative (pub i32);
 
 impl Default for Initiative {
     fn default() -> Self {
-        Initiative {
-            initiative: 20
-        }
+        Initiative (20)
     }
 }
 
@@ -197,17 +177,17 @@ pub fn roll_initiative(
     for npc_init in npc_query.iter() {
         let npc_number;
 
-        if npc_init.initiative -20 <= 0 {
+        if npc_init.0 -20 <= 0 {
             npc_number =
-            rand::thread_rng().gen_range(0..npc_init.initiative +20);
-        } else if npc_init.initiative == 100{
+            rand::thread_rng().gen_range(0..npc_init.0 +20);
+        } else if npc_init.0 == 100{
             npc_number = 100;
-        } else if npc_init.initiative +20 >= 100 {
+        } else if npc_init.0 +20 >= 100 {
             npc_number =
-            rand::thread_rng().gen_range(npc_init.initiative -20..100);
+            rand::thread_rng().gen_range(npc_init.0 -20..100);
         } else {
             npc_number =
-            rand::thread_rng().gen_range(npc_init.initiative -20..npc_init.initiative +20);
+            rand::thread_rng().gen_range(npc_init.0 -20..npc_init.0 +20);
         }
 
         // insert these number in a vector
@@ -217,17 +197,17 @@ pub fn roll_initiative(
 
     let player_number;
 
-    if player_init.initiative -20 <= 0 {
+    if player_init.0 -20 <= 0 {
         player_number =
-        rand::thread_rng().gen_range(0..player_init.initiative +20);
-    } else if player_init.initiative == 100{
+        rand::thread_rng().gen_range(0..player_init.0 +20);
+    } else if player_init.0 == 100{
         player_number = 100;
-    } else if player_init.initiative +20 >= 100 {
+    } else if player_init.0 +20 >= 100 {
         player_number =
-        rand::thread_rng().gen_range(player_init.initiative -20..100);
+        rand::thread_rng().gen_range(player_init.0 -20..100);
     } else {
         player_number =
-        rand::thread_rng().gen_range(player_init.initiative -20..player_init.initiative +20);
+        rand::thread_rng().gen_range(player_init.0 -20..player_init.0 +20);
     }
 
     v.push(player_number);
@@ -241,15 +221,11 @@ pub fn roll_initiative(
 /// ----------ACCURACY----------
 /// Used to calculate if the technic will hit (in percentage).
 #[derive(Component)]
-pub struct Accuracy {
-    pub accuracy: i32
-}
+pub struct Accuracy (pub i32);
 
 impl Default for Accuracy {
     fn default() -> Self {
-        Accuracy {
-            accuracy: 95
-        }
+        Accuracy (95)
     }
 }
 
@@ -258,14 +234,10 @@ impl Default for Accuracy {
 /// A Critical technic has its dmg inflicted multiplied by 300%
 /// ONLY allow critics on hit
 #[derive(Component)]
-pub struct Critical {
-    pub critical: i32
-}
+pub struct Critical (pub i32);
 
 impl Default for Critical {
     fn default() -> Self {
-        Critical {
-            critical: 1
-        }
+        Critical (1)
     }
 }
