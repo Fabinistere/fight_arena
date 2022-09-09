@@ -25,8 +25,7 @@ To avoid using the git storage for such maters.
 Indeed store image in git means if only one pixel changed the git will save the previous and the next image completly.
 Which happens to be a pure waste of energy in my case.
 
-SO, to have the assets please download this folder:
+SO, to have the assets of the last commit, please download this folder:
 [assets](https://drive.google.com/drive/folders/1jcYH7U0qzLvyE25JEkXixoA6EWw6KNN5?usp=sharing)
 
-You can find all the previous assets (if I decide to keep them) in this folder, sort by version and commits:
-[fight_arena assets](https://drive.google.com/drive/folders/1yMiTuwBXS3seAFQQSWTyM7emhLPJ_dJI?usp=sharing)
+To find previous assets, they will be given in the given realase
