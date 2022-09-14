@@ -20,5 +20,15 @@ pub struct Skills {
     pub attack: Attack,
     pub attack_spe: AttackSpe,
     pub defense: Defense,
-    pub defense_spe: DefenseSpe
+    pub defense_spe: DefenseSpe,
+    pub skills_queue: Vec![Skills],
+    pub description: String
+}
+
+fn skill_caller(
+    query: Query<(&NPC)>, // ??
+    skill: Skills,
+    target: &Target
+){
+
 }
