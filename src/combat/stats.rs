@@ -165,6 +165,8 @@ impl Default for Initiative {
 }
 
 /// Roll for each entity a d100 ranged into +-20 initiative
+/// ALso Display the final score
+/// 
 /// Sort the result in a nice table
 /// In case of egality: pick the higher initiative boyo to be on top
 pub fn roll_initiative(
