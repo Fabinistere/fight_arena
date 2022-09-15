@@ -4,9 +4,13 @@ use bevy_rapier2d::prelude::*;
 
 
 use crate::{
-    // collisions::{TesselatedCollider, TesselatedColliderConfig},
-    combat::stats::*,
-    constants::player::*,
+    collisions::{TesselatedCollider, TesselatedColliderConfig},
+    combat::{
+        Leader,
+        stats::*,
+        Team,
+    },
+    constants::{player::*, combat::team::TEAM_MC},
     FabienSheet,
     movement::*,
     spawn_fabien_sprite,
@@ -70,34 +74,38 @@ fn player_movement(
 fn spawn_player(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    // asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>
 )
 {
     let player = spawn_fabien_sprite(
         &mut commands,
         &fabien,
         4,
-        Color::rgb(0.9,0.9,0.9),
         Vec3::new(0.0, 0.0, 6.),
-        Vec3::new(2.0, 2.0, 0.0)
+        Vec3::splat(PLAYER_SCALE)
     );
 
     // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    // let morgan_hitbox = asset_server.load("textures/character/Morgan.png");
+    let morgan_hitbox: Handle<Image> = asset_server.load("textures/character/Morgan.png");
 
     commands
         .entity(player)
         .insert(Name::new("Player"))
         .insert(Player)
+        .insert(Leader)
+        .insert(Team(TEAM_MC))
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
             speed: Speed::default(),
             velocity: Velocity {
-                linvel: Vec2::default(),
+                linvel: Vect::ZERO,
                 angvel: 0.0,
             }
         })
+        // .insert(GravityScale(0.01))
+        // .insert(Sleeping::disabled())
+        // .insert(Ccd::enabled())
         .insert_bundle(CombatBundle {
             hp: HP {
                 current_hp: PLAYER_HP,
@@ -107,29 +115,21 @@ fn spawn_player(
                 current_mana: PLAYER_MANA,
                 max_mana: PLAYER_MANA
             },
-            initiative: Initiative {
-                initiative: PLAYER_INITIATIVE
-            },
-            attack: Attack {
-                attack: PLAYER_ATTACK
-            },
-            attack_spe: AttackSpe {
-                attack_spe: PLAYER_ATTACK_SPE
-            },
-            defense: Defense {
-                defense: PLAYER_DEFENSE
-            },
-            defense_spe: DefenseSpe {
-                defense_spe: PLAYER_DEFENSE_SPE
-            }
+            initiative: Initiative (PLAYER_INITIATIVE),
+            attack: Attack (PLAYER_ATTACK),
+            attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
+            defense: Defense (PLAYER_DEFENSE),
+            defense_spe: DefenseSpe (PLAYER_DEFENSE_SPE)
         })
-        // .insert(TesselatedCollider {
-        //     texture: morgan_hitbox.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_radius: 0.4,
-        //         vertice_separation: 0.0,
-        //         extrusion: 0.1,
-        //     },
+        // .with_children(|parent| {
+        //     parent
+        //         .spawn()
+        //         .insert(TesselatedCollider {
+        //             texture: morgan_hitbox.clone(),
+        //             tesselator_config: TesselatedColliderConfig::default()
+        //         })
+        //         .insert(Transform::from_xyz(0.0, 0.0, 0.0));
         // })
+        
         ;
 }

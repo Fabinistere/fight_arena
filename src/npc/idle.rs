@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use log::{info, warn};
+
 use crate::npc::movement::{
     JustWalkBehavior,
     FollowBehavior,
@@ -13,6 +15,11 @@ pub struct RestTime {
     /// track when the npc should stop rest (non-repeating timer)
     pub timer: Timer,
 }
+
+// TODO Create a starting idleBehavior
+// to avoid: 
+// - to give a direction in the spawn NPC
+// - To give a RestTime in spwan
 
 pub fn do_flexing(
     mut commands: Commands,
@@ -30,10 +37,7 @@ pub fn do_flexing(
 
         if rest_timer.timer.finished() {
 
-            println!(
-                "{} got a way to go",
-                name
-            );
+            info!(target: "Got a way to go", "{:?}, {}", npc, name);
 
             commands.entity(npc)
                     .insert(

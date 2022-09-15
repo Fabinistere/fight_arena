@@ -2,6 +2,7 @@
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
+use log::{info, warn};
 use std::time::Duration;
 use rand::Rng;
 
@@ -14,8 +15,11 @@ use crate::{
         RestTime
     },
     TILE_SIZE,
-    player::Player
+    combat::{Leader, Team},
+    // player::Player
 };
+
+use super::NPC;
 
 /// Indicates that an entity should run towards a destination and which.
 #[derive(Default, Component)]
@@ -32,7 +36,7 @@ pub struct FollowBehavior;
 /// For a certain destination contained in [RunToDestinationbehavior], make the npc run towards it
 pub fn just_walk(
     mut commands: Commands,
-    mut query: Query<(
+    mut npc_query: Query<(
         Entity,
         &JustWalkBehavior,
         &Transform,
@@ -41,7 +45,7 @@ pub fn just_walk(
         &Name
     ), (With<JustWalkBehavior>, Without<IdleBehavior>)>
 ) {
-    for (npc, behavior, transform, speed, mut rb_vel, name) in query.iter_mut() {
+    for (npc, behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
         let direction: Vec3 = behavior.destination;
 
         // TODO Approximation Louche
@@ -77,10 +81,8 @@ pub fn just_walk(
             rb_vel.linvel.y = vel_y;
 
         } else {
-            println!(
-                "I'm {} and I'm gonna rest for a while",
-                name
-            );
+            
+            info!(target: "Start Rest", "{:?}, {}", npc, name);
 
             // Stop the npc after reaching the destination
             rb_vel.linvel.x = 0.0;
@@ -104,54 +106,69 @@ pub fn just_walk(
 /// Entity pursues their target.
 pub fn follow(
     // mut commands: Commands,
-    mut query: Query<(
+    mut npc_query: Query<(
         Entity, 
         &Transform,
         &Speed,
-        &mut Velocity
-    ), With<FollowBehavior>>,
-    player_query: Query<&Transform, With<Player>>,
+        &mut Velocity,
+        &Team
+    ), (With<NPC>, With<FollowBehavior>) // only npc can follow 
+    >,
+    targets_query: Query<(&Transform, &Team, &Name), With<Leader>>,
+    // pos_query: Query<&GlobalTransform>,
 ) {
-    for (_npc, transform, speed, mut rb_vel) in query.iter_mut() {
+    for (_npc, transform, speed, mut rb_vel, team) in npc_query.iter_mut() {
 
-        let player_transform = player_query.single();
+        for (target_transform, target_team, name) in targets_query.iter() {
 
-        // TODO Approximation Louche
-        if !close(transform.translation, player_transform.translation, TILE_SIZE*2.0)
-        {
+            
+            // println!("target: {}, Leader of team {}", name, target_team.0);
 
-            let up = player_transform.translation.y > transform.translation.y;
-            let down = player_transform.translation.y < transform.translation.y;
-            let left = player_transform.translation.x < transform.translation.x;
-            let right = player_transform.translation.x > transform.translation.x;
-
-            let x_axis = -(left as i8) + right as i8;
-            let y_axis = -(down as i8) + up as i8;
-
-            // println!("x: {}, y: {}", x_axis, y_axis);
+            // TODO Rework this Approximation Louche
+            // carefull with more than one leader per team
+            // it will be not nice
+            if !close(transform.translation, target_transform.translation, TILE_SIZE*2.0)
+                &&
+               (team.0 == target_team.0)
+            {
+                // println!("moving towards target: {}", name);
     
-            let mut vel_x = x_axis as f32 * **speed;
-            let mut vel_y = y_axis as f32 * **speed;
+                let up = target_transform.translation.y > transform.translation.y;
+                let down = target_transform.translation.y < transform.translation.y;
+                let left = target_transform.translation.x < transform.translation.x;
+                let right = target_transform.translation.x > transform.translation.x;
     
-            if x_axis != 0 && y_axis != 0 {
-                vel_x *= (std::f32::consts::PI / 4.0).cos();
-                vel_y *= (std::f32::consts::PI / 4.0).cos();
+                let x_axis = -(left as i8) + right as i8;
+                let y_axis = -(down as i8) + up as i8;
+    
+                // println!("x: {}, y: {}", x_axis, y_axis);
+        
+                let mut vel_x = x_axis as f32 * **speed;
+                let mut vel_y = y_axis as f32 * **speed;
+        
+                if x_axis != 0 && y_axis != 0 {
+                    vel_x *= (std::f32::consts::PI / 4.0).cos();
+                    vel_y *= (std::f32::consts::PI / 4.0).cos();
+                }
+        
+                rb_vel.linvel.x = vel_x;
+                rb_vel.linvel.y = vel_y;
+    
+            } else {
+                // TODO AVOID npc to merge
+                rb_vel.linvel.x = 0.0;
+                rb_vel.linvel.y = 0.0;
             }
-    
-            rb_vel.linvel.x = vel_x;
-            rb_vel.linvel.y = vel_y;
-
-        } else {
-            // TODO AVOID npc to merge
-            rb_vel.linvel.x = 0.0;
-            rb_vel.linvel.y = 0.0;
         }
+        }
+        
 
-        // target does not have position. Go to idle state
-        // commands.entity(npc).remove::<FollowBehavior>();
-        // commands.entity(npc).remove::<RunToDestinationBehavior>();
-        // commands.entity(npc).insert(IdleBehavior);
-    }
+        
+    // target does not have position. Go to idle state
+    // commands.entity(npc).remove::<FollowBehavior>();
+    // commands.entity(npc).remove::<RunToDestinationBehavior>();
+    // commands.entity(npc).insert(IdleBehavior);
+
     // println!("pursue: {:?} entities, {:?} err, {:?} ok.", query.iter_mut().len(), err_count, ok_count);
 }
 

@@ -1,23 +1,33 @@
-use bevy::core::FixedTimestep;
+use bevy::time::FixedTimestep;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier2d::prelude::*;
 
 
 use crate::{
-    // collisions::{TesselatedCollider, TesselatedColliderConfig},
-    combat::stats::*,
+    collisions::{TesselatedCollider, TesselatedColliderConfig},
+    combat::{
+        Leader,
+        Team,
+        stats::*,
+    },
     constants::FIXED_TIME_STEP,
-    constants::npc::movement::NPC_SPEED,
+    constants::{
+        npc::{
+            movement::NPC_SPEED,
+            NPC_SCALE
+        },
+        combat::team::*
+    },
     FabienSheet,
     movement::*,
     npc::{
         // idle::IdleBehavior,
         movement::FollowBehavior,
-        // movement::JustWalkBehavior,
-        // movement::give_a_direction
+        movement::JustWalkBehavior,
+        movement::give_a_direction
     },
-    spawn_fabien_sprite
+    spawn_fabien_sprite,
 };
 
 pub mod movement;
@@ -69,7 +79,6 @@ impl Plugin  for NPCPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_character)
-            // .add_startup_system(show_ieud_grid)
             .add_system_to_stage(
                 CoreStage::Update,
                 movement::just_walk
@@ -91,10 +100,13 @@ impl Plugin  for NPCPlugin {
     }
 }
 
+// Check in location/temple/mod.rs
+// the npc_z_position
+
 fn spawn_character(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    // asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>,
 ) {
     let position = Vec3::new(-0.2, 0.35, 5.);
 
@@ -102,37 +114,40 @@ fn spawn_character(
         &mut commands,
         &fabien,
         0,
-        Color::rgb(0.9,0.9,0.9),
         position,
-        Vec3::new(2.0,2.0,0.0)
+        Vec3::splat(NPC_SCALE)
     );
 
     let olf = spawn_fabien_sprite(
         &mut commands,
         &fabien,
         12,
-        Color::rgb(0.9,0.9,0.9),
         Vec3::new(-0.2, 0.55, 5.),
-        Vec3::new(2.0,2.0,0.0)
+        Vec3::splat(NPC_SCALE)
     );
 
     // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    // let admiral_hitbox = asset_server.load("textures/character/admiral.png");
-    // let olf_hitbox = asset_server.load("textures/character/Olf.png");
+    let admiral_hitbox: Handle<Image> = asset_server.load("textures/character/admiral.png");
+    let olf_hitbox: Handle<Image> = asset_server.load("textures/character/Olf.png");
 
     commands
         .entity(admiral)
         .insert(Name::new("NPC Admiral"))
         .insert(NPC)
+        .insert(Team(TEAM_OLF))
+        .insert(FollowBehavior)
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
-            speed: Speed(NPC_SPEED),
+            speed: Speed::default(),
             velocity: Velocity {
-                linvel: Vec2::default(),
+                linvel: Vect::ZERO,
                 angvel: 0.0,
             }
         })
+        // .insert(GravityScale(0.01))
+        // .insert(Sleeping::disabled())
+        // .insert(Ccd::enabled())
         .insert_bundle(CombatBundle {
             hp: HP::default(),
             mana: MANA::default(),
@@ -144,27 +159,31 @@ fn spawn_character(
         })
         // .insert(TesselatedCollider {
         //     texture: admiral_hitbox.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_radius: 0.4,
-        //         vertice_separation: 0.0,
-        //         extrusion: 0.1,
-        //     },
+        //     tesselator_config: TesselatedColliderConfig::default(),
         // })
-        .insert(FollowBehavior);
+        ;
 
     commands
         .entity(olf)
         .insert(Name::new("NPC Olf"))
         .insert(NPC)
+        .insert(Leader)
+        .insert(Team(TEAM_OLF))
+        .insert(JustWalkBehavior {
+            destination: give_a_direction()
+        })
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
             speed: Speed(NPC_SPEED),
             velocity: Velocity {
-                linvel: Vec2::default(),
+                linvel: Vect::ZERO,
                 angvel: 0.0,
             }
         })
+        // .insert(GravityScale(0.01))
+        // .insert(Sleeping::disabled())
+        // .insert(Ccd::enabled())
         .insert_bundle(CombatBundle {
             hp: HP::default(),
             mana: MANA::default(),
@@ -176,49 +195,7 @@ fn spawn_character(
         })
         // .insert(TesselatedCollider {
         //     texture: olf_hitbox.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_radius: 0.4,
-        //         vertice_separation: 0.0,
-        //         extrusion: 0.1,
-        //     },
+        //     tesselator_config: TesselatedColliderConfig::default()
         // })
-        .insert(FollowBehavior);
-}
-
-fn _show_ieud_grid(
-    mut commands: Commands,
-    fabien: Res<FabienSheet>
-) {
-    // TODO proper GRID
-
-    let mut marks = Vec::new();
-
-    for i in -10..10 {
-        for j in -10..10 {
-            let mark = spawn_fabien_sprite(
-                &mut commands,
-                &fabien,
-                16,
-                Color::rgb(0.9,0.9,0.9),
-                Vec3::new(i as f32*0.1, j as f32*0.1, 4.0),
-                Vec3::new(1.0,1.0,0.0)
-            );
-            let _name = 
-                "Mark {a}.{b}".replace("{a}", &(i+10).to_string())
-                              .replace("{b}", &(j+10).to_string());
-            
-            marks.push(mark);
-
-            // commands
-            //     .entity(mark)
-            //     .insert(Name::new(name));
-        }
-    }
-
-    commands
-        .spawn()
-        .insert(Name::new("Marks"))
-        .insert(Transform::default())
-        .insert(GlobalTransform::default())
-        .push_children(&marks);
+        ;
 }

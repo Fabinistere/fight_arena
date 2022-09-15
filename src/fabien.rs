@@ -22,13 +22,11 @@ pub fn spawn_fabien_sprite(
     commands: &mut Commands,
     fabien: &FabienSheet,
     index: usize,
-    color: Color,
     translation: Vec3,
     scale: Vec3
 ) -> Entity 
 {
     let mut sprite = TextureAtlasSprite::new(index);
-    sprite.color = color;
     sprite.custom_size = Some(Vec2::splat(TILE_SIZE));
 
     commands

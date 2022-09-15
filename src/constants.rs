@@ -19,7 +19,7 @@ pub mod locations {
         pub const BACKGROUND_Z: f32 = 0.;
 
         // Vec3::splat(TILE_SIZE*0.1)
-        pub const TEMPLE_SCALE: (f32, f32, f32) = (-TILE_SIZE*0.1, TILE_SIZE*0.1, 0.);
+        pub const TEMPLE_SCALE: (f32, f32, f32) = (-TILE_SIZE*0.1, TILE_SIZE*0.1, TILE_SIZE*0.1);
         pub const TEMPLE_Z: f32 = 2.0;
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
         
@@ -45,6 +45,12 @@ pub mod locations {
 }
 
 pub mod npc {
+
+    pub const NPC_SCALE: f32 = 2.;
+
+    pub const NPC_Z_BACK: f32 = 2.;
+    pub const NPC_Z_FRONT: f32 = 8.;
+
     pub mod movement {
         pub const REST_TIMER: u64 = 3;
         pub const NPC_SPEED: f32 = 0.5;
@@ -52,6 +58,7 @@ pub mod npc {
 }
 
 pub mod player {
+    pub const PLAYER_SCALE: f32 = 2.;
     pub const PLAYER_Z: f32 = 6.;
     
     pub const PLAYER_HP: i32 = 50;
@@ -64,6 +71,10 @@ pub mod player {
 }
 
 pub mod combat {
-    
+    pub mod team {
+        pub const TEAM_MC: i32 = 0;
+        pub const TEAM_OLF: i32 = 1;
+        pub const TEAM_FABICURION: i32 = 2;
+    }
 }
 
