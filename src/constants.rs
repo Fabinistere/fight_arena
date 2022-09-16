@@ -53,7 +53,8 @@ pub mod npc {
 
     pub mod movement {
         pub const REST_TIMER: u64 = 3;
-        pub const NPC_SPEED: f32 = 0.5;
+        pub const NPC_SPEED_LEADER: f32 = 0.7;
+        pub const NPC_SPEED: f32 = 0.5; // -> Speed::default()
     }
 }
 
