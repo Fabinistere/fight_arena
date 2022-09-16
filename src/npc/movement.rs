@@ -114,29 +114,33 @@ pub fn follow(
         &Team
     ), (With<NPC>, With<FollowBehavior>) // only npc can follow 
     >,
-    targets_query: Query<(&Transform, &Team, &Name), With<Leader>>,
+    targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
     // pos_query: Query<&GlobalTransform>,
 ) {
     for (_npc, transform, speed, mut rb_vel, team) in npc_query.iter_mut() {
 
         for (target_transform, target_team, name) in targets_query.iter() {
 
+            // incorporer le test team.0 == target_team.0 dans le for
+            // pour eval qu'une fois
             
             // println!("target: {}, Leader of team {}", name, target_team.0);
 
             // TODO Rework this Approximation Louche
             // carefull with more than one leader per team
             // it will be not nice
-            if !close(transform.translation, target_transform.translation, TILE_SIZE*2.0)
-                &&
-               (team.0 == target_team.0)
+
+            // println!("no");
+
+            if (team.0 == target_team.0)
+               && !close(transform.translation, target_transform.translation(), TILE_SIZE*2.0)
             {
-                // println!("moving towards target: {}", name);
-    
-                let up = target_transform.translation.y > transform.translation.y;
-                let down = target_transform.translation.y < transform.translation.y;
-                let left = target_transform.translation.x < transform.translation.x;
-                let right = target_transform.translation.x > transform.translation.x;
+                println!("moving towards target: {}", name);
+
+                let up = target_transform.translation().y > transform.translation.y;
+                let down = target_transform.translation().y < transform.translation.y;
+                let left = target_transform.translation().x < transform.translation.x;
+                let right = target_transform.translation().x > transform.translation.x;
     
                 let x_axis = -(left as i8) + right as i8;
                 let y_axis = -(down as i8) + up as i8;
@@ -154,7 +158,7 @@ pub fn follow(
                 rb_vel.linvel.x = vel_x;
                 rb_vel.linvel.y = vel_y;
     
-            } else {
+            } else if team.0 == target_team.0 {
                 // TODO AVOID npc to merge
                 rb_vel.linvel.x = 0.0;
                 rb_vel.linvel.y = 0.0;

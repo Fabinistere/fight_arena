@@ -14,8 +14,9 @@ use crate::{
     constants::FIXED_TIME_STEP,
     constants::{
         npc::{
-            movement::NPC_SPEED,
-            NPC_SCALE
+            movement::NPC_SPEED_LEADER,
+            NPC_SCALE,
+            NPC_Z_BACK
         },
         combat::team::*
     },
@@ -108,7 +109,7 @@ fn spawn_character(
     fabien: Res<FabienSheet>,
     asset_server: Res<AssetServer>,
 ) {
-    let position = Vec3::new(-0.2, 0.35, 5.);
+    let position = Vec3::new(-0.2, 0.35, NPC_Z_BACK);
 
     let admiral = spawn_fabien_sprite(
         &mut commands,
@@ -122,7 +123,15 @@ fn spawn_character(
         &mut commands,
         &fabien,
         12,
-        Vec3::new(-0.2, 0.55, 5.),
+        Vec3::new(-0.2, 0.55, NPC_Z_BACK),
+        Vec3::splat(NPC_SCALE)
+    );
+
+    let hugo = spawn_fabien_sprite(
+        &mut commands,
+        &fabien,
+        16,
+        Vec3::new(-0.7, -0.55, NPC_Z_BACK),
         Vec3::splat(NPC_SCALE)
     );
 
@@ -169,13 +178,14 @@ fn spawn_character(
         .insert(NPC)
         .insert(Leader)
         .insert(Team(TEAM_OLF))
+        // .insert(IdleBehavior)
         .insert(JustWalkBehavior {
             destination: give_a_direction()
         })
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
-            speed: Speed(NPC_SPEED),
+            speed: Speed(NPC_SPEED_LEADER),
             velocity: Velocity {
                 linvel: Vect::ZERO,
                 angvel: 0.0,
@@ -198,4 +208,30 @@ fn spawn_character(
         //     tesselator_config: TesselatedColliderConfig::default()
         // })
         ;
+
+        commands
+            .entity(hugo)
+            .insert(Name::new("NPC Hugo"))
+            .insert(NPC)
+            .insert(Team(TEAM_OLF))
+            .insert(FollowBehavior)
+            .insert(RigidBody::Dynamic)
+            .insert(LockedAxes::ROTATION_LOCKED)
+            .insert_bundle(MovementBundle {
+                speed: Speed::default(),
+                velocity: Velocity {
+                    linvel: Vect::ZERO,
+                    angvel: 0.0,
+                }
+            })
+            .insert_bundle(CombatBundle {
+                hp: HP::default(),
+                mana: MANA::default(),
+                initiative: Initiative::default(),
+                attack: Attack::default(),
+                attack_spe: AttackSpe::default(),
+                defense: Defense::default(),
+                defense_spe: DefenseSpe::default()
+            })
+            ;
 }
