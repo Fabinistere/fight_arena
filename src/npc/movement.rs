@@ -135,7 +135,8 @@ pub fn follow(
             if (team.0 == target_team.0)
                && !close(transform.translation, target_transform.translation(), TILE_SIZE*2.0)
             {
-                println!("moving towards target: {}", name);
+                
+                // println!("moving towards target: {}", name);
 
                 let up = target_transform.translation().y > transform.translation.y;
                 let down = target_transform.translation().y < transform.translation.y;
