@@ -10,9 +10,17 @@ use crate::{
         stats::*,
         Team,
     },
-    constants::{character::player::*, combat::team::TEAM_MC},
+    constants::{
+        character::{
+            player::*,
+            CHAR_HITBOX_HEIGHT,
+            CHAR_HITBOX_WIDTH,
+            CHAR_HITBOX_Y_OFFSET,
+        },
+        combat::team::TEAM_MC
+    },
     FabienSheet,
-    movement::*
+    movement::*,
 };
 
 pub struct PlayerPlugin;
@@ -74,14 +82,9 @@ fn player_movement(
 fn spawn_player(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    // asset_server: Res<AssetServer>
 )
 {
     let player = TextureAtlasSprite::new(4);
-    // player.custom_size = Some(Vec2::splat(TILE_SIZE));
-
-    // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    // let morgan_hitbox: Handle<Image> = asset_server.load("textures/character/Morgan.png");
 
     commands
         .spawn_bundle(SpriteSheetBundle {
@@ -107,9 +110,6 @@ fn spawn_player(
                 angvel: 0.0,
             }
         })
-        // .insert(GravityScale(0.01))
-        // .insert(Sleeping::disabled())
-        // .insert(Ccd::enabled())
         .insert_bundle(CombatBundle {
             hp: HP {
                 current_hp: PLAYER_HP,
@@ -128,8 +128,8 @@ fn spawn_player(
         .with_children(|parent| {
             parent
                 .spawn()
-                .insert(Collider::cuboid(PLAYER_HITBOX_WIDTH, PLAYER_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, PLAYER_HITBOX_Y_OFFSET, 0.0));
+                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
 
             // parent
             //     .spawn()
@@ -141,16 +141,6 @@ fn spawn_player(
             //     .insert(ActiveEvents::COLLISION_EVENTS)
             //     .insert(ActiveCollisionTypes::STATIC_STATIC)
             //     .insert(PlayerSensor);
-        })
-        // .with_children(|parent| {
-        //     parent
-        //         .spawn()
-        //         .insert(TesselatedCollider {
-        //             texture: morgan_hitbox.clone(),
-        //             tesselator_config: TesselatedColliderConfig::default()
-        //         })
-        //         .insert(Transform::from_xyz(0.0, 0.0, 0.0));
-        // })
-        
+        })     
         ;
 }

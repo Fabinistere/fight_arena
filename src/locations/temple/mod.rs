@@ -1,15 +1,16 @@
 use bevy::{ecs::schedule::ShouldRun, prelude::*};
 use bevy_rapier2d::prelude::*;
 
-// use crate::{FabienSheet, TILE_SIZE};
 use crate::{
-    constants::locations::temple::*,
-    constants::player::PLAYER_Z,
-    // constants::TILE_SIZE,
-    // collisions::{TesselatedCollider, TesselatedColliderConfig},
-    player::Player,
+    collisions::{TesselatedCollider, TesselatedColliderConfig},
+    constants::{
+        locations::temple::*,
+        character::npc::{NPC_Z_BACK, NPC_Z_FRONT}
+    },
+    npc::NPC,
+    player::Player
 };
-use super::{Location};
+use super::Location;
 
 pub struct TemplePlugin;
 
@@ -32,6 +33,12 @@ impl Plugin for TemplePlugin {
                 SystemSet::new()
                     .with_run_criteria(run_if_in_temple)
                     .with_system(pillar_position)
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::new()
+                    .with_run_criteria(run_if_in_temple)
+                    .with_system(npc_z_position)
             );
     }
 }
@@ -61,6 +68,33 @@ fn run_if_in_temple(
         ShouldRun::Yes
     } else {
         ShouldRun::No
+    }
+}
+
+/// doesn't work
+fn npc_z_position(
+    mut npc_query: Query<&mut Transform, With<NPC>>,
+    pillar_query: Query<&GlobalTransform, With<Pillar>>,
+) {
+    // TODO prevent no transform in npc
+    for mut npc_transform in npc_query.iter_mut() {
+        for pillar_transform in pillar_query.iter() {
+            // put the npc in front cause above the last pillar
+            // the pb was: always below one pillar (the closest to the stage)
+            // It only works when the npc was below the last pillar
+            // this methods doesn't work cause we can be ABOVE and BELOW two diff pillars
+            // between two line (in a single column)
+            if npc_transform.translation.y <= pillar_transform.translation().y + 0.07
+               &&
+               npc_transform.translation.y >= pillar_transform.translation().y - 0.07 {
+                if npc_transform.translation.y >= (pillar_transform.translation().y-PILLAR_ADJUST) {
+                    npc_transform.translation.z = NPC_Z_BACK;
+                } else {
+                    npc_transform.translation.z = NPC_Z_FRONT;
+                }
+            }
+            
+        }
     }
 }
 
@@ -194,6 +228,7 @@ fn spawn_pillars(
     asset_server: Res<AssetServer>
 ) {
     let column = asset_server.load("textures/temple/column.png");
+    let column_hitbox = asset_server.load("textures/temple/colonne_hitbox.png");
 
     // let mut elements = Vec::new();
     // elements.push(t_banners);
@@ -210,18 +245,23 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: column.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: column_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0));
+        })
         .insert(Pillar)
         .insert(Name::new("column 1"));
 
-        commands
+    commands
         .spawn_bundle(SpriteBundle {
             texture: column.clone(),
             transform: Transform {
@@ -232,14 +272,19 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: column.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: column_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0));
+        })
         .insert(Pillar)
         .insert(Name::new("column 2"));
         
@@ -254,14 +299,19 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: column.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: column_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0));
+        })
         .insert(Pillar)
         .insert(Name::new("column 3"));
 
@@ -277,14 +327,19 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: column.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: column_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0));
+        })
         .insert(Pillar)
         .insert(Name::new("column 4"));
 
@@ -300,14 +355,19 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: column.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: column_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0));
+        })
         .insert(Pillar)
         .insert(Name::new("column 5"));
 
@@ -323,14 +383,19 @@ fn spawn_pillars(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: column.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: column_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0));
+        })
         .insert(Pillar)
         .insert(Name::new("column 6"));
 }

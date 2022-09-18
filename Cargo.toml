@@ -11,6 +11,10 @@ bevy-inspector-egui = "0.12.1"
 # bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" } # for bevy 0.8
 bevy_rapier2d = { version = "0.16", features = ["simd-stable", "debug-render"] }
 
+density-mesh-core = "1.5"
+density-mesh-image = "1.5"
+image = "0.23"
+
 log = "0.4.17"
 rand = "0.8.5"
 

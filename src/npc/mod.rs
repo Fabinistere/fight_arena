@@ -5,7 +5,6 @@ use bevy_rapier2d::prelude::*;
 
 
 use crate::{
-    // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{
         Leader,
         Team,
@@ -13,10 +12,15 @@ use crate::{
     },
     constants::FIXED_TIME_STEP,
     constants::{
-        character::npc::{
-            movement::NPC_SPEED_LEADER,
-            NPC_SCALE,
-            NPC_Z_BACK
+        character::{
+            CHAR_HITBOX_HEIGHT,
+            CHAR_HITBOX_WIDTH,
+            CHAR_HITBOX_Y_OFFSET,
+            npc::{
+                movement::NPC_SPEED_LEADER,
+                NPC_SCALE,
+                NPC_Z_BACK
+            },
         },
         combat::team::*
     },
@@ -106,7 +110,6 @@ impl Plugin  for NPCPlugin {
 fn spawn_character(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    // asset_server: Res<AssetServer>,
 ) {
 
     let admiral = TextureAtlasSprite::new(0);
@@ -114,10 +117,6 @@ fn spawn_character(
     let olf = TextureAtlasSprite::new(12);
 
     let hugo = TextureAtlasSprite::new(16);
-
-    // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    // let admiral_hitbox: Handle<Image> = asset_server.load("textures/character/admiral.png");
-    // let olf_hitbox: Handle<Image> = asset_server.load("textures/character/Olf.png");
 
     commands
         .spawn_bundle(SpriteSheetBundle {
@@ -143,9 +142,6 @@ fn spawn_character(
                 angvel: 0.0,
             }
         })
-        // .insert(GravityScale(0.01))
-        // .insert(Sleeping::disabled())
-        // .insert(Ccd::enabled())
         .insert_bundle(CombatBundle {
             hp: HP::default(),
             mana: MANA::default(),
@@ -155,10 +151,12 @@ fn spawn_character(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
-        // .insert(TesselatedCollider {
-        //     texture: admiral_hitbox.clone(),
-        //     tesselator_config: TesselatedColliderConfig::default(),
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+        })
         ;
 
     commands
@@ -189,9 +187,6 @@ fn spawn_character(
                 angvel: 0.0,
             }
         })
-        // .insert(GravityScale(0.01))
-        // .insert(Sleeping::disabled())
-        // .insert(Ccd::enabled())
         .insert_bundle(CombatBundle {
             hp: HP::default(),
             mana: MANA::default(),
@@ -201,10 +196,12 @@ fn spawn_character(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
-        // .insert(TesselatedCollider {
-        //     texture: olf_hitbox.clone(),
-        //     tesselator_config: TesselatedColliderConfig::default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+        })
         ;
 
         commands
@@ -239,6 +236,12 @@ fn spawn_character(
                 attack_spe: AttackSpe::default(),
                 defense: Defense::default(),
                 defense_spe: DefenseSpe::default()
+            })
+            .with_children(|parent| {
+                parent
+                    .spawn()
+                    .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+                    .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
             })
             ;
 }

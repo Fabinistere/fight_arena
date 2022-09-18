@@ -40,7 +40,9 @@ pub mod locations {
         pub const PILLAR_Z_FRONT: f32 = 7.;
 
         // make the pillar above and on coherence with the pillar hitbox
-        pub const PILLAR_ADJUST: f32 = 1.;
+        // used in the pillar z position
+        pub const PILLAR_ADJUST: f32 = 3.;
+        pub const PILLAR_HITBOX_Y_OFFSET: f32 = -12.5;
 
         pub const PILLAR_POSITION_1: (f32, f32, f32) = (48.5*TILE_SIZE, 28.*TILE_SIZE, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_2: (f32, f32, f32) = (48.5*TILE_SIZE, -12.*TILE_SIZE, PILLAR_Z_BACK);
@@ -56,6 +58,10 @@ pub mod character {
     use super::TILE_SIZE;
 
     pub const CHAR_SCALE: f32 = 0.6 * TILE_SIZE;
+
+    pub const CHAR_HITBOX_HEIGHT: f32 = 1.5 * CHAR_SCALE;
+    pub const CHAR_HITBOX_WIDTH: f32 = 5. * CHAR_SCALE;
+    pub const CHAR_HITBOX_Y_OFFSET: f32 = -8.5 * CHAR_SCALE;
 
     pub mod npc {
 
@@ -74,10 +80,6 @@ pub mod character {
     }
     
     pub mod player {
-
-        pub const PLAYER_HITBOX_HEIGHT: f32 = 3. * super::CHAR_SCALE;
-        pub const PLAYER_HITBOX_WIDTH: f32 = 10. * super::CHAR_SCALE;
-        pub const PLAYER_HITBOX_Y_OFFSET: f32 = -8. * super::CHAR_SCALE;
     
         pub const PLAYER_SCALE: f32 = super::CHAR_SCALE;
         pub const PLAYER_Z: f32 = 6.;

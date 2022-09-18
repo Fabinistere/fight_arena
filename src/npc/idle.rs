@@ -1,5 +1,9 @@
 use bevy::prelude::*;
-use log::{info, warn};
+use bevy_rapier2d::prelude::Velocity;
+use log::{
+    info,
+    // warn
+};
 
 use crate::npc::movement::{
     JustWalkBehavior,
@@ -25,13 +29,17 @@ pub fn do_flexing(
     mut commands: Commands,
     time: Res<Time>,
     mut npc_query: Query<
-        (Entity, &mut RestTime, &Name), 
+        (Entity, &mut RestTime, &mut Velocity, &Name), 
         (With<IdleBehavior>, Without<FollowBehavior>)
     >
 ) {
-    for (npc, mut rest_timer, name) in npc_query.iter_mut() {
+    for (npc, mut rest_timer, mut rb_vel, name) in npc_query.iter_mut() {
 
         rest_timer.timer.tick(time.delta());
+
+        // prevent npcs from being launched by pushing them
+        rb_vel.linvel.x = 0.;
+        rb_vel.linvel.y = 0.;
 
         // flexing animation                 
 
