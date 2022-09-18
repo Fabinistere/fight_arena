@@ -1,3 +1,8 @@
+//! Constants
+//! 
+//! 0.01 == one pixel
+//! magical number = ratio
+
 pub const BACKGROUND_COLOR: bevy::render::color::Color = bevy::render::color::Color::Rgba {
     red: 58.0 / 256.0,
     green: 36.0 / 256.0,
@@ -46,7 +51,7 @@ pub mod locations {
 
 pub mod npc {
 
-    pub const NPC_SCALE: f32 = 2.;
+    pub const NPC_SCALE: f32 = 0.01;
 
     pub const NPC_Z_BACK: f32 = 2.;
     pub const NPC_Z_FRONT: f32 = 8.;
@@ -59,7 +64,11 @@ pub mod npc {
 }
 
 pub mod player {
-    pub const PLAYER_SCALE: f32 = 2.;
+    pub const PLAYER_HITBOX_HEIGHT: f32 = 3.*0.01;
+    pub const PLAYER_HITBOX_WIDTH: f32 = 10.*0.01;
+    pub const PLAYER_HITBOX_Y_OFFSET: f32 = -8.*0.01;
+
+    pub const PLAYER_SCALE: f32 = 0.01;
     pub const PLAYER_Z: f32 = 6.;
     
     pub const PLAYER_HP: i32 = 50;
