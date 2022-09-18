@@ -1,23 +1,21 @@
 [package]
 name = "fight_arena"
 version = "0.1.0"
-author = "Olf EPAIN aka Wabtey"
+authors = ["Olf EPAIN aka Wabtey", "Morgan Van Amerongen <vanamerongen.morgan@gmail.com>"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
 
-[profile.dev]
-opt-level = 1
+bevy = { version = "0.8", features = ["dynamic"] }
+bevy-inspector-egui = "0.12.1"
+# bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" } # for bevy 0.8
+bevy_rapier2d = { version = "0.16", features = ["simd-stable", "debug-render"] }
+
+log = "0.4.17"
+rand = "0.8.5"
 
 [profile.dev.package."*"]
 opt-level = 3
 
-[dependencies]
-
-bevy = { version = "0.7", features = ["dynamic"] }
-bevy-inspector-egui = "0.10"
-# bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" } # for bevy 0.8
-bevy_rapier2d = { version = "0.13", features = ["simd-stable", "debug-render"] }
-
-
-rand = "0.8.5"
+[profile.dev]
+opt-level = 1

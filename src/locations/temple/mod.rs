@@ -70,7 +70,7 @@ fn throne_position(
 ) {
     if let Ok(player_transform) = player_query.get_single() {
         for mut throne_transform in throne_query.iter_mut() {
-            if player_transform.translation.y > throne_transform.translation.y {
+            if player_transform.translation().y > throne_transform.translation.y {
                 throne_transform.translation.z = THRONE_Z_FRONT;
             } else {
                 throne_transform.translation.z = THRONE_Z_BACK;
@@ -180,7 +180,7 @@ fn pillar_position(
 ) {
     if let Ok(player_transform) = player_query.get_single() {
         for mut pillar_transform in pillar_query.iter_mut() {
-            if player_transform.translation.y >= (pillar_transform.translation.y-PILLAR_ADJUST) {
+            if player_transform.translation().y >= (pillar_transform.translation.y-PILLAR_ADJUST) {
                 pillar_transform.translation.z = PILLAR_Z_FRONT;
             } else {
                 pillar_transform.translation.z = PILLAR_Z_BACK;

@@ -17,7 +17,7 @@ pub mod player;
 
 use combat::CombatPlugin;
 use debug::DebugPlugin;
-use fabien::{FabienPlugin, FabienSheet, spawn_fabien_sprite};
+use spritesheet::{FabienPlugin, FabienSheet};
 use locations::LocationsPlugin;
 use npc::NPCPlugin;
 use player::PlayerPlugin;
@@ -61,7 +61,8 @@ fn main() {
         .add_plugin(CombatPlugin)
         .add_state(GameState::Playing)
         .add_startup_system(spawn_camera)
-        .add_startup_system(setup)
+        // .add_startup_system(setup)
+        // .add_startup_system(music)
         ;
 
     app.run();
@@ -85,11 +86,40 @@ fn spawn_camera(
 }
 
 fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>
+) {
+
+    let morgan = asset_server.load("textures/character/Morgan.png");
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: morgan.clone(),
+            transform: Transform::from_scale(Vec3::splat(2.)),
+            ..SpriteBundle::default()
+        })
+        .insert(Name::new("Player"))
+        // .insert(Player)
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
+        // .insert_bundle(MovementBundle {
+        //     speed: Speed::default(),
+        //     velocity: Velocity {
+        //         linvel: Vec2::default(),
+        //         angvel: 0.0,
+        //     }
+        // })
+        ;
+}
+
+fn music(
     asset_server: Res<AssetServer>, audio: Res<Audio>
 ) {
+
+    
     let music = asset_server.load("sounds/FTO_Dracula_theme.ogg");
-    audio.play(music);
-    // audio.play_with_settings(music, PlaybackSettings::LOOP.with_volume(0.10));
+    // audio.play(music);
+    audio.play_with_settings(music, PlaybackSettings::LOOP.with_volume(0.10));
 
     println!("audio playing...");
 }
