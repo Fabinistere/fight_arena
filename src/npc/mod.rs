@@ -13,7 +13,7 @@ use crate::{
     },
     constants::FIXED_TIME_STEP,
     constants::{
-        npc::{
+        character::npc::{
             movement::NPC_SPEED_LEADER,
             NPC_SCALE,
             NPC_Z_BACK
@@ -124,7 +124,7 @@ fn spawn_character(
             sprite: admiral,
             texture_atlas: fabien.0.clone(),
             transform: Transform {
-                translation:  Vec3::new(-0.2, 0.35, NPC_Z_BACK),
+                translation:  Vec3::new(-20., 35., NPC_Z_BACK),
                 scale: Vec3::splat(NPC_SCALE),
                 ..default()
             },
@@ -166,7 +166,7 @@ fn spawn_character(
             sprite: olf,
             texture_atlas: fabien.0.clone(),
             transform: Transform {
-                translation:   Vec3::new(-0.2, 0.55, NPC_Z_BACK),
+                translation:   Vec3::new(-20., 55., NPC_Z_BACK),
                 scale: Vec3::splat(NPC_SCALE),
                 ..default()
             },
@@ -212,7 +212,7 @@ fn spawn_character(
                 sprite: hugo,
                 texture_atlas: fabien.0.clone(),
                 transform: Transform {
-                    translation:  Vec3::new(-0.7, -0.55, NPC_Z_BACK),
+                    translation:  Vec3::new(-70., -55., NPC_Z_BACK),
                     scale: Vec3::splat(NPC_SCALE),
                     ..default()
                 },

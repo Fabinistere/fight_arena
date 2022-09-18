@@ -2,13 +2,16 @@
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
-use log::{info, warn};
+use log::{
+    info,
+    // warn
+};
 use std::time::Duration;
 use rand::Rng;
 
 use crate::{
     // combat::Target,
-    constants::npc::movement::*,
+    constants::character::npc::movement::*,
     movement::Speed,
     npc::idle::{
         IdleBehavior,
@@ -85,8 +88,8 @@ pub fn just_walk(
             info!(target: "Start Rest", "{:?}, {}", npc, name);
 
             // Stop the npc after reaching the destination
-            rb_vel.linvel.x = 0.0;
-            rb_vel.linvel.y = 0.0;
+            rb_vel.linvel.x = 0.;
+            rb_vel.linvel.y = 0.;
 
             commands.entity(npc)
                     .remove::<JustWalkBehavior>();
@@ -119,7 +122,7 @@ pub fn follow(
 ) {
     for (_npc, transform, speed, mut rb_vel, team) in npc_query.iter_mut() {
 
-        for (target_transform, target_team, name) in targets_query.iter() {
+        for (target_transform, target_team, _name) in targets_query.iter() {
 
             // incorporer le test team.0 == target_team.0 dans le for
             // pour eval qu'une fois
@@ -130,10 +133,8 @@ pub fn follow(
             // carefull with more than one leader per team
             // it will be not nice
 
-            // println!("no");
-
             if (team.0 == target_team.0)
-               && !close(transform.translation, target_transform.translation(), TILE_SIZE*2.0)
+               && !close(transform.translation, target_transform.translation(), 20.*TILE_SIZE)
             {
                 
                 // println!("moving towards target: {}", name);
@@ -161,8 +162,8 @@ pub fn follow(
     
             } else if team.0 == target_team.0 {
                 // TODO AVOID npc to merge
-                rb_vel.linvel.x = 0.0;
-                rb_vel.linvel.y = 0.0;
+                rb_vel.linvel.x = 0.;
+                rb_vel.linvel.y = 0.;
             }
         }
         }
@@ -222,8 +223,10 @@ fn close(
  */
 pub fn give_a_direction() -> Vec3
 {
-    let x = rand::thread_rng().gen_range(-10..10) as f32 / 10.0;
-    let y = rand::thread_rng().gen_range(-10..10) as f32 / 10.0;
+    let x = rand::thread_rng()
+        .gen_range(-100*(TILE_SIZE as i32)..100*(TILE_SIZE as i32)) as f32;
+   let y = rand::thread_rng()
+        .gen_range(-100*(TILE_SIZE as i32)..100*(TILE_SIZE as i32)) as f32;
     // let z = rand::thread_rng().gen_range(1..101);
 
     /* shape ideas
@@ -232,7 +235,7 @@ pub fn give_a_direction() -> Vec3
      * (x+0.5, y-0.5) -> milieu
      */
 
-    let direction: Vec3 = Vec3::new(x, y, 0.0);
+    let direction: Vec3 = Vec3::new(x, y, 0.);
 
     direction
 }

@@ -10,7 +10,7 @@ use crate::{
         stats::*,
         Team,
     },
-    constants::{player::*, combat::team::TEAM_MC},
+    constants::{character::player::*, combat::team::TEAM_MC},
     FabienSheet,
     movement::*
 };

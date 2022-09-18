@@ -137,7 +137,7 @@ fn setup_temple(
         .spawn_bundle(SpriteBundle {
             texture: huge_throne.clone(),
             transform: Transform {
-                translation: Vec3::new(0.23, 0.74, PLAYER_Z),
+                translation: THRONE_POSITION.into(),
                 scale: TEMPLE_SCALE.into(),
                 ..default()
             },
