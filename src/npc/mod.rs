@@ -5,7 +5,7 @@ use bevy_rapier2d::prelude::*;
 
 
 use crate::{
-    collisions::{TesselatedCollider, TesselatedColliderConfig},
+    // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{
         Leader,
         Team,
@@ -27,8 +27,7 @@ use crate::{
         movement::FollowBehavior,
         movement::JustWalkBehavior,
         movement::give_a_direction
-    },
-    spawn_fabien_sprite,
+    }
 };
 
 pub mod movement;
@@ -107,40 +106,30 @@ impl Plugin  for NPCPlugin {
 fn spawn_character(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    asset_server: Res<AssetServer>,
+    // asset_server: Res<AssetServer>,
 ) {
-    let position = Vec3::new(-0.2, 0.35, NPC_Z_BACK);
 
-    let admiral = spawn_fabien_sprite(
-        &mut commands,
-        &fabien,
-        0,
-        position,
-        Vec3::splat(NPC_SCALE)
-    );
+    let admiral = TextureAtlasSprite::new(0);
 
-    let olf = spawn_fabien_sprite(
-        &mut commands,
-        &fabien,
-        12,
-        Vec3::new(-0.2, 0.55, NPC_Z_BACK),
-        Vec3::splat(NPC_SCALE)
-    );
+    let olf = TextureAtlasSprite::new(12);
 
-    let hugo = spawn_fabien_sprite(
-        &mut commands,
-        &fabien,
-        16,
-        Vec3::new(-0.7, -0.55, NPC_Z_BACK),
-        Vec3::splat(NPC_SCALE)
-    );
+    let hugo = TextureAtlasSprite::new(16);
 
     // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    let admiral_hitbox: Handle<Image> = asset_server.load("textures/character/admiral.png");
-    let olf_hitbox: Handle<Image> = asset_server.load("textures/character/Olf.png");
+    // let admiral_hitbox: Handle<Image> = asset_server.load("textures/character/admiral.png");
+    // let olf_hitbox: Handle<Image> = asset_server.load("textures/character/Olf.png");
 
     commands
-        .entity(admiral)
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: admiral,
+            texture_atlas: fabien.0.clone(),
+            transform: Transform {
+                translation:  Vec3::new(-0.2, 0.35, NPC_Z_BACK),
+                scale: Vec3::splat(NPC_SCALE),
+                ..default()
+            },
+            ..default()
+        }) 
         .insert(Name::new("NPC Admiral"))
         .insert(NPC)
         .insert(Team(TEAM_OLF))
@@ -173,7 +162,16 @@ fn spawn_character(
         ;
 
     commands
-        .entity(olf)
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: olf,
+            texture_atlas: fabien.0.clone(),
+            transform: Transform {
+                translation:   Vec3::new(-0.2, 0.55, NPC_Z_BACK),
+                scale: Vec3::splat(NPC_SCALE),
+                ..default()
+            },
+            ..default()
+        }) 
         .insert(Name::new("NPC Olf"))
         .insert(NPC)
         .insert(Leader)
@@ -210,7 +208,16 @@ fn spawn_character(
         ;
 
         commands
-            .entity(hugo)
+            .spawn_bundle(SpriteSheetBundle {
+                sprite: hugo,
+                texture_atlas: fabien.0.clone(),
+                transform: Transform {
+                    translation:  Vec3::new(-0.7, -0.55, NPC_Z_BACK),
+                    scale: Vec3::splat(NPC_SCALE),
+                    ..default()
+                },
+                ..default()
+            }) 
             .insert(Name::new("NPC Hugo"))
             .insert(NPC)
             .insert(Team(TEAM_OLF))

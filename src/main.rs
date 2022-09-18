@@ -9,7 +9,7 @@ use bevy_rapier2d::prelude::*;
 pub mod constants;
 mod combat;
 mod debug;
-mod fabien;
+mod spritesheet;
 mod locations;
 mod movement;
 mod npc;

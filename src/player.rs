@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 
 
 use crate::{
-    collisions::{TesselatedCollider, TesselatedColliderConfig},
+    // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{
         Leader,
         stats::*,
@@ -12,15 +12,15 @@ use crate::{
     },
     constants::{player::*, combat::team::TEAM_MC},
     FabienSheet,
-    movement::*,
-    spawn_fabien_sprite,
-
+    movement::*
 };
 
 pub struct PlayerPlugin;
 
 #[derive(Component, Inspectable)]
 pub struct Player;
+#[derive(Component)]
+pub struct PlayerSensor;
 
 impl Plugin  for PlayerPlugin {
     fn build(&self, app: &mut App) {
@@ -74,22 +74,26 @@ fn player_movement(
 fn spawn_player(
     mut commands: Commands,
     fabien: Res<FabienSheet>,
-    asset_server: Res<AssetServer>
+    // asset_server: Res<AssetServer>
 )
 {
-    let player = spawn_fabien_sprite(
-        &mut commands,
-        &fabien,
-        4,
-        Vec3::new(0.0, 0.0, 6.),
-        Vec3::splat(PLAYER_SCALE)
-    );
+    let player = TextureAtlasSprite::new(4);
+    // player.custom_size = Some(Vec2::splat(TILE_SIZE));
 
     // let basic_hitbox = asset_server.load("textures/character/basic_hitbox.png");
-    let morgan_hitbox: Handle<Image> = asset_server.load("textures/character/Morgan.png");
+    // let morgan_hitbox: Handle<Image> = asset_server.load("textures/character/Morgan.png");
 
     commands
-        .entity(player)
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: player,
+            texture_atlas: fabien.0.clone(),
+            transform: Transform {
+                translation: Vec3::new(0.0, 0.0, 6.),
+                scale: Vec3::splat(PLAYER_SCALE),
+                ..default()
+            },
+            ..default()
+        }) 
         .insert(Name::new("Player"))
         .insert(Player)
         .insert(Leader)
@@ -120,6 +124,23 @@ fn spawn_player(
             attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
             defense: Defense (PLAYER_DEFENSE),
             defense_spe: DefenseSpe (PLAYER_DEFENSE_SPE)
+        })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::cuboid(PLAYER_HITBOX_WIDTH, PLAYER_HITBOX_HEIGHT))
+                .insert(Transform::from_xyz(0.0, PLAYER_HITBOX_Y_OFFSET, 0.0));
+
+            // parent
+            //     .spawn()
+            //     .insert(Collider::segment(
+            //         Vect::new(-PLAYER_HITBOX_WIDTH, 0.0),
+            //         Vect::new(PLAYER_HITBOX_WIDTH, 0.0),
+            //     ))
+            //     .insert(Sensor)
+            //     .insert(ActiveEvents::COLLISION_EVENTS)
+            //     .insert(ActiveCollisionTypes::STATIC_STATIC)
+            //     .insert(PlayerSensor);
         })
         // .with_children(|parent| {
         //     parent
