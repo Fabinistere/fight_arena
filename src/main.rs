@@ -70,7 +70,7 @@ fn main() {
         })
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.0))
         .add_plugin(RetroPhysicsPlugin::default())
-        // .add_plugin(CombatPlugin)
+        .add_plugin(CombatPlugin)
         .add_plugin(DebugPlugin)
         .add_plugin(FabienPlugin)
         .add_plugin(LocationsPlugin)
@@ -89,11 +89,11 @@ fn spawn_camera(
 ) {
     let mut camera = Camera2dBundle::default();
 
-    camera.projection.top = 25. * TILE_SIZE;
-    camera.projection.bottom = -25. * TILE_SIZE;
+    camera.projection.top = 50. * TILE_SIZE;
+    camera.projection.bottom = -50. * TILE_SIZE;
 
-    camera.projection.left = 25. * TILE_SIZE * RESOLUTION;
-    camera.projection.right = -25. * TILE_SIZE * RESOLUTION;
+    camera.projection.left = 50. * TILE_SIZE * RESOLUTION;
+    camera.projection.right = -50. * TILE_SIZE * RESOLUTION;
 
     camera.projection.scaling_mode = ScalingMode::None;
 
