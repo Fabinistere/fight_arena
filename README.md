@@ -11,6 +11,10 @@ NPC can
 
 NPC now use the velocity method to move
 
+Collision works thanks to bevy_retrograde
+
+Press O to see the grateful future
+
 ### For a future
 
 - NPC will Avoid collider
