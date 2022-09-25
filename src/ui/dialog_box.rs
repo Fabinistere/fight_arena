@@ -245,14 +245,14 @@ pub fn create_dialog_box(
 
                 parent
                     .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.chandelier.clone().into(),
+                        image: dialog_box_resources.stained_glass_opened.clone().into(),
                         style: child_sprite_style.clone(),
                         ..ImageBundle::default()
                     });
 
                 parent
                     .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.stained_glass_opened.clone().into(),
+                        image: dialog_box_resources.chandelier.clone().into(),
                         style: child_sprite_style.clone(),
                         ..ImageBundle::default()
                     });

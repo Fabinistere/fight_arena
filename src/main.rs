@@ -10,6 +10,7 @@ use bevy::{
         texture::ImageSettings
     }};
 use bevy_rapier2d::prelude::*;
+use bevy_tweening::TweeningPlugin;
 
 pub mod collisions;
 pub mod constants;
@@ -20,19 +21,17 @@ mod locations;
 mod movement;
 mod npc;
 pub mod player;
+mod ui;
 
 use collisions::RetroPhysicsPlugin;
 use combat::CombatPlugin;
+use constants::*;
 use debug::DebugPlugin;
 use spritesheet::{FabienPlugin, FabienSheet};
 use locations::LocationsPlugin;
 use npc::NPCPlugin;
 use player::PlayerPlugin;
-
-
-pub use crate::{
-    constants::*,
-};
+use ui::UiPlugin;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
@@ -48,6 +47,7 @@ fn main() {
 
     let mut app = App::new();
     app
+
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(ImageSettings::default_nearest())
         .insert_resource(Msaa { samples: 1 })
@@ -62,6 +62,7 @@ fn main() {
             resizable: false,
             ..WindowDescriptor::default()
         })
+
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierDebugRenderPlugin {
             depth_test: false,
@@ -70,13 +71,17 @@ fn main() {
         })
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.0))
         .add_plugin(RetroPhysicsPlugin::default())
+        .add_plugin(TweeningPlugin)
         .add_plugin(CombatPlugin)
         .add_plugin(DebugPlugin)
         .add_plugin(FabienPlugin)
         .add_plugin(LocationsPlugin)
         .add_plugin(NPCPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(UiPlugin)
+
         .add_state(GameState::Playing)
+        
         .add_startup_system(spawn_camera)
         // .add_startup_system(music)
         ;

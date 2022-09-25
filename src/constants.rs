@@ -102,3 +102,13 @@ pub mod combat {
     }
 }
 
+pub mod ui {
+    pub mod dialogs {
+        pub const DIALOG_BOX_ANIMATION_OFFSET: f32 = -1000.0;
+        pub const DIALOG_BOX_UPDATE_DELTA_S: f32 = 0.05;
+        pub const DIALOG_BOX_ANIMATION_TIME_MS: u64 = 500;
+        pub const SCROLL_SIZE: (f32, f32) = (490.0, 11700.0 / 45.0);
+        pub const SCROLL_ANIMATION_DELTA_S: f32 = 0.1;
+        pub const SCROLL_ANIMATION_FRAMES_NUMBER: usize = 45;
+    }
+}
