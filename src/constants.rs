@@ -69,6 +69,12 @@ pub mod character {
     
         pub const NPC_Z_BACK: f32 = 2.;
         pub const NPC_Z_FRONT: f32 = 8.;
+
+        pub const ADMIRAL_STARTING_SS: usize = 0;
+
+        pub const OLF_STARTING_SS: usize = 12;
+
+        pub const HUGO_STARTING_SS: usize = 16;
     
         pub mod movement {
             use crate::TILE_SIZE;
