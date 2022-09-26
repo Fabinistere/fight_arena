@@ -67,14 +67,14 @@ fn run_if_pressed_h(
 #[derive(Clone, Copy, Component)]
 pub struct Leader;
 
-#[derive(Clone, Copy, Component)]
-pub struct Target(pub Option<Entity>);
+// #[derive(Clone, Copy, Component)]
+// pub struct Target(pub Option<Entity>);
 
-impl Default for Target {
-    fn default() -> Self {
-        Target { 0: None }
-    }
-}
+// impl Default for Target {
+//     fn default() -> Self {
+//         Target { 0: None }
+//     }
+// }
 
 /// The team an entity is assigned to.
 #[derive(Copy, Clone, PartialEq, Eq, Component)]
