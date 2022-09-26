@@ -31,8 +31,20 @@ pub struct JustWalkBehavior {
 }
 
 #[derive(Default, Component)]
-pub struct FollowBehavior;
+pub struct FollowupBehavior;
+
+#[derive(Default, Component)]
+pub struct PursuitBehavior;
 // pub const PROXIMITY_RADIUS: f32 = 64.0;
+
+#[derive(Clone, Copy, Component)]
+pub struct Target(pub Option<Entity>);
+
+impl Default for Target {
+    fn default() -> Self {
+        Target { 0: None }
+    }
+}
 
 // TODO use ColliderType::Sensor to delimiter zone
 
@@ -106,7 +118,8 @@ pub fn just_walk(
     }
 }
 
-/// Entity pursues their target.
+/// Entity gently follows their target.
+/// depending the team
 pub fn follow(
     // mut commands: Commands,
     mut npc_query: Query<(
@@ -114,13 +127,14 @@ pub fn follow(
         &Transform,
         &Speed,
         &mut Velocity,
-        &Team
-    ), (With<NPC>, With<FollowBehavior>) // only npc can follow 
+        &Team,
+        &Target
+    ), (With<NPC>, With<FollowupBehavior>, Without<PursuitBehavior>) // only npc can follow 
     >,
     targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
     // pos_query: Query<&GlobalTransform>,
 ) {
-    for (_npc, transform, speed, mut rb_vel, team) in npc_query.iter_mut() {
+    for (_npc, transform, speed, mut rb_vel, team, target) in npc_query.iter_mut() {
 
         for (target_transform, target_team, _name) in targets_query.iter() {
 
@@ -161,21 +175,39 @@ pub fn follow(
                 rb_vel.linvel.y = vel_y;
     
             } else if team.0 == target_team.0 {
-                // TODO AVOID npc to merge
+                // TODO AVOID npc to merge with the target
                 rb_vel.linvel.x = 0.;
                 rb_vel.linvel.y = 0.;
             }
         }
-        }
+    }
         
 
         
     // target does not have position. Go to idle state
-    // commands.entity(npc).remove::<FollowBehavior>();
+    // commands.entity(npc).remove::<FollowupBehavior>();
     // commands.entity(npc).remove::<RunToDestinationBehavior>();
     // commands.entity(npc).insert(IdleBehavior);
 
     // println!("pursue: {:?} entities, {:?} err, {:?} ok.", query.iter_mut().len(), err_count, ok_count);
+}
+
+/// Entity pursues their target.
+pub fn pursuit(
+    // mut commands: Commands,
+    mut npc_query: Query<(
+        Entity, 
+        &Transform,
+        &Speed,
+        &mut Velocity,
+        &Team,
+        &Target
+    ), (With<NPC>, With<PursuitBehavior>) // only npc can follow 
+    >,
+    targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
+    // pos_query: Query<&GlobalTransform>,
+) {
+    // TODO
 }
 
 /**

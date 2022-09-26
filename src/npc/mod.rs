@@ -17,9 +17,8 @@ use crate::{
             CHAR_HITBOX_WIDTH,
             CHAR_HITBOX_Y_OFFSET,
             npc::{
-                movement::NPC_SPEED_LEADER,
-                NPC_SCALE,
-                NPC_Z_BACK
+                *,
+                movement::NPC_SPEED_LEADER
             },
         },
         combat::team::*
@@ -28,7 +27,7 @@ use crate::{
     movement::*,
     npc::{
         // idle::IdleBehavior,
-        movement::FollowBehavior,
+        movement::FollowupBehavior,
         movement::JustWalkBehavior,
         movement::give_a_direction
     }
@@ -112,56 +111,10 @@ fn spawn_character(
     fabien: Res<FabienSheet>,
 ) {
 
-    let admiral = TextureAtlasSprite::new(0);
-
-    let olf = TextureAtlasSprite::new(12);
-
-    let hugo = TextureAtlasSprite::new(16);
-
+    // Olf 
     commands
         .spawn_bundle(SpriteSheetBundle {
-            sprite: admiral,
-            texture_atlas: fabien.0.clone(),
-            transform: Transform {
-                translation:  Vec3::new(-20., 35., NPC_Z_BACK),
-                scale: Vec3::splat(NPC_SCALE),
-                ..default()
-            },
-            ..default()
-        }) 
-        .insert(Name::new("NPC Admiral"))
-        .insert(NPC)
-        .insert(Team(TEAM_OLF))
-        .insert(FollowBehavior)
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert_bundle(MovementBundle {
-            speed: Speed::default(),
-            velocity: Velocity {
-                linvel: Vect::ZERO,
-                angvel: 0.0,
-            }
-        })
-        .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
-            initiative: Initiative::default(),
-            attack: Attack::default(),
-            attack_spe: AttackSpe::default(),
-            defense: Defense::default(),
-            defense_spe: DefenseSpe::default()
-        })
-        .with_children(|parent| {
-            parent
-                .spawn()
-                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
-        })
-        ;
-
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: olf,
+            sprite: TextureAtlasSprite::new(OLF_STARTING_SS),
             texture_atlas: fabien.0.clone(),
             transform: Transform {
                 translation:   Vec3::new(-20., 55., NPC_Z_BACK),
@@ -204,44 +157,88 @@ fn spawn_character(
         })
         ;
 
-        commands
-            .spawn_bundle(SpriteSheetBundle {
-                sprite: hugo,
-                texture_atlas: fabien.0.clone(),
-                transform: Transform {
-                    translation:  Vec3::new(-70., -55., NPC_Z_BACK),
-                    scale: Vec3::splat(NPC_SCALE),
-                    ..default()
-                },
+    // Admiral
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: TextureAtlasSprite::new(ADMIRAL_STARTING_SS),
+            texture_atlas: fabien.0.clone(),
+            transform: Transform {
+                translation:  Vec3::new(-20., 35., NPC_Z_BACK),
+                scale: Vec3::splat(NPC_SCALE),
                 ..default()
-            }) 
-            .insert(Name::new("NPC Hugo"))
-            .insert(NPC)
-            .insert(Team(TEAM_OLF))
-            .insert(FollowBehavior)
-            .insert(RigidBody::Dynamic)
-            .insert(LockedAxes::ROTATION_LOCKED)
-            .insert_bundle(MovementBundle {
-                speed: Speed::default(),
-                velocity: Velocity {
-                    linvel: Vect::ZERO,
-                    angvel: 0.0,
-                }
-            })
-            .insert_bundle(CombatBundle {
-                hp: HP::default(),
-                mana: MANA::default(),
-                initiative: Initiative::default(),
-                attack: Attack::default(),
-                attack_spe: AttackSpe::default(),
-                defense: Defense::default(),
-                defense_spe: DefenseSpe::default()
-            })
-            .with_children(|parent| {
-                parent
-                    .spawn()
-                    .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                    .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
-            })
-            ;
+            },
+            ..default()
+        }) 
+        .insert(Name::new("NPC Admiral"))
+        .insert(NPC)
+        .insert(Team(TEAM_OLF))
+        .insert(FollowupBehavior)
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert_bundle(MovementBundle {
+            speed: Speed::default(),
+            velocity: Velocity {
+                linvel: Vect::ZERO,
+                angvel: 0.0,
+            }
+        })
+        .insert_bundle(CombatBundle {
+            hp: HP::default(),
+            mana: MANA::default(),
+            initiative: Initiative::default(),
+            attack: Attack::default(),
+            attack_spe: AttackSpe::default(),
+            defense: Defense::default(),
+            defense_spe: DefenseSpe::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+        })
+        ;
+
+    // HUGO
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: TextureAtlasSprite::new(HUGO_STARTING_SS),
+            texture_atlas: fabien.0.clone(),
+            transform: Transform {
+                translation:  Vec3::new(-70., -55., NPC_Z_BACK),
+                scale: Vec3::splat(NPC_SCALE),
+                ..default()
+            },
+            ..default()
+        }) 
+        .insert(Name::new("NPC Hugo"))
+        .insert(NPC)
+        .insert(Team(TEAM_OLF))
+        .insert(FollowupBehavior)
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert_bundle(MovementBundle {
+            speed: Speed::default(),
+            velocity: Velocity {
+                linvel: Vect::ZERO,
+                angvel: 0.0,
+            }
+        })
+        .insert_bundle(CombatBundle {
+            hp: HP::default(),
+            mana: MANA::default(),
+            initiative: Initiative::default(),
+            attack: Attack::default(),
+            attack_spe: AttackSpe::default(),
+            defense: Defense::default(),
+            defense_spe: DefenseSpe::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+        })
+        ;
+
 }

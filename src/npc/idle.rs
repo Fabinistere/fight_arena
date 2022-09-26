@@ -7,7 +7,7 @@ use log::{
 
 use crate::npc::movement::{
     JustWalkBehavior,
-    FollowBehavior,
+    FollowupBehavior,
     give_a_direction
 };
 
@@ -30,7 +30,7 @@ pub fn do_flexing(
     time: Res<Time>,
     mut npc_query: Query<
         (Entity, &mut RestTime, &mut Velocity, &Name), 
-        (With<IdleBehavior>, Without<FollowBehavior>)
+        (With<IdleBehavior>, Without<FollowupBehavior>)
     >
 ) {
     for (npc, mut rest_timer, mut rb_vel, name) in npc_query.iter_mut() {
@@ -65,7 +65,7 @@ pub fn do_flexing(
 //     mut commands: Commands,
 //     mut npc_query: Query<
 //         (Entity, &Name), 
-//         (With<IdleBehavior>, With<FollowBehavior>)
+//         (With<IdleBehavior>, With<FollowupBehavior>)
 //     >
 // ) {
 //     for (npc, name) in npc_query.iter_mut() {
@@ -74,7 +74,7 @@ pub fn do_flexing(
 
 //         commands.entity(npc)
 //                 .insert(
-//                     FollowBehavior);
+//                     FollowupBehavior);
 //         commands.entity(npc)
 //                 .remove::<IdleBehavior>();      
 
