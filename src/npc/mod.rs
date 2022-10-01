@@ -26,6 +26,9 @@ use crate::{
     FabienSheet,
     movement::*,
     npc::{
+        aggression::{
+            DetectionSensor
+        },
         // idle::IdleBehavior,
         movement::FollowupBehavior,
         movement::JustWalkBehavior,
@@ -35,6 +38,7 @@ use crate::{
 
 pub mod movement;
 pub mod idle;
+pub mod aggression;
 
 #[derive(Component, Inspectable)]
 pub struct NPC;
@@ -45,10 +49,10 @@ pub struct NPCPlugin;
 #[derive(PartialEq, Clone, Hash, Debug, Eq, SystemLabel)]
 pub enum NPCSystems {
     Stroll,
-    Following,
+    Follow,
     // FindLandmark,
-    // FindTargets,
-    // UpdateAggressionSource,
+    FindTargets,
+    Chase,
     // Talking,
     Idle,
     // Combat,
@@ -92,13 +96,31 @@ impl Plugin  for NPCPlugin {
                 CoreStage::Update,
                 movement::follow
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::Following)
+                    .label(NPCSystems::Follow)
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
+                movement::follow
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .label(NPCSystems::Follow)
             )
             .add_system_to_stage(
                 CoreStage::Update,
                 idle::do_flexing
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(NPCSystems::Idle)
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
+                aggression::threat_detection
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .label(NPCSystems::FindTargets)
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
+                movement::pursue
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .label(NPCSystems::Chase)
             );
     }
 }
@@ -150,10 +172,20 @@ fn spawn_character(
             defense_spe: DefenseSpe::default()
         })
         .with_children(|parent| {
+
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
                 .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+
+            parent
+                .spawn()
+                .insert(Collider::ball(40.))
+                .insert(ActiveEvents::COLLISION_EVENTS)
+                .insert(Sensor)
+                .insert(DetectionSensor)
+                .insert(Name::new("Detection Range"));
+
         })
         ;
 

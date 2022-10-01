@@ -10,16 +10,16 @@ use std::time::Duration;
 use rand::Rng;
 
 use crate::{
-    // combat::Target,
+    combat::{Leader, Team},
     constants::character::npc::movement::*,
+    GameState,
     movement::Speed,
     npc::idle::{
         IdleBehavior,
         RestTime
     },
+    // player::Player,
     TILE_SIZE,
-    combat::{Leader, Team},
-    // player::Player
 };
 
 use super::NPC;
@@ -58,7 +58,7 @@ pub fn just_walk(
         &Speed,
         &mut Velocity,
         &Name
-    ), (With<JustWalkBehavior>, Without<IdleBehavior>)>
+    ), (With<JustWalkBehavior>, Without<IdleBehavior>, Without<PursuitBehavior>)>
 ) {
     for (npc, behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
         let direction: Vec3 = behavior.destination;
@@ -128,13 +128,12 @@ pub fn follow(
         &Speed,
         &mut Velocity,
         &Team,
-        &Target
     ), (With<NPC>, With<FollowupBehavior>, Without<PursuitBehavior>) // only npc can follow 
     >,
     targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
     // pos_query: Query<&GlobalTransform>,
 ) {
-    for (_npc, transform, speed, mut rb_vel, team, target) in npc_query.iter_mut() {
+    for (_npc, transform, speed, mut rb_vel, team) in npc_query.iter_mut() {
 
         for (target_transform, target_team, _name) in targets_query.iter() {
 
@@ -143,7 +142,8 @@ pub fn follow(
             
             // println!("target: {}, Leader of team {}", name, target_team.0);
 
-            // TODO Rework this Approximation Louche
+            // TODO
+            // Rework this Approximation Louche
             // carefull with more than one leader per team
             // it will be not nice
 
@@ -193,21 +193,74 @@ pub fn follow(
 }
 
 /// Entity pursues their target.
-pub fn pursuit(
-    // mut commands: Commands,
+/// This target has entered in the detection range of the npc
+pub fn pursue(
+    mut commands: Commands,
+    mut game_state: ResMut<State<GameState>>,
     mut npc_query: Query<(
         Entity, 
         &Transform,
         &Speed,
         &mut Velocity,
         &Team,
-        &Target
-    ), (With<NPC>, With<PursuitBehavior>) // only npc can follow 
-    >,
-    targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
-    // pos_query: Query<&GlobalTransform>,
+        &Target,
+        &Name
+        ),(With<NPC>, With<PursuitBehavior>)>,
+    pos_query: Query<&GlobalTransform>,
 ) {
-    // TODO
+
+    for (npc, transform, speed, mut rb_vel, team, target, name) in npc_query.iter_mut() {
+
+        if target.0.is_none() {
+            info!(target: "target is none", "{}", name);
+            continue;
+        }
+
+        let result = pos_query.get_component::<GlobalTransform>(target.0.expect("target is none"));
+        match result {
+            Err(_) => {
+                // target does not have position. Disengage.
+                commands.entity(npc).remove::<PursuitBehavior>();
+                continue;
+            }
+            Ok(target_transform) => {
+                // Turn away from the enemy.
+                if !close(transform.translation, target_transform.translation(), 10.*TILE_SIZE)
+                {
+                    
+                    // println!("moving towards target: {}", name);
+
+                    let up = target_transform.translation().y > transform.translation.y;
+                    let down = target_transform.translation().y < transform.translation.y;
+                    let left = target_transform.translation().x < transform.translation.x;
+                    let right = target_transform.translation().x > transform.translation.x;
+
+                    let x_axis = -(left as i8) + right as i8;
+                    let y_axis = -(down as i8) + up as i8;
+
+                    // println!("x: {}, y: {}", x_axis, y_axis);
+            
+                    let mut vel_x = x_axis as f32 * **speed;
+                    let mut vel_y = y_axis as f32 * **speed;
+            
+                    if x_axis != 0 && y_axis != 0 {
+                        vel_x *= (std::f32::consts::PI / 4.0).cos();
+                        vel_y *= (std::f32::consts::PI / 4.0).cos();
+                    }
+            
+                    rb_vel.linvel.x = vel_x;
+                    rb_vel.linvel.y = vel_y;
+
+                } else {
+                    // TODO AVOID npc to merge with the target
+                    rb_vel.linvel.x = 0.;
+                    rb_vel.linvel.y = 0.;
+                }
+            }
+        }
+
+        
+    }
 }
 
 /**
@@ -217,6 +270,9 @@ pub fn pursuit(
  *            is on the middle of the segment [a,c]
  * @return true
  * if the entity is on the square around the direction point
+ * 
+ * TODO
+ * Rework this Approximation Louche
  */
 fn close(
     position: Vec3,
