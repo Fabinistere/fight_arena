@@ -71,7 +71,7 @@ fn run_if_in_temple(
     }
 }
 
-/// doesn't work
+/// TODO doesn't work well
 fn npc_z_position(
     mut npc_query: Query<&mut Transform, With<NPC>>,
     pillar_query: Query<&GlobalTransform, With<Pillar>>,
@@ -126,10 +126,13 @@ fn setup_temple(
     let banners = asset_server.load("textures/temple/temple_banners.png");
     let floor = asset_server.load("textures/temple/temple_floor.png");
     let wall = asset_server.load("textures/temple/temple_wall.png");
+
     // let light_off = asset_server.load("textures/temple/temple_light_off.png");
     // let light_on = asset_server.load("textures/temple/temple_light_on.png");
     // let museum = asset_server.load("textures/temple/temple_museum.png");
+
     let huge_throne = asset_server.load("textures/temple/temple_huge_throne.png");
+    let huge_throne_hitbox: Handle<Image> = asset_server.load("textures/temple/temple_huge_throne_hitbox.png");
 
     // All the temple sprites
 
@@ -178,14 +181,20 @@ fn setup_temple(
             ..SpriteBundle::default()
         })
         .insert(RigidBody::Fixed)
-        // .insert(TesselatedCollider {
-        //     texture: huge_throne.clone(),
-        //     tesselator_config: TesselatedColliderConfig {
-        //         vertice_separation: 0.,
-        //         ..default()
-        //     },
-        //     ..default()
-        // })
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(TesselatedCollider {
+                    texture: huge_throne_hitbox.clone(),
+                    tesselator_config: TesselatedColliderConfig {
+                        vertice_separation: 0.,
+                        extrusion: 0.1,
+                        vertice_radius: 0.4
+                    }
+                })
+                .insert(Transform::from_xyz(0.0, 0., 0.0))
+                .insert(Name::new("Throne Hitbox"));
+        })
         .insert(Throne)
         .insert(Name::new("throne"));
 
@@ -232,6 +241,8 @@ fn spawn_pillars(
 
     // let mut elements = Vec::new();
     // elements.push(t_banners);
+
+    // TODO CHECK https://bevy-cheatbook.github.io/features/parent-child.html
 
     // All 6 PILLARS
     commands
