@@ -74,7 +74,7 @@ pub mod character {
 
         pub const OLF_STARTING_SS: usize = 12;
 
-        pub const HUGO_STARTING_SS: usize = 16;
+        pub const HUGO_STARTING_SS: usize = 24;
     
         pub mod movement {
             use crate::TILE_SIZE;
