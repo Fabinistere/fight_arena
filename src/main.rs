@@ -21,7 +21,7 @@ mod locations;
 mod movement;
 mod npc;
 pub mod player;
-mod ui;
+pub mod ui;
 
 use collisions::RetroPhysicsPlugin;
 use combat::CombatPlugin;
