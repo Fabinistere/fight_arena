@@ -4,6 +4,10 @@ use bevy_rapier2d::prelude::Velocity;
 
 use crate::TILE_SIZE;
 
+// find the right place to put this component (indicator)
+#[derive(Component)]
+pub struct CharacterHitbox;
+
 #[derive(Component, Deref, DerefMut)]
 pub struct Speed(pub f32);
 

@@ -129,13 +129,14 @@ fn spawn_player(
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
+                .insert(CharacterHitbox);
 
             // parent
             //     .spawn()
             //     .insert(Collider::segment(
-            //         Vect::new(-PLAYER_HITBOX_WIDTH, 0.0),
-            //         Vect::new(PLAYER_HITBOX_WIDTH, 0.0),
+            //         Vect::new(-CHAR_HITBOX_WIDTH, 0.0),
+            //         Vect::new(CHAR_HITBOX_WIDTH, 0.0),
             //     ))
             //     .insert(Sensor)
             //     .insert(ActiveEvents::COLLISION_EVENTS)

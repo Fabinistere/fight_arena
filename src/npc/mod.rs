@@ -176,7 +176,8 @@ fn spawn_character(
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
+                .insert(CharacterHitbox);
 
             parent
                 .spawn()
@@ -227,7 +228,8 @@ fn spawn_character(
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
+                .insert(CharacterHitbox);
         })
         ;
 
@@ -269,7 +271,8 @@ fn spawn_character(
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0));
+                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
+                .insert(CharacterHitbox);
         })
         ;
 
