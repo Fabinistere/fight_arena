@@ -134,10 +134,25 @@ fn setup_temple(
     let huge_throne = asset_server.load("textures/temple/temple_huge_throne.png");
     let huge_throne_hitbox: Handle<Image> = asset_server.load("textures/temple/temple_huge_throne_hitbox.png");
 
+    let corridors = asset_server.load("textures/temple/corridors.png");
+
     // All the temple sprites
 
     // let mut elements = Vec::new();
     // elements.push(t_banners);
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: corridors.clone(),
+            transform: Transform {
+                translation: Vec3::new(0.,0.,9.),
+                scale: TEMPLE_SCALE.into(),
+                ..default()
+            },
+            ..SpriteBundle::default()
+        })
+        .insert(RigidBody::Fixed)
+        .insert(Name::new("corridors"));
 
     commands
         .spawn_bundle(SpriteBundle {
