@@ -5,11 +5,17 @@ use log::{
     // warn
 };
 
-use super::movement::{
-    JustWalkBehavior,
-    FollowupBehavior,
-    PursuitBehavior,
-    give_a_direction
+// use crate::combat::{InCombat, FairPlayTimer};
+
+use super::{
+    movement::{
+        DetectionBehavior,
+        FollowupBehavior,
+        JustWalkBehavior,
+        PursuitBehavior,
+        give_a_direction
+    },
+    NPC
 };
 
 #[derive(Component)]
@@ -31,7 +37,12 @@ pub fn do_flexing(
     time: Res<Time>,
     mut npc_query: Query<
         (Entity, &mut RestTime, &mut Velocity, &Name), 
-        (With<IdleBehavior>, Without<FollowupBehavior>, Without<PursuitBehavior>)
+        (
+            With<NPC>,
+            With<IdleBehavior>,
+            Without<FollowupBehavior>,
+            Without<PursuitBehavior>,
+        )
     >
 ) {
     for (npc, mut rest_timer, mut rb_vel, name) in npc_query.iter_mut() {
@@ -46,6 +57,8 @@ pub fn do_flexing(
 
         if rest_timer.timer.finished() {
 
+            // TODO restart previous behavior or new one
+
             info!(target: "Got a way to go", "{:?}, {}", npc, name);
 
             commands.entity(npc)
@@ -53,6 +66,10 @@ pub fn do_flexing(
                         JustWalkBehavior {
                             destination: give_a_direction()
                     });
+
+            // why this insert ?
+            commands.entity(npc)
+                    .insert(DetectionBehavior);
             commands.entity(npc)
                     .remove::<IdleBehavior>();
             commands.entity(npc)

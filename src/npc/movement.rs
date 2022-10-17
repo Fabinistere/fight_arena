@@ -10,19 +10,24 @@ use std::time::Duration;
 use rand::Rng;
 
 use crate::{
-    combat::{Leader, Team},
+    combat::{Leader, Team, InCombat},
     constants::character::npc::movement::*,
-    GameState,
+    // GameState,
     movement::Speed,
-    npc::idle::{
-        IdleBehavior,
-        RestTime
-    },
+    npc::{
+        aggression::{
+            CombatEvent,
+            StopChaseEvent
+        },
+        idle::{
+            IdleBehavior,
+            RestTime
+        },
+        NPC,
+    }, 
     // player::Player,
     TILE_SIZE,
 };
-
-use super::NPC;
 
 /// Indicates that an entity should run towards a destination and which.
 #[derive(Default, Component)]
@@ -32,6 +37,9 @@ pub struct JustWalkBehavior {
 
 #[derive(Default, Component)]
 pub struct FollowupBehavior;
+
+#[derive(Default, Component)]
+pub struct DetectionBehavior;
 
 #[derive(Default, Component)]
 pub struct PursuitBehavior;
@@ -67,31 +75,15 @@ pub fn just_walk(
         if !close(transform.translation, direction, TILE_SIZE/2.0)
         {
 
-//             println!(
-//                 "{} direction: ({},{})
-// position: ({},{})",
-//                 name, direction.x, direction.y,
-//                 transform.translation.x, transform.translation.y
-//             );
+            // println!(
+            //     "{} direction: ({},{}) \nposition: ({},{})",
+            //     name, direction.x, direction.y,
+            //     transform.translation.x, transform.translation.y
+            // );
 
-            let up = direction.y > transform.translation.y;
-            let down = direction.y < transform.translation.y;
-            let left = direction.x < transform.translation.x;
-            let right = direction.x > transform.translation.x;
+            let (vel_x, vel_y) =
+                move_to_dest(direction, transform, speed);
 
-            let x_axis = -(left as i8) + right as i8;
-            let y_axis = -(down as i8) + up as i8;
-
-            // println!("x: {}, y: {}", x_axis, y_axis);
-    
-            let mut vel_x = x_axis as f32 * **speed;
-            let mut vel_y = y_axis as f32 * **speed;
-    
-            if x_axis != 0 && y_axis != 0 {
-                vel_x *= (std::f32::consts::PI / 4.0).cos();
-                vel_y *= (std::f32::consts::PI / 4.0).cos();
-            }
-    
             rb_vel.linvel.x = vel_x;
             rb_vel.linvel.y = vel_y;
 
@@ -109,6 +101,7 @@ pub fn just_walk(
                     .insert(IdleBehavior);
             // println!("postChange: npc's state: {:#?}", npc.state);
             
+            // TODO change this part by sending a event : FREEZE
             commands.entity(npc)
                     .insert(RestTime {
                         // create the non-repeating rest timer
@@ -120,6 +113,8 @@ pub fn just_walk(
 
 /// Entity gently follows their target.
 /// depending the team
+/// 
+/// TODO: Follow an ally by the component Target 
 pub fn follow(
     // mut commands: Commands,
     mut npc_query: Query<(
@@ -153,28 +148,15 @@ pub fn follow(
                 
                 // println!("moving towards target: {}", name);
 
-                let up = target_transform.translation().y > transform.translation.y;
-                let down = target_transform.translation().y < transform.translation.y;
-                let left = target_transform.translation().x < transform.translation.x;
-                let right = target_transform.translation().x > transform.translation.x;
-    
-                let x_axis = -(left as i8) + right as i8;
-                let y_axis = -(down as i8) + up as i8;
-    
-                // println!("x: {}, y: {}", x_axis, y_axis);
-        
-                let mut vel_x = x_axis as f32 * **speed;
-                let mut vel_y = y_axis as f32 * **speed;
-        
-                if x_axis != 0 && y_axis != 0 {
-                    vel_x *= (std::f32::consts::PI / 4.0).cos();
-                    vel_y *= (std::f32::consts::PI / 4.0).cos();
-                }
-        
+                let (vel_x, vel_y) =
+                        move_to(target_transform, transform, speed);
+
                 rb_vel.linvel.x = vel_x;
                 rb_vel.linvel.y = vel_y;
     
-            } else if team.0 == target_team.0 {
+            }
+            // if reached the target
+            else if team.0 == target_team.0 {
                 // TODO AVOID npc to merge with the target
                 rb_vel.linvel.x = 0.;
                 rb_vel.linvel.y = 0.;
@@ -192,11 +174,11 @@ pub fn follow(
     // println!("pursue: {:?} entities, {:?} err, {:?} ok.", query.iter_mut().len(), err_count, ok_count);
 }
 
-/// Entity pursues their target.
+/// Entity chases their target.
 /// This target has entered in the detection range of the npc
 pub fn pursue(
     mut commands: Commands,
-    mut game_state: ResMut<State<GameState>>,
+    // mut game_state: ResMut<State<GameState>>,
     mut npc_query: Query<(
         Entity, 
         &Transform,
@@ -204,12 +186,15 @@ pub fn pursue(
         &mut Velocity,
         &Team,
         &Target,
+        &Children,
         &Name
         ),(With<NPC>, With<PursuitBehavior>)>,
     pos_query: Query<&GlobalTransform>,
+    mut ev_combat: EventWriter<CombatEvent>,
+    mut ev_stop_chase: EventWriter<StopChaseEvent>,
 ) {
 
-    for (npc, transform, speed, mut rb_vel, team, target, name) in npc_query.iter_mut() {
+    for (npc, transform, speed, mut rb_vel, _team, target, _colliders, name) in npc_query.iter_mut() {
 
         if target.0.is_none() {
             info!(target: "target is none", "{}", name);
@@ -220,47 +205,117 @@ pub fn pursue(
         match result {
             Err(_) => {
                 // target does not have position. Disengage.
-                commands.entity(npc).remove::<PursuitBehavior>();
+                ev_stop_chase
+                    .send(StopChaseEvent {
+                        npc_entity: npc
+                    });
                 continue;
             }
             Ok(target_transform) => {
-                // Turn away from the enemy.
+                // If the target is too far away
+                // adjust npc's velocity to reach it
                 if !close(transform.translation, target_transform.translation(), 10.*TILE_SIZE)
                 {
                     
                     // println!("moving towards target: {}", name);
+                    let (vel_x, vel_y) =
+                        move_to(target_transform, transform, speed);
 
-                    let up = target_transform.translation().y > transform.translation.y;
-                    let down = target_transform.translation().y < transform.translation.y;
-                    let left = target_transform.translation().x < transform.translation.x;
-                    let right = target_transform.translation().x > transform.translation.x;
-
-                    let x_axis = -(left as i8) + right as i8;
-                    let y_axis = -(down as i8) + up as i8;
-
-                    // println!("x: {}, y: {}", x_axis, y_axis);
-            
-                    let mut vel_x = x_axis as f32 * **speed;
-                    let mut vel_y = y_axis as f32 * **speed;
-            
-                    if x_axis != 0 && y_axis != 0 {
-                        vel_x *= (std::f32::consts::PI / 4.0).cos();
-                        vel_y *= (std::f32::consts::PI / 4.0).cos();
-                    }
-            
                     rb_vel.linvel.x = vel_x;
                     rb_vel.linvel.y = vel_y;
+                    
 
                 } else {
-                    // TODO AVOID npc to merge with the target
+                    info!("Target Caught in 4K by {:?} {}", npc, name);
+
+                    // open HUD to combat talk after chase
+                    ev_combat.send(CombatEvent);
+                    commands.entity(npc)
+                            .insert(InCombat);
+
+                    // Freeze any entity involved in the combat
+                    // when read CombatEvent
                     rb_vel.linvel.x = 0.;
                     rb_vel.linvel.y = 0.;
+
+                    ev_stop_chase
+                        .send(StopChaseEvent {
+                            npc_entity: npc
+                        });
+
+                    commands
+                        .entity(npc)
+                        .remove::<PursuitBehavior>();
+
+                    // remove old poursuit sensor
+                    
+
+                    // handle flee when pressing o or moving ?
+                    // (timer on npc before rechase)
+                    // 'global' timer (on player)
+                    // atm just pressing o won't make you free cause still in the detectionSensor
                 }
             }
         }
 
         
     }
+}
+
+/// Give velocity x and y value to move forward a certain target
+fn move_to(
+    target_transform: &GlobalTransform,
+    transform: &Transform,
+    speed: &Speed,
+) -> (f32, f32)
+{
+    let up = target_transform.translation().y > transform.translation.y;
+    let down = target_transform.translation().y < transform.translation.y;
+    let left = target_transform.translation().x < transform.translation.x;
+    let right = target_transform.translation().x > transform.translation.x;
+
+    let x_axis = -(left as i8) + right as i8;
+    let y_axis = -(down as i8) + up as i8;
+
+    // println!("x: {}, y: {}", x_axis, y_axis);
+
+    let mut vel_x = x_axis as f32 * **speed;
+    let mut vel_y = y_axis as f32 * **speed;
+
+    if x_axis != 0 && y_axis != 0 {
+        vel_x *= (std::f32::consts::PI / 4.0).cos();
+        vel_y *= (std::f32::consts::PI / 4.0).cos();
+    }
+
+    return (vel_x, vel_y);
+}
+
+/// Give velocity x and y value to move forward a certain vec3
+fn move_to_dest(
+    target_vec3: Vec3,
+    transform: &Transform,
+    speed: &Speed,
+) -> (f32, f32)
+{
+    let up = target_vec3.y > transform.translation.y;
+    let down = target_vec3.y < transform.translation.y;
+    let left = target_vec3.x < transform.translation.x;
+    let right = target_vec3.x > transform.translation.x;
+
+    let x_axis = -(left as i8) + right as i8;
+    let y_axis = -(down as i8) + up as i8;
+
+    // println!("x: {}, y: {}", x_axis, y_axis);
+
+    let mut vel_x = x_axis as f32 * **speed;
+    let mut vel_y = y_axis as f32 * **speed;
+
+    if x_axis != 0 && y_axis != 0 {
+        vel_x *= (std::f32::consts::PI / 4.0).cos();
+        vel_y *= (std::f32::consts::PI / 4.0).cos();
+    }
+
+    return (vel_x, vel_y);
 }
 
 /**
@@ -305,7 +360,7 @@ fn close(
 /**
  * param:
  *  force
- *  range: cuboid ?
+ *  range: cuboid ? no ball
  * return:
  *  Vec3
  */

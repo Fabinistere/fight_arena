@@ -27,12 +27,16 @@ use crate::{
     movement::*,
     npc::{
         aggression::{
+            DetectionModeEvent,
             DetectionSensor
         },
         // idle::IdleBehavior,
-        movement::FollowupBehavior,
-        movement::JustWalkBehavior,
-        movement::give_a_direction
+        movement::{
+            DetectionBehavior,
+            FollowupBehavior,
+            JustWalkBehavior,
+            give_a_direction,
+        }
     }
 };
 
@@ -53,6 +57,7 @@ pub enum NPCSystems {
     // FindLandmark,
     FindTargets,
     Chase,
+    StopChase,
     // Talking,
     Idle,
     // Combat,
@@ -85,30 +90,40 @@ pub enum NPCSystems {
 impl Plugin  for NPCPlugin {
     fn build(&self, app: &mut App) {
         app
+            // when an enemy npc catch the player or an ally attached to the group
+            // initialize a Combat
+            // Combat mean A lock dialogue : Talk or Fight
+            .add_event::<aggression::CombatEvent>()
+            .add_event::<aggression::CombatExitEvent>()
+            .add_event::<aggression::StopChaseEvent>()
+            .add_event::<aggression::DetectionModeEvent>()
+            .add_event::<aggression::EngagePursuitEvent>()
+
             .add_startup_system(spawn_character)
-            .add_system_to_stage(
+
+            .add_system_set_to_stage(
                 CoreStage::Update,
-                movement::just_walk
+                SystemSet::new()
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::Stroll)
+                    .with_system(
+                        movement::just_walk.label(NPCSystems::Stroll)
+                    )
+                    .with_system(
+                        movement::follow.label(NPCSystems::Follow)
+                    )
+                    .with_system(
+                        idle::do_flexing
+                            .label(NPCSystems::Idle)
+                            .after(NPCSystems::Stroll)
+                    )
             )
+            // .add_system(aggression::add_pursuit_urge)
+            // .add_system(aggression::remove_pursuit_urge)
             .add_system_to_stage(
                 CoreStage::Update,
-                movement::follow
+                aggression::add_detection_aura
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::Follow)
-            )
-            .add_system_to_stage(
-                CoreStage::Update,
-                movement::follow
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::Follow)
-            )
-            .add_system_to_stage(
-                CoreStage::Update,
-                idle::do_flexing
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::Idle)
+                    .before(NPCSystems::FindTargets)
             )
             .add_system_to_stage(
                 CoreStage::Update,
@@ -118,10 +133,37 @@ impl Plugin  for NPCPlugin {
             )
             .add_system_to_stage(
                 CoreStage::Update,
+                aggression::add_pursuit_urge
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .before(NPCSystems::Chase)
+                    .after(NPCSystems::FindTargets)
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
                 movement::pursue
                     .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(NPCSystems::Chase)
-            );
+                    .after(NPCSystems::FindTargets)
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
+                aggression::remove_pursuit_urge
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .label(NPCSystems::StopChase)
+                    .after(NPCSystems::Chase)
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
+                aggression::fair_play_wait
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .after(NPCSystems::StopChase)
+            )
+            .add_system(
+                aggression::add_detection_aura
+                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    .after(NPCSystems::StopChase)
+            )
+            ;
     }
 }
 
@@ -133,7 +175,23 @@ fn spawn_character(
     fabien: Res<FabienSheet>,
 ) {
 
+    /*
+     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/rapier2d-0.14.0/src/geometry/collider.rs
+     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_rapier2d-0.16.2/src/geometry/collider.rs
+     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_rapier2d-0.16.2/src/plugin/context.rs
+     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_rapier2d-0.16.2/src/plugin/narrow_phase.rs
+     */
+
+    // let char_hitbox_original =
+    //     commands
+    //         .spawn()
+    //         .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
+    //         .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
+    //         .insert(CharacterHitbox)
+    //         .id();
+
     // Olf 
+    // let olf =
     commands
         .spawn_bundle(SpriteSheetBundle {
             sprite: TextureAtlasSprite::new(OLF_STARTING_SS),
@@ -171,8 +229,8 @@ fn spawn_character(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
+        .insert(DetectionBehavior)
         .with_children(|parent| {
-
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
@@ -186,9 +244,26 @@ fn spawn_character(
                 .insert(Sensor)
                 .insert(DetectionSensor)
                 .insert(Name::new("Detection Range"));
-
         })
+        // .id()
         ;
+
+    // instead of:
+    
+        // commands
+        //     .entity(olf);
+        
+        // commands
+        //     .entity(olf)
+        //     // same as add_child()
+        //     // push_children doesn't work
+        //     .add_child(char_hitbox_original.clone());
+        
+        // send a event in the startup is not a good idea
+        // The event will be lost after the stage ended (frame passed)
+        // ev_detection_mode.send(DetectionModeEvent { 
+        //     entity: olf
+        // });
 
     // Admiral
     commands
@@ -224,14 +299,36 @@ fn spawn_character(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
+        .insert(DetectionBehavior)
         .with_children(|parent| {
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
                 .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
                 .insert(CharacterHitbox);
+
+            parent
+                .spawn()
+                .insert(Collider::ball(40.))
+                .insert(ActiveEvents::COLLISION_EVENTS)
+                .insert(Sensor)
+                .insert(DetectionSensor)
+                .insert(Name::new("Detection Range"));
         })
         ;
+
+    // commands
+    //     .entity(admiral);
+
+    // commands
+    //     .entity(admiral)
+    //     // same as add_child()
+    //     // push_children doesn't work
+    //     .add_child(char_hitbox_original.clone());
+
+    // ev_detection_mode.send(DetectionModeEvent { 
+    //     entity: admiral
+    // });
 
     // HUGO
     commands
@@ -267,13 +364,34 @@ fn spawn_character(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
+        .insert(DetectionBehavior)
         .with_children(|parent| {
             parent
                 .spawn()
                 .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
                 .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
                 .insert(CharacterHitbox);
+
+            parent
+                .spawn()
+                .insert(Collider::ball(40.))
+                .insert(ActiveEvents::COLLISION_EVENTS)
+                .insert(Sensor)
+                .insert(DetectionSensor)
+                .insert(Name::new("Detection Range"));
         })
         ;
+
+    // commands
+    //     .entity(hugo);
+
+    // commands
+    //     .entity(hugo)
+    //     // push_children doesn't work
+    //     .add_child(char_hitbox_original.clone());
+
+    // ev_detection_mode.send(DetectionModeEvent { 
+    //     entity: hugo
+    // });
 
 }

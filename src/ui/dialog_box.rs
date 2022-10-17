@@ -1,4 +1,9 @@
-use crate::constants::ui::dialogs::*;
+//! All method involved in creating the UI ingame
+//! 
+//! EventHandler :
+//!     - Enter in Combat
+//!     - Exit in Combat
+//!     - Open HUD manually (pressing 'o')
 
 use bevy::prelude::*;
 // render::RenderWorld,
@@ -6,6 +11,15 @@ use bevy::prelude::*;
 // ui::{ExtractedUiNode, ExtractedUiNodes},
 use bevy_tweening::{lens::UiPositionLens, *};
 use std::time::Duration;
+
+use crate::{
+    constants::ui::dialogs::*,
+    npc::aggression::{
+        CombatEvent,
+        CombatExitEvent,
+    },
+};
+
 
 #[derive(Component)]
 pub struct DialogPanel;
@@ -39,9 +53,26 @@ pub struct Scroll {
 #[derive(Component, Deref, DerefMut)]
 pub struct ScrollTimer(Timer);
 
+/// Happens when
+///   - ui::dialog_box::create_dialog_box_on_key_press
+///     - press 'o' to open the UI
+///   - ui::dialog_box::create_dialog_box_on_combat_event
+///     - for each CombatEvent read: open a UI
+/// Read in
+///   - ui::dialog_box::create_dialog_box
+///     - for a given String, creates a ui + fx
 pub struct CreateDialogBoxEvent {
     dialog: String,
 }
+
+/// Happens when
+///   - ui::dialog_box::create_dialog_box_on_key_press
+///     - ui already open
+///   - ui::dialog_box::create_dialog_box_on_combat_event
+///     - ui already open
+/// Read in
+///   - ui::dialog_box::close_dialog_box
+///     - close ui
 pub struct CloseDialogBoxEvent;
 
 pub struct DialogBoxResources {
@@ -59,7 +90,7 @@ pub struct DialogBoxResources {
 pub fn load_textures(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     // let scroll_texture = asset_server.load("textures/hud/scroll_animation.png");
     // let scroll_atlas = TextureAtlas::from_grid(scroll_texture, SCROLL_SIZE.into(), 1, 45);
@@ -90,7 +121,8 @@ pub fn create_dialog_box_on_key_press(
     query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::O) {
+    if keyboard_input.just_pressed(KeyCode::O)
+    {
         if let Ok((_entity, animator, _style)) = query.get_single() {
             if animator.tweenable().unwrap().progress() >= 1.0 {
                 close_dialog_box_event.send(CloseDialogBoxEvent);
@@ -98,9 +130,57 @@ pub fn create_dialog_box_on_key_press(
         } else {
             info!("here second");
             create_dialog_box_event.send(CreateDialogBoxEvent {
-                dialog: "Bonjour Florian. Comment vas-tu ? J'ai faim.".to_owned(),
+                dialog: "Bonjour Florian. \nComment vas-tu ? \nJ'ai faim.".to_owned(),
             });
         }
+    }
+}
+
+/// Handle the CombatEvent
+/// 
+/// read CombatEvent
+///     open a new ui / or got to Discussion ui
+/// read CombatExitEvent
+///     close any open ui
+pub fn create_dialog_box_on_combat_event(
+    mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
+    mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
+    query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
+    mut ev_combat: EventReader<CombatEvent>,
+    mut ev_combat_exit: EventReader<CombatExitEvent>,   
+)
+{
+
+    // order : exit combat UI 
+    for _ev in ev_combat_exit.iter()
+    {
+        // and UI is open
+        if let Ok((_entity, animator, _style)) = query.get_single()
+        {
+            if animator.tweenable().unwrap().progress() >= 1.0 {
+                close_dialog_box_event.send(CloseDialogBoxEvent);
+            }
+        }
+    }
+    // TODO Test
+    // putting the combat exit event
+    // before the combat enter event
+    for _ev in ev_combat.iter() 
+    {
+
+        // if already open go to combat tab
+        if let Ok((_entity, animator, _style)) = query.get_single() {
+            // close any open ui
+            if animator.tweenable().unwrap().progress() >= 1.0 {
+                close_dialog_box_event.send(CloseDialogBoxEvent);
+            }
+
+        }
+        // open a new ui with the Combat Choose
+        info!("Open UI Combat");
+        create_dialog_box_event.send(CreateDialogBoxEvent {
+            dialog: "TALK \nFIGHT".to_owned(),
+        });       
     }
 }
 
@@ -347,7 +427,7 @@ pub fn update_dialog_box(
 
 pub fn animate_scroll(
     time: Res<Time>,
-    texture_atlases: Res<Assets<TextureAtlas>>,
+    // texture_atlases: Res<Assets<TextureAtlas>>,
     dialog_box_resources: Res<DialogBoxResources>,
     mut commands: Commands,
     mut scroll_query: Query<(&mut UiImage, &mut Scroll, &mut ScrollTimer, Entity)>,
