@@ -26,10 +26,7 @@ use crate::{
     FabienSheet,
     movement::*,
     npc::{
-        aggression::{
-            DetectionModeEvent,
-            DetectionSensor
-        },
+        aggression::DetectionSensor,
         // idle::IdleBehavior,
         movement::{
             DetectionBehavior,

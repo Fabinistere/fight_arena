@@ -36,10 +36,11 @@ pub fn do_flexing(
     mut commands: Commands,
     time: Res<Time>,
     mut npc_query: Query<
-        (Entity, &mut RestTime, &mut Velocity, &Name), 
+        (Entity, &mut RestTime, &mut Velocity, &Name), // Option<&mut JustWalkBehavior>,
         (
             With<NPC>,
             With<IdleBehavior>,
+            // Or<(JustWalkBehavior, ...)>,
             Without<FollowupBehavior>,
             Without<PursuitBehavior>,
         )
@@ -57,19 +58,13 @@ pub fn do_flexing(
 
         if rest_timer.timer.finished() {
 
-            // TODO restart previous behavior or new one
+            info!(target: "Stop Rest", "{:?}, {}", npc, name);
 
-            info!(target: "Got a way to go", "{:?}, {}", npc, name);
-
-            commands.entity(npc)
-                    .insert(
-                        JustWalkBehavior {
-                            destination: give_a_direction()
-                    });
-
-            // why this insert ?
-            commands.entity(npc)
-                    .insert(DetectionBehavior);
+            // restart previous behavior
+                // if JustWalkingBehavior
+                // new target
+                // event to change destination
+            // TODO or new one
             commands.entity(npc)
                     .remove::<IdleBehavior>();
             commands.entity(npc)

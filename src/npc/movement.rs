@@ -61,14 +61,14 @@ pub fn just_walk(
     mut commands: Commands,
     mut npc_query: Query<(
         Entity,
-        &JustWalkBehavior,
+        &mut JustWalkBehavior,
         &Transform,
         &Speed,
         &mut Velocity,
         &Name
     ), (With<JustWalkBehavior>, Without<IdleBehavior>, Without<PursuitBehavior>)>
 ) {
-    for (npc, behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
+    for (npc, mut behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
         let direction: Vec3 = behavior.destination;
 
         // TODO Approximation Louche
@@ -95,8 +95,10 @@ pub fn just_walk(
             rb_vel.linvel.x = 0.;
             rb_vel.linvel.y = 0.;
 
-            commands.entity(npc)
-                    .remove::<JustWalkBehavior>();
+            // change their destiantion before resting
+            // TODO event like in do_flexing
+            behavior.destination = give_a_direction();
+
             commands.entity(npc)
                     .insert(IdleBehavior);
             // println!("postChange: npc's state: {:#?}", npc.state);
