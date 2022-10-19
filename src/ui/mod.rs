@@ -13,6 +13,7 @@ impl Plugin for UiPlugin {
             .add_system(dialog_box::create_dialog_box)
             .add_system(dialog_box::close_dialog_box)
             .add_system(dialog_box::create_dialog_box_on_key_press)
+            .add_system(dialog_box::create_dialog_box_on_combat_event)
             .add_system(dialog_box::despawn_dialog_box);
     }
 }

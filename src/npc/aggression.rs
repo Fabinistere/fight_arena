@@ -81,42 +81,54 @@ pub struct EngagePursuitEvent {
     target_entity: Entity
 }
 
-/// targeting after the detection event
-/// Even if the FairPlayTimer ended:
-///     As the entity doesn't stop the collision to restart it,
-///     (quit n enter the detection circle)
-///     with themself and the DetectionSensor,
-///     the npc won't start pursue/chase
-///     (wait for you to hide)
+/// Pursuit Management
+/// 
+///   - Engagement
+///       - targeting after the detection event
+///           - Even if the FairPlayTimer ended:
+///               As the entity doesn't stop the collision to restart it,
+///               (quit n enter the detection circle)
+///               with themself and the DetectionSensor,
+///               the npc won't start pursue/chase
+///               (wait for you to hide)
+///     - Disengagement
+///         - If the target outran the chaser remove
 pub fn threat_detection(
     mut ev_engage_pursuit: EventWriter<EngagePursuitEvent>,
+    mut ev_stop_pursuit: EventWriter<StopChaseEvent>,
 
     rapier_context: Res<RapierContext>,
 
     mut collision_events: EventReader<CollisionEvent>,
-    collider_sensor_query: Query<(Entity, &Parent), (With<Collider>, With<Sensor>, With<DetectionSensor>)>,
+    collider_detection_sensor_query: Query<(Entity, &Parent), (With<Collider>, With<Sensor>, With<DetectionSensor>)>,
+    collider_pursuit_sensor_query: Query<(Entity, &Parent), (With<Collider>, With<Sensor>, With<PursuitSensor>)>,
     collider_query: Query<(Entity, &Parent), (With<Collider>, With<CharacterHitbox>)>,
     
     target_query: Query<(Entity, &Team, &Name)>,
-    npc_query: Query<(Entity, &Team, &Name), (With<NPC>, With<DetectionBehavior>, Without<PursuitBehavior>, Without<FairPlayTimer>)>
+    npc_query: Query<(Entity, &Team, &Name), (With<NPC>, With<DetectionBehavior>, Without<PursuitBehavior>, Without<FairPlayTimer>)>,
+    pursuit_npc_query: Query<(Entity, &Team, &Name), (With<NPC>, With<PursuitBehavior>, Without<DetectionBehavior>)> // , Without<FairPlayTimer>
 ) {
 
     for collision_event in collision_events.iter() {
         let entity_1 = collision_event.entities().0;
         let entity_2 = collision_event.entities().1;
         
-        // one of theses two colliders is a sensor
+        // TODO find a nicer solution instead of this "copy paste"
+        // it's pbly opti cause (TODO complexity calc) enter in the if or the else if 
+
+        // one of these two colliders is a sensor && are in collision
         if rapier_context.intersection_pair(entity_1, entity_2) == Some(true) {
 
             // DEBUG: info!(target: "Collision Event with a sensor involved", "{:?} and {:?}", entity_1, entity_2);
 
+            // check if the sensor is a DetectionSensor
             match (
-                collider_sensor_query.get(entity_1),
-                collider_sensor_query.get(entity_2),
+                collider_detection_sensor_query.get(entity_1),
+                collider_detection_sensor_query.get(entity_2),
                 collider_query.get(entity_1),
                 collider_query.get(entity_2)
             ) {
-                // only one of them is a ColliderSensor: sensor_potential_npc
+                // only one of them contains DetectionSensor: sensor_potential_npc
                 // and the other one is a hitbox_potential_threat
                 (Ok(sensor_potential_npc), Err(_e1), Err(_e2), Ok(hitbox_potential_threat))
                 | (Err(_e1), Ok(sensor_potential_npc), Ok(hitbox_potential_threat), Err(_e2)) => {
@@ -163,6 +175,69 @@ pub fn threat_detection(
                         // not our manners (not a npc OR not a potential target)
                         (Err(e), _) => warn!(target: "Not an NPC", "err: {:?}", e),
                         (_, Err(e)) => warn!(target: "Not an Targeable Entity", "err: {:?}", e),
+
+                        // _ => continue
+                    }
+
+                }
+                // two are sensors
+                // two are errors
+                _ => continue,
+            }
+        }
+
+        // these two colliders have stopped their collision
+        else if collision_event.is_stopped() {
+
+            // check if the sensor is a PursuitSensor
+            match (
+                collider_pursuit_sensor_query.get(entity_1),
+                collider_pursuit_sensor_query.get(entity_2),
+                collider_query.get(entity_1),
+                collider_query.get(entity_2)
+            ) {
+                // only one of them contains PursuitSensor: sensor_potential_npc
+                // and the other one is a hitbox_potential_threat
+                (Ok(sensor_potential_npc), Err(_e1), Err(_e2), Ok(hitbox_potential_threat))
+                | (Err(_e1), Ok(sensor_potential_npc), Ok(hitbox_potential_threat), Err(_e2)) => {
+
+                    // DEBUG: info!(target: "Collision with a sensor and a hitbox", "{:?} and {:?}", sensor_potential_npc, hitbox_potential_threat);
+
+                    // [sensor_potential_npc, hitbox_potential_threat].1 returns the Parent Entity
+
+                    // from the collider get their parent
+                    match (
+                        pursuit_npc_query.get(sensor_potential_npc.1.get()),
+                        target_query.get(hitbox_potential_threat.1.get())
+                    ) {
+                        (Ok(npc), Ok(target)) => {
+
+                            // DEBUG: info!(target: "Collision with a npc and a character", "{:?} and {:?}", npc.0, target.0);
+
+                            // [npc, target].0: Entity
+                            // [npc, target].1: &Team
+                            // [npc, target].2: &Name
+                            // add the potential_threat as a target if not in the same team
+                            if target.1 != npc.1 {
+
+                                info!("{} outran {}: chase canceled", target.2, npc.2);
+
+                                ev_stop_pursuit.send(StopChaseEvent {
+                                    npc_entity: npc.0,
+                                });
+                                
+
+                            }
+                            else { 
+                                info!("{} detected {}: same team", npc.2, target.2);
+                                continue
+                            }
+                            
+                        }
+
+                        // not our manners (not a npc OR not a potential target)
+                        (Err(e), _) => warn!("Not the wanted NPC; err: {:?}", e),
+                        (_, Err(e)) => warn!("Not an Targeable Entity; err: {:?}", e),
 
                         // _ => continue
                     }
@@ -241,8 +316,6 @@ pub fn add_pursuit_urge(
     //         .id();
 
     for ev in ev_engage_pursuit.iter() {
-
-        info!("help");
         
         match npc_query.get(ev.npc_entity) {
 
@@ -332,9 +405,11 @@ pub fn remove_pursuit_urge (
                     // despawn it
                     match pursuit_sensor_query.get(*collider) {
                         // returned pursuit_sensor: Entity
-                        Ok(pursuit_sensor) => {
+                        Ok(_pursuit_sensor) => {
+
+                            // TODO detach the child from their parent
                             commands
-                                .entity(pursuit_sensor)
+                                .entity(*collider)
                                 .despawn();
                         }
 
