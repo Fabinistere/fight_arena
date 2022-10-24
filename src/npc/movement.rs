@@ -92,8 +92,8 @@ pub fn just_walk(
             info!(target: "Start Rest", "{:?}, {}", npc, name);
 
             // Stop the npc after reaching the destination
-            rb_vel.linvel.x = 0.;
-            rb_vel.linvel.y = 0.;
+            // rb_vel.linvel.x = 0.;
+            // rb_vel.linvel.y = 0.;
 
             // change their destiantion before resting
             // TODO event like in do_flexing
@@ -134,35 +134,33 @@ pub fn follow(
 
         for (target_transform, target_team, _name) in targets_query.iter() {
 
-            // incorporer le test team.0 == target_team.0 dans le for
-            // pour eval qu'une fois
-            
             // println!("target: {}, Leader of team {}", name, target_team.0);
+            if team.0 == target_team.0 {
+                // TODO
+                // Rework this Approximation Louche
+                // carefull with more than one leader per team
+                // it will be not nice
 
-            // TODO
-            // Rework this Approximation Louche
-            // carefull with more than one leader per team
-            // it will be not nice
+                if !close(transform.translation, target_transform.translation(), 20.*TILE_SIZE)
+                {
+                    
+                    // println!("moving towards target: {}", name);
 
-            if (team.0 == target_team.0)
-               && !close(transform.translation, target_transform.translation(), 20.*TILE_SIZE)
-            {
-                
-                // println!("moving towards target: {}", name);
+                    let (vel_x, vel_y) =
+                            move_to(target_transform, transform, speed);
 
-                let (vel_x, vel_y) =
-                        move_to(target_transform, transform, speed);
-
-                rb_vel.linvel.x = vel_x;
-                rb_vel.linvel.y = vel_y;
-    
+                    rb_vel.linvel.x = vel_x;
+                    rb_vel.linvel.y = vel_y;
+        
+                }
+                // if reached the target
+                else {
+                    // TODO AVOID npc to merge with the target
+                    rb_vel.linvel.x = 0.;
+                    rb_vel.linvel.y = 0.;
+                }
             }
-            // if reached the target
-            else if team.0 == target_team.0 {
-                // TODO AVOID npc to merge with the target
-                rb_vel.linvel.x = 0.;
-                rb_vel.linvel.y = 0.;
-            }
+           
         }
     }
         
@@ -243,14 +241,7 @@ pub fn pursue(
                     ev_stop_chase
                         .send(StopChaseEvent {
                             npc_entity: npc
-                        });
-
-                    commands
-                        .entity(npc)
-                        .remove::<PursuitBehavior>();
-
-                    // remove old poursuit sensor
-                    
+                        });                    
 
                     // handle flee when pressing o or moving ?
                     // (timer on npc before rechase)
