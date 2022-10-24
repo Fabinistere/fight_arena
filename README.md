@@ -9,18 +9,29 @@ NPC can
 - follow the player within a range
 - walk around towards random destination
 
-NPC now use the velocity method to move
+Aggressive NPC can
+
+- detect player and enemy
+- chase them
+- trigger CombatEvent
 
 Collision works thanks to bevy_retrograde
 
-Press O to see the grateful future
+Press o to see the grateful future
 
 ### For a future
 
 - NPC will Avoid collider
-- NPC will Have some personnality
-- Implement landmark/place
+  - Pathfind ?
+- NPC will have some personnality
+  - Implement landmark/place
+  - Will have dialogue
 - Combat system
+  - Talk
+  - Fight
+    - Placement
+    - UI
+    - Combat Phases
 
 ## Assets deported - Ecological Issue
 
