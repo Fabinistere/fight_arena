@@ -80,9 +80,9 @@ pub struct DialogBoxResources {
     appartements: Handle<Image>,
     stained_glass_panels: Handle<Image>,
     background: Handle<Image>,
-    stained_glass_closed: Handle<Image>,
+    _stained_glass_closed: Handle<Image>,
     stained_glass_opened: Handle<Image>,
-    stained_glass_bars: Handle<Image>,
+    _stained_glass_bars: Handle<Image>,
     chandelier: Handle<Image>,
     scroll_animation: Vec<Handle<Image>>,
 }
@@ -107,9 +107,9 @@ pub fn load_textures(
         background: asset_server.load("textures/hud/dialog_background.png"),
         scroll_animation: scroll_animation_frames,
         chandelier: asset_server.load("textures/hud/chandelier.png"),
-        stained_glass_closed: asset_server.load("textures/hud/stained_glass_closed.png"),
+        _stained_glass_closed: asset_server.load("textures/hud/stained_glass_closed.png"),
         stained_glass_opened: asset_server.load("textures/hud/stained_glass_opened.png"),
-        stained_glass_bars: asset_server.load("textures/hud/stained_glass_bars.png"),
+        _stained_glass_bars: asset_server.load("textures/hud/stained_glass_bars.png"),
         stained_glass_panels: asset_server.load("textures/hud/stained_glass_panels.png"),
     });
 }
@@ -171,16 +171,18 @@ pub fn create_dialog_box_on_combat_event(
         // if already open go to combat tab
         if let Ok((_entity, animator, _style)) = query.get_single() {
             // close any open ui
-            if animator.tweenable().unwrap().progress() >= 1.0 {
-                close_dialog_box_event.send(CloseDialogBoxEvent);
-            }
+            // if animator.tweenable().unwrap().progress() >= 1.0 {
+            //     close_dialog_box_event.send(CloseDialogBoxEvent);
+            // }
 
         }
-        // open a new ui with the Combat Choose
-        info!("Open UI Combat");
-        create_dialog_box_event.send(CreateDialogBoxEvent {
-            dialog: "TALK \nFIGHT".to_owned(),
-        });       
+        else {
+            // open a new ui with the Combat Choose
+            info!("Open UI Combat");
+            create_dialog_box_event.send(CreateDialogBoxEvent {
+                dialog: "TALK \nFIGHT".to_owned(),
+            });
+        }   
     }
 }
 
