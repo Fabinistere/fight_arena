@@ -172,23 +172,7 @@ fn spawn_character(
     fabien: Res<FabienSheet>,
 ) {
 
-    /*
-     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/rapier2d-0.14.0/src/geometry/collider.rs
-     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_rapier2d-0.16.2/src/geometry/collider.rs
-     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_rapier2d-0.16.2/src/plugin/context.rs
-     * /home/olf/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_rapier2d-0.16.2/src/plugin/narrow_phase.rs
-     */
-
-    // let char_hitbox_original =
-    //     commands
-    //         .spawn()
-    //         .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-    //         .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
-    //         .insert(CharacterHitbox)
-    //         .id();
-
-    // Olf 
-    // let olf =
+    // ADMIRAL
     commands
         .spawn_bundle(SpriteSheetBundle {
             sprite: TextureAtlasSprite::new(OLF_STARTING_SS),

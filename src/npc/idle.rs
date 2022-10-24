@@ -61,9 +61,6 @@ pub fn do_flexing(
             info!(target: "Stop Rest", "{:?}, {}", npc, name);
 
             // restart previous behavior
-                // if JustWalkingBehavior
-                // new target
-                // event to change destination
             // TODO or new one
             commands.entity(npc)
                     .remove::<IdleBehavior>();
