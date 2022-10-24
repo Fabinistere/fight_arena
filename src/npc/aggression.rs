@@ -6,8 +6,10 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     collisions::CollisionEventExt,
-    combat::{ FairPlayTimer, Team },
-    constants::{character::npc::movement::EVASION_TIMER, combat::team::TEAM_MC},
+    combat::{
+        FairPlayTimer,
+        Team,
+    },
     npc::{
         movement::{
             PursuitBehavior,
@@ -58,8 +60,11 @@ pub struct StopChaseEvent {
 }
 
 /// Happens when:
-///   - npc::mod
+///   - ~~npc::mod~~
 ///     - creating npc
+///   - npc::aggression::remove_pursuit_urge
+///     - restablish -*dominance*- the detection behavior
+///       over the pursuit beh
 /// Read in
 ///   - npc::aggression::add_detection_aura
 ///     - creates THE DetectionSensor in the entity
@@ -81,18 +86,29 @@ pub struct EngagePursuitEvent {
     target_entity: Entity
 }
 
+// if we represent a grp not only by their leader
+// but with every npc in :
+
+/// Happens when:
+///   - *future*
+///     - if the target outran all npc in a grp,
+///       disengage the grp
+///       - a grp still chase a target if there is
+///         at least one member still in range
+// pub struct DisengagePursuitGlobalEvent;
+
 /// Pursuit Management
 /// 
 ///   - Engagement
-///       - targeting after the detection event
-///           - Even if the FairPlayTimer ended:
-///               As the entity doesn't stop the collision to restart it,
-///               (quit n enter the detection circle)
-///               with themself and the DetectionSensor,
-///               the npc won't start pursue/chase
-///               (wait for you to hide)
-///     - Disengagement
-///         - If the target outran the chaser remove
+///     - targeting after the detection event
+///       - Even if the FairPlayTimer ended:
+///         As the entity doesn't stop the collision to restart it,
+///         (quit n enter the detection circle)
+///         with themself and the DetectionSensor,
+///         the npc won't start pursue/chase
+///         (wait for you to hide)
+///   - Disengagement
+///     - If the target outran the chaser remove
 pub fn threat_detection(
     mut ev_engage_pursuit: EventWriter<EngagePursuitEvent>,
     mut ev_stop_pursuit: EventWriter<StopChaseEvent>,
@@ -165,18 +181,18 @@ pub fn threat_detection(
                                 
 
                             }
-                            else { 
-                                info!("{} detected {}: same team", npc.2, target.2);
-                                continue
-                            }
+                            // else { 
+                            //     info!("{} detected {}: same team", npc.2, target.2);
+                            //     continue
+                            // }
                             
                         }
 
                         // not our manners (not a npc OR not a potential target)
-                        (Err(e), _) => warn!(target: "Not an NPC", "err: {:?}", e),
-                        (_, Err(e)) => warn!(target: "Not an Targeable Entity", "err: {:?}", e),
+                        // (Err(e), _) => warn!(target: "Not an NPC", "err: {:?}", e),
+                        // (_, Err(e)) => warn!(target: "Not an Targeable Entity", "err: {:?}", e),
 
-                        // _ => continue
+                        _ => continue
                     }
 
                 }
@@ -228,18 +244,18 @@ pub fn threat_detection(
                                 
 
                             }
-                            else { 
-                                info!("{} detected {}: same team", npc.2, target.2);
-                                continue
-                            }
+                            // else { 
+                            //     info!("{} detected {}: same team", npc.2, target.2);
+                            //     continue
+                            // }
                             
                         }
 
                         // not our manners (not a npc OR not a potential target)
-                        (Err(e), _) => warn!("Not the wanted NPC; err: {:?}", e),
-                        (_, Err(e)) => warn!("Not an Targeable Entity; err: {:?}", e),
+                        // (Err(e), _) => warn!("Not the wanted NPC; err: {:?}", e),
+                        // (_, Err(e)) => warn!("Not an Targeable Entity; err: {:?}", e),
 
-                        // _ => continue
+                        _ => continue
                     }
 
                 }
@@ -296,7 +312,7 @@ pub fn add_pursuit_urge(
     mut commands: Commands,
     mut ev_engage_pursuit: EventReader<EngagePursuitEvent>,
     npc_query: Query<
-        Entity,
+        (Entity, &Name),
         (
             With<NPC>,
             With<DetectionBehavior>,
@@ -320,7 +336,7 @@ pub fn add_pursuit_urge(
         match npc_query.get(ev.npc_entity) {
 
             Ok(npc) => {
-                info!("add pursuit urge with an npc");
+                info!("add pursuit urge to {}", npc.1);
 
                 // remove DetectionSensor
                 commands
@@ -329,12 +345,12 @@ pub fn add_pursuit_urge(
 
                 // remove DetectionBehavior
                 commands
-                    .entity(npc)
+                    .entity(npc.0)
                     .remove::<DetectionBehavior>();
         
                 // turn on npc pursuit sensor
                 commands
-                    .entity(npc)
+                    .entity(npc.0)
                     .insert(PursuitBehavior)
                     .with_children(|parent| {
                         parent
@@ -348,7 +364,7 @@ pub fn add_pursuit_urge(
         
                 // insert the new target into the npc
                 commands
-                    .entity(npc)
+                    .entity(npc.0)
                     .insert(Target(Some(ev.target_entity)));
             }
 
@@ -363,7 +379,7 @@ pub fn add_pursuit_urge(
 pub fn remove_pursuit_urge (
     mut commands: Commands,
     mut ev_stop_chase: EventReader<StopChaseEvent>,
-    npc_query: Query<(Entity, &Children), (With<NPC>, With<PursuitBehavior>)>,
+    npc_query: Query<(Entity, &Children, &Name), (With<NPC>, With<PursuitBehavior>)>,
     pursuit_sensor_query: Query<Entity, (With<Collider>, With<Sensor>, With<PursuitSensor>)>,
 
     mut ev_detection_mode: EventWriter<DetectionModeEvent>
@@ -375,7 +391,7 @@ pub fn remove_pursuit_urge (
         match npc_query.get(ev.npc_entity) {
 
             Ok(npc) => {
-                info!("remove pursuit urge with an npc");
+                info!("remove pursuit urge to {}", npc.2);
 
                 commands
                     .entity(npc.0)
@@ -435,7 +451,7 @@ pub fn add_detection_aura(
     mut commands: Commands,
     mut ev_detection_mode: EventReader<DetectionModeEvent>,
 
-    npc_query: Query<Entity, (With<NPC>, Without<DetectionBehavior>)>,
+    npc_query: Query<(Entity, &Name), (With<NPC>, Without<DetectionBehavior>)>,
 ) {
     // let detection_sensor =
     //     commands
@@ -451,15 +467,15 @@ pub fn add_detection_aura(
     
     for ev in ev_detection_mode.iter() {
 
-        info!("detection mode ev");
+        // DEBUG: info!("detection mode ev");
 
         // verify if this entity correspond with our query
         match npc_query.get(ev.entity) {
             Ok(npc) => {
-                info!("add detection aura with an npc");
+                info!("add detection aura to {}", npc.1);
 
                 commands
-                    .entity(npc)
+                    .entity(npc.0)
                     .insert(DetectionBehavior)
                     .with_children(|parent| {
                         parent
@@ -502,80 +518,5 @@ pub fn add_detection_aura(
 // fn modify_collider_type(mut sensors: Query<&mut PursuitSensor, &Name>) {
 //     for mut sensor in sensors.iter_mut() {
 //         sensor.0 = true;
-//     }
-// }
-
-// pub fn old_threat_detection(
-//     mut commands: Commands,
-//     rapier_context: Res<RapierContext>,
-//     player_query: Query<(Entity, &Name, &Children), With<Player>>,
-//     npc_query: Query<
-//         (Entity, &Name, &Children),
-//         (With<DetectionBehavior>, Without<PursuitBehavior>, Without<FairPlayTimer>)>,
-//     detection_sensor_query: Query<
-//         Entity,
-//         (With<DetectionSensor>, Without<PursuitSensor>)>
-// ) {
-//     let (player, player_name, player_colliders) = player_query.single();
-    
-//     for (npc, npc_name, npc_colliders) in npc_query.iter() {
-
-//         // info!(target: "Entities checked", "{}", npc_name);
-//         // TODO Exclude the pursuit sensor
-//         for &npc_child in npc_colliders.iter() {
-
-//             match detection_sensor_query.get(npc_child) {
-//                 Ok(sensor) => {
-//                     for &player_child in player_colliders.iter() {
-                
-//                         /* Find the intersection pair, if it exists, between two colliders. */
-//                         if rapier_context.intersection_pair(sensor, player_child) == Some(true) {
-//                             info!(target: "Threat Detected", "{:?} {} chase {:?} {}", npc, npc_name, player, player_name);
-//                         }
-//                     }
-//                 }
-//                 // Err(e)
-//                 _ => continue
-//             }
-
-//             for &player_child in player_colliders.iter() {
-                
-//                 /* Find the intersection pair, if it exists, between two colliders. */
-//                 if rapier_context.intersection_pair(npc_child, player_child) == Some(true) {
-//                     info!(target: "Threat Detected", "{:?} {} chase {:?} {}", npc, npc_name, player, player_name);
-                    
-//                     // start: NPCDetectionEvent
-//                     commands
-//                         .entity(npc)
-//                         .insert(PursuitBehavior)
-//                         .insert(Target(Some(player)));
-
-//                     commands
-//                         .entity(npc)
-//                         .remove::<DetectionBehavior>();
-                    
-
-//                     // if npc_child has PursuitSensor
-//                     // turn it true
-//                     commands
-//                         .entity(npc)
-//                         .with_children(|parent| {
-//                             parent
-//                                 .spawn()
-//                                 .insert(Collider::ball(80.))
-//                                 .insert(ActiveEvents::COLLISION_EVENTS)
-//                                 .insert(Sensor)
-//                                 .insert(PursuitSensor)
-//                                 .insert(Name::new("Pursuit Range"));
-//                         });
-
-//                     // end: NPCDetectionEvent
-
-//                     // TODO give same orders to everyone in the group
-
-//                     // exit the search on the first occurence
-//                 }
-//             }
-//         }
 //     }
 // }
