@@ -8,7 +8,12 @@ use crate::{
     collisions::CollisionEventExt,
     combat::{
         FairPlayTimer,
+        InCombat,
         Team,
+    },
+    constants::{
+        character::npc::movement::EVASION_TIMER,
+        combat::team::TEAM_MC
     },
     npc::{
         movement::{
@@ -120,9 +125,24 @@ pub fn threat_detection(
     collider_pursuit_sensor_query: Query<(Entity, &Parent), (With<Collider>, With<Sensor>, With<PursuitSensor>)>,
     collider_query: Query<(Entity, &Parent), (With<Collider>, With<CharacterHitbox>)>,
     
-    target_query: Query<(Entity, &Team, &Name)>,
-    npc_query: Query<(Entity, &Team, &Name), (With<NPC>, With<DetectionBehavior>, Without<PursuitBehavior>, Without<FairPlayTimer>)>,
-    pursuit_npc_query: Query<(Entity, &Team, &Name), (With<NPC>, With<PursuitBehavior>, Without<DetectionBehavior>)> // , Without<FairPlayTimer>
+    target_query: Query<(Entity, &Team, &Name), Without<InCombat>>,
+    leader_query: Query<
+        (Entity, &Team, &Name),
+        (
+            With<NPC>,
+            // With<Leader>,
+            With<DetectionBehavior>,
+            Without<PursuitBehavior>,
+            Without<FairPlayTimer>
+        )>,
+    pursuit_npc_query: Query<
+        (Entity, &Team, &Name),
+        (
+            With<NPC>,
+            // With<Leader>,
+            With<PursuitBehavior>,
+            Without<DetectionBehavior>
+        )> // , Without<FairPlayTimer>
 ) {
 
     for collision_event in collision_events.iter() {
@@ -155,7 +175,7 @@ pub fn threat_detection(
 
                     // from the collider get their parent
                     match (
-                        npc_query.get(sensor_potential_npc.1.get()),
+                        leader_query.get(sensor_potential_npc.1.get()),
                         target_query.get(hitbox_potential_threat.1.get())
                     ) {
                         (Ok(npc), Ok(target)) => {
