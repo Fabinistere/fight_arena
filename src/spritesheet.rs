@@ -25,9 +25,9 @@ fn load_character_spritesheet(
     let image = assets.load("textures/character/big_sprite_sheet.png");
     let atlas = TextureAtlas::from_grid(
         image,
-        Vec2::splat(30.0),
+        Vec2::splat(34.),
         4,
-        7,
+        12,
     );
 
     let atlas_handle

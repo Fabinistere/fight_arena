@@ -70,11 +70,10 @@ pub mod character {
         pub const NPC_Z_BACK: f32 = 2.;
         pub const NPC_Z_FRONT: f32 = 8.;
 
-        pub const ADMIRAL_STARTING_SS: usize = 0;
-
-        pub const OLF_STARTING_SS: usize = 12;
-
-        pub const HUGO_STARTING_SS: usize = 24;
+        pub const ADMIRAL_STARTING_ANIM: usize = 0;
+        pub const OLF_STARTING_ANIM: usize = 16;
+        pub const HUGO_STARTING_ANIM: usize = 36;
+        pub const FABICURION_STARTING_ANIM: usize = 40;
     
         pub mod movement {
             use crate::TILE_SIZE;
@@ -89,6 +88,8 @@ pub mod character {
     }
     
     pub mod player {
+
+        pub const PLAYER_STARTING_ANIM: usize = 4;
     
         pub const PLAYER_SCALE: f32 = super::CHAR_SCALE;
         pub const PLAYER_Z: f32 = 6.;

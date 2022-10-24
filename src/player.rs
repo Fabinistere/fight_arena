@@ -81,15 +81,14 @@ fn player_movement(
 
 fn spawn_player(
     mut commands: Commands,
-    fabien: Res<FabienSheet>,
+    fabiens: Res<FabienSheet>,
 )
 {
-    let player = TextureAtlasSprite::new(4);
 
     commands
         .spawn_bundle(SpriteSheetBundle {
-            sprite: player,
-            texture_atlas: fabien.0.clone(),
+            sprite: TextureAtlasSprite::new(PLAYER_STARTING_ANIM),
+            texture_atlas: fabiens.0.clone(),
             transform: Transform {
                 translation: Vec3::new(0.0, 0.0, 6.),
                 scale: Vec3::splat(PLAYER_SCALE),
