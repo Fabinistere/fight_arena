@@ -14,10 +14,15 @@ Aggressive NPC can
 - detect player and enemy
 - chase them
 - trigger CombatEvent
+- wait 5s before retargeting someone
 
 Collision works thanks to bevy_retrograde
 
 Press o to see the grateful future
+
+
+[Preview of Chase](https://user-images.githubusercontent.com/73140258/198221963-00eaaa8c-6ab9-4142-8519-d4124fc5dd82.mp4)
+
 
 ### For a future
 
