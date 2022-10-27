@@ -33,6 +33,20 @@ Press o to see the grateful future
     - UI
     - Combat Phases
 
+    ```mermaid
+    graph
+        Observation-->ManageStuff;
+        ManageStuff-->Observation;
+        Observation-->Skills;
+        Skills-->Observation;
+        Skills-->Target;
+        Target-->Skills;
+        Target-->RollInitiative;
+        RollInitiative-->Target;
+        RollInitiative-->ExecuteSkills-->RollInitiative;
+        ExecuteSkills-->Observation;
+    ```
+
 ## Assets deported - Ecological Issue
 
 From now on, all my repertory using musics and images changing a lot will have a particular folder in our org's cloud.
