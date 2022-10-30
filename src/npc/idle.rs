@@ -9,11 +9,8 @@ use log::{
 
 use super::{
     movement::{
-        DetectionBehavior,
         FollowupBehavior,
-        JustWalkBehavior,
         PursuitBehavior,
-        give_a_direction
     },
     NPC
 };
