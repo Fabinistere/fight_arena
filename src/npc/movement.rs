@@ -66,7 +66,7 @@ pub fn just_walk(
         &Speed,
         &mut Velocity,
         &Name
-    ), (With<JustWalkBehavior>, Without<IdleBehavior>, Without<PursuitBehavior>)>
+    ), (With<JustWalkBehavior>, Without<IdleBehavior>, Without<PursuitBehavior>, Without<InCombat>)>
 ) {
     for (npc, mut behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
         let direction: Vec3 = behavior.destination;
@@ -125,7 +125,7 @@ pub fn follow(
         &Speed,
         &mut Velocity,
         &Team,
-    ), (With<NPC>, With<FollowupBehavior>, Without<PursuitBehavior>) // only npc can follow 
+    ), (With<NPC>, With<FollowupBehavior>, Without<PursuitBehavior>, Without<InCombat>) // only npc can follow 
     >,
     targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
     // pos_query: Query<&GlobalTransform>,
@@ -177,18 +177,18 @@ pub fn follow(
 /// Entity chases their target.
 /// This target has entered in the detection range of the npc
 pub fn pursue(
-    mut commands: Commands,
     // mut game_state: ResMut<State<GameState>>,
     mut npc_query: Query<(
-        Entity, 
-        &Transform,
-        &Speed,
-        &mut Velocity,
-        &Team,
-        &Target,
-        &Children,
-        &Name
-        ),(With<NPC>, With<PursuitBehavior>)>,
+            Entity, 
+            &Transform,
+            &Speed,
+            &mut Velocity,
+            &Team,
+            &Target,
+            &Children,
+            &Name
+        ),
+        (With<NPC>, With<PursuitBehavior>, Without<InCombat>)>,
     pos_query: Query<&GlobalTransform>,
     mut ev_combat: EventWriter<CombatEvent>,
     mut ev_stop_chase: EventWriter<StopChaseEvent>,
@@ -229,14 +229,9 @@ pub fn pursue(
                     info!("Target Caught in 4K by {:?} {}", npc, name);
 
                     // open HUD to combat talk after chase
-                    ev_combat.send(CombatEvent);
-                    commands.entity(npc)
-                            .insert(InCombat);
-
-                    // Freeze any entity involved in the combat
-                    // when read CombatEvent
-                    rb_vel.linvel.x = 0.;
-                    rb_vel.linvel.y = 0.;
+                    ev_combat.send(CombatEvent {
+                        npc_entity: npc
+                    });
 
                     ev_stop_chase
                         .send(StopChaseEvent {

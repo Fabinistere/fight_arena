@@ -23,7 +23,7 @@ use crate::{
         },
         NPC,
     },
-    movement::CharacterHitbox,
+    movement::CharacterHitbox, player::Player,
 };
 
 #[derive(Component)]
@@ -43,14 +43,19 @@ pub struct PursuitSensor;
 /// Read in
 ///   - ui::dialog_box::create_dialog_box_on_combat_event
 ///     - open combat ui
-///   - *future*
+///   - combat::mod::freeze_in_combat
 ///     - freeze all entities involved in the starting combat
-pub struct CombatEvent;
+pub struct CombatEvent {
+    pub npc_entity: Entity,
+}
 
 /// Happens when:
-///   - combat::mod
-///     - combat ended
+///   - ???
+///     - combat was stoped by the player
 /// Read in
+///   - combat::exit_combat
+///     - Add a FairPlayTimer to all enemies involved in the fight
+///     - Remove to all entities InCombat Component
 ///   - ui::dialog_box::create_dialog_box_on_combat_event
 ///     - close the ui
 pub struct CombatExitEvent;
@@ -91,17 +96,6 @@ pub struct EngagePursuitEvent {
     target_entity: Entity
 }
 
-// if we represent a grp not only by their leader
-// but with every npc in :
-
-/// Happens when:
-///   - *future*
-///     - if the target outran all npc in a grp,
-///       disengage the grp
-///       - a grp still chase a target if there is
-///         at least one member still in range
-// pub struct DisengagePursuitGlobalEvent;
-
 /// Pursuit Management
 /// 
 ///   - Engagement
@@ -125,12 +119,11 @@ pub fn threat_detection(
     collider_pursuit_sensor_query: Query<(Entity, &Parent), (With<Collider>, With<Sensor>, With<PursuitSensor>)>,
     collider_query: Query<(Entity, &Parent), (With<Collider>, With<CharacterHitbox>)>,
     
-    target_query: Query<(Entity, &Team, &Name), Without<InCombat>>,
+    target_query: Query<(Entity, &Team, &Name), (Or<(With<Player>, With<NPC>)>, Without<InCombat>)>,
     leader_query: Query<
         (Entity, &Team, &Name),
         (
             With<NPC>,
-            // With<Leader>,
             With<DetectionBehavior>,
             Without<PursuitBehavior>,
             Without<FairPlayTimer>
@@ -139,10 +132,10 @@ pub fn threat_detection(
         (Entity, &Team, &Name),
         (
             With<NPC>,
-            // With<Leader>,
             With<PursuitBehavior>,
-            Without<DetectionBehavior>
-        )> // , Without<FairPlayTimer>
+            Without<DetectionBehavior>,
+            Without<FairPlayTimer>
+        )>
 ) {
 
     for collision_event in collision_events.iter() {
@@ -303,6 +296,7 @@ pub fn fair_play_wait(
         (Entity, &mut FairPlayTimer, &mut Velocity, &Team, &Name), 
         (
             With<NPC>,
+            // Without<InCombat>
         )
     >
 ) {
@@ -512,31 +506,3 @@ pub fn add_detection_aura(
         }
     }
 }
-
-// pub fn detection_trigger(
-//     player_query: Query<&Transform, With<Player>>,
-//     mut npc_query: Query<
-//         (Entity,
-//         &mut DetectionSensor,
-//         &mut PursuitSensor,
-//         &Name),
-//         With<NPC>>,
-//     mut detection_trigger_events: EventReader<NPCDetectionEvent>,
-// ) {
-//     for NPCDetectionEvent { started } in detection_trigger_events.iter() {
-//         let transform = player_query.single();
-
-//         if *started {
-
-//         } else {
-            
-//         }
-//     }
-// }
-
-// /* Change the collider sensor status inside of a system. */
-// fn modify_collider_type(mut sensors: Query<&mut PursuitSensor, &Name>) {
-//     for mut sensor in sensors.iter_mut() {
-//         sensor.0 = true;
-//     }
-// }

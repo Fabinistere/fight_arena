@@ -6,6 +6,7 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{
+        InCombat,
         Leader,
         stats::*,
         Team,
@@ -54,7 +55,7 @@ fn camera_follow(
 
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<(&Speed, &mut Velocity), With<Player>>,
+    mut player_query: Query<(&Speed, &mut Velocity), (With<Player>, Without<InCombat>)>,
 ) {
     for (speed, mut rb_vel) in player_query.iter_mut() {
 

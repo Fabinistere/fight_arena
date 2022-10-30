@@ -6,9 +6,11 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     combat::{
+        GroupSize,
         Leader,
-        Team,
+        Recruted,
         stats::*,
+        Team,
     },
     constants::FIXED_TIME_STEP,
     constants::{
@@ -187,7 +189,10 @@ fn spawn_characters(
         }) 
         .insert(Name::new("NPC Admiral"))
         .insert(NPC)
+
         .insert(Team(TEAM_MC))
+        .insert(Recruted)
+
         .insert(FollowupBehavior)
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
@@ -230,7 +235,10 @@ fn spawn_characters(
         }) 
         .insert(Name::new("NPC Hugo"))
         .insert(NPC)
+
         .insert(Team(TEAM_MC))
+        .insert(Recruted)
+
         .insert(FollowupBehavior)
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
@@ -303,6 +311,8 @@ fn spawn_aggresives_characters(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
+        // 5 Fabicurion are hidden within Olf's silhouette
+        .insert(GroupSize(5))
         .insert(DetectionBehavior)
         .with_children(|parent| {
             parent
@@ -362,6 +372,8 @@ fn spawn_aggresives_characters(
                 defense: Defense::default(),
                 defense_spe: DefenseSpe::default()
             })
+            // 2 Fabicurion are hidden behind the representant
+            .insert(GroupSize(2))
             .insert(DetectionBehavior)
             .with_children(|parent| {
                 parent

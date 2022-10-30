@@ -118,6 +118,9 @@ pub fn load_textures(
 pub fn create_dialog_box_on_key_press(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
     mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
+
+    mut ev_combat_exit: EventWriter<CombatExitEvent>,
+
     query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
@@ -126,6 +129,8 @@ pub fn create_dialog_box_on_key_press(
         if let Ok((_entity, animator, _style)) = query.get_single() {
             if animator.tweenable().unwrap().progress() >= 1.0 {
                 close_dialog_box_event.send(CloseDialogBoxEvent);
+
+                ev_combat_exit.send(CombatExitEvent);
             }
         } else {
             info!("here second");
@@ -162,9 +167,9 @@ pub fn create_dialog_box_on_combat_event(
             }
         }
     }
-    // TODO Test
-    // putting the combat exit event
-    // before the combat enter event
+    
+    // TODO separate into two function
+
     for _ev in ev_combat.iter() 
     {
 
