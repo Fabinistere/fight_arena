@@ -1,5 +1,5 @@
 //! Combat Implementation
-//! 
+//!
 //! Handle
 //!   - Combat Initialisation
 //!   - Comabt System / Phases
@@ -11,7 +11,7 @@
 //!       - talk
 //!         - Initialize dialogue
 //!       - fight
-//! 
+//!
 //!         ```mermaid
 //!         graph
 //!             Observation-->ManageStuff;
@@ -25,15 +25,15 @@
 //!             RollInitiative-->ExecuteSkills-->RollInitiative;
 //!             ExecuteSkills-->Observation;
 //!         ```
-//! 
+//!
 //!     - Reward-s (gift or loot)
 //!   - Combat Evasion (quit)
-//! 
+//!
 
 use bevy::{
-    // ecs::schedule::ShouldRun,
-    time::FixedTimestep, 
     prelude::*,
+    // ecs::schedule::ShouldRun,
+    time::FixedTimestep,
 };
 use bevy_rapier2d::prelude::Velocity;
 use std::time::Duration;
@@ -43,19 +43,14 @@ pub mod stats;
 use crate::{
     // combat::stats::*,
     // combat::stats::{show_hp, show_mana}
-    constants::{
-        character::npc::movement::EVASION_TIMER,
-        FIXED_TIME_STEP,
-    },
-    
+    constants::{character::npc::movement::EVASION_TIMER, FIXED_TIME_STEP},
+
     npc::{
-        aggression::{
-            CombatEvent,
-            CombatExitEvent,
-        },
+        aggression::{CombatEvent, CombatExitEvent},
         NPC,
     },
     player::Player,
+    ui::dialog_box::CloseDialogBoxEvent,
 };
 
 /// Just help to create a ordered system in the app builder
@@ -70,7 +65,7 @@ enum CombatState {
     // ExecuteSkills,
 
     // ShowExecution,
-    Evasion
+    Evasion,
 }
 #[derive(Component)]
 pub struct InCombat;
@@ -125,7 +120,7 @@ impl Plugin for CombatPlugin {
     }
 }
 
-fn observation(){
+fn observation() {
     // println!("Now it's your turn...")
 }
 
@@ -133,20 +128,20 @@ fn observation(){
 pub struct Leader;
 
 /// The team an entity is assigned to.
-#[derive(Copy, Clone, PartialEq, Eq, Component)]
+#[derive(Copy, Clone, PartialEq, Eq, Component, Deref, DerefMut)]
 pub struct Team(pub i32);
 
 /// One aggressive npc can hide 5 others.
 /// This number exclude the 'leader'/representant of the grp
-/// 
+///
 /// - Could Give info on the type of group ?
 ///   - (All fabicurion or else)
-/// 
+///
 /// Min = 0
 /// Max = 5
-/// 
+///
 /// Examples :
-/// 
+///
 /// - Fabicurion who represent a group of 3
 /// - Fabicurion who represent a group of 6
 #[derive(Copy, Clone, PartialEq, Eq, Component)]
@@ -178,17 +173,16 @@ pub struct FairPlayTimer {
 ///       aggressive npc
 pub struct SpawnCombatFoesEvent {
     pub leader: Entity,
-    pub group_size: i32
+    pub group_size: i32,
 }
 
-
 /// Emulate the Combat phase
-/// 
+///
 ///   - Talk
 ///   - Fight
-/// 
+///
 /// Freeze all entity involved
-/// 
+///
 ///   - Player
 ///     - all companie members (recruted)
 ///   - Foe who caught player
@@ -201,38 +195,27 @@ pub fn enter_combat(
     mut player_query: Query<
         Entity,
         // must implied the disjunction with player_compagnie
-        (With<Player>, Without<NPC>)
+        (With<Player>, Without<NPC>),
     >,
-    mut player_companie: Query<
-        Entity,
-        (With<NPC>, With<Recruted>)
-    >,
+    mut player_companie: Query<Entity, (With<NPC>, With<Recruted>)>,
     mut foes_query: Query<(Entity, &GroupSize), (With<NPC>, Without<Recruted>)>,
 ) {
-    
-
     for ev in ev_combat_enter.iter() {
+        let player = player_query.single_mut();
 
-        let player = player_query.single_mut() ;
+        commands.entity(player).insert(InCombat);
 
-        commands.entity(player)
-                .insert(InCombat);
-    
         for member in player_companie.iter_mut() {
-            commands.entity(member)
-                    .insert(InCombat);
-   
+            commands.entity(member).insert(InCombat);
+
             // display / spawn them in the ui (CANCELED)
         }
 
         let npc = ev.npc_entity;
 
         match foes_query.get_mut(npc) {
-
             Ok((foe, group_size)) => {
-
-                commands.entity(foe)
-                        .insert(InCombat);
+                commands.entity(foe).insert(InCombat);
 
                 // could be a assert ?
                 // no the error could happend cause of human error
@@ -240,37 +223,26 @@ pub fn enter_combat(
                 if group_size.0 < 0 || group_size.0 > 5 {
                     warn!("GroupSize in invalid: < 0 || > 5");
                     // Raise Err ?
-                }
-                else {
-                    ev_spawn_fabicurion.send(
-                        SpawnCombatFoesEvent {
-                            leader: foe,
-                            group_size: group_size.0
-                        }
-                    );
+                } else {
+                    ev_spawn_fabicurion.send(SpawnCombatFoesEvent {
+                        leader: foe,
+                        group_size: group_size.0,
+                    });
                 }
 
                 // display / spawn them in the ui
                 // or
                 // spawn them in the temple during combat (PREFERED)
-            },
+            }
 
             // Err(e)
-            _ => continue
-
+            _ => continue,
         }
-
     }
 }
 
 /// For each entity in combat, freeze their movement
-pub fn freeze_in_combat(
-    mut characters_query: Query<
-        (Entity, &mut Velocity),
-        With<InCombat>
-    >,
-) {
-
+pub fn freeze_in_combat(mut characters_query: Query<(Entity, &mut Velocity), With<InCombat>>) {
     // QUESTION: Maybe be not for the member of the company
     // to let them reach the player
 
@@ -283,8 +255,8 @@ pub fn freeze_in_combat(
 /// Event Handler of SpawnCombatFoesEvent
 pub fn spawn_party_members(
     mut commands: Commands,
-    
-    mut ev_spawn_party_members: EventReader<SpawnCombatFoesEvent>
+
+    mut ev_spawn_party_members: EventReader<SpawnCombatFoesEvent>,
 ) {
     for ev in ev_spawn_party_members.iter() {
         // ev.group_size
@@ -292,7 +264,7 @@ pub fn spawn_party_members(
 }
 
 /// exit Combat by pressing 'o'
-/// 
+///
 /// apply to all npc involved in a interaction the IdleBehavior
 pub fn exit_combat(
     mut commands: Commands,
@@ -300,40 +272,30 @@ pub fn exit_combat(
     allies_query: Query<
         (Entity, &Name),
         (
-            Or<(
-                With<Player>,
-                (With<NPC>, With<Recruted>)
-            )>,
-            With<InCombat>
-        )
+            Or<(With<Player>, (With<NPC>, With<Recruted>))>,
+            With<InCombat>,
+        ),
     >,
 
-    foes_query: Query<
-        (Entity, &Name),
-        (With<NPC>, With<InCombat>, Without<Recruted>)>,
+    foes_query: Query<(Entity, &Name), (With<NPC>, With<InCombat>, Without<Recruted>)>,
 
     mut ev_combat_exit: EventReader<CombatExitEvent>,
-){
-
-    
+    mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
+) {
     for _ev in ev_combat_exit.iter() {
         for (allie, _name) in allies_query.iter() {
-            commands
-                .entity(allie)
-                .remove::<InCombat>();
+            commands.entity(allie).remove::<InCombat>();
         }
-        
+
         // TODO foes AND being an enemy
         for (foes, _name) in foes_query.iter() {
-            commands
-                .entity(foes)
-                .insert(FairPlayTimer { timer: Timer::new(Duration::from_secs(EVASION_TIMER), false)});
+            commands.entity(foes).insert(FairPlayTimer {
+                timer: Timer::new(Duration::from_secs(EVASION_TIMER), false),
+            });
 
-            commands
-                .entity(foes)
-                .remove::<InCombat>();
+            commands.entity(foes).remove::<InCombat>();
         }
-}
 
-    
+        close_dialog_box_event.send(CloseDialogBoxEvent);
+    }
 }
