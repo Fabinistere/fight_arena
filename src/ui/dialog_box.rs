@@ -24,6 +24,7 @@ use crate::{
 #[derive(Component)]
 pub struct DialogPanel;
 
+/// TODO add entity id (u32) into the DialogBox
 #[derive(Debug, Component)]
 pub struct DialogBox {
     text: String,
@@ -149,24 +150,24 @@ pub fn create_dialog_box_on_key_press(
 ///     close any open ui
 pub fn create_dialog_box_on_combat_event(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
-    mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
+    // mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
     query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
     mut ev_combat: EventReader<CombatEvent>,
-    mut ev_combat_exit: EventReader<CombatExitEvent>,   
+    // mut ev_combat_exit: EventReader<CombatExitEvent>,   
 )
 {
 
     // order : exit combat UI 
-    for _ev in ev_combat_exit.iter()
-    {
-        // and UI is open
-        if let Ok((_entity, animator, _style)) = query.get_single()
-        {
-            if animator.tweenable().unwrap().progress() >= 1.0 {
-                close_dialog_box_event.send(CloseDialogBoxEvent);
-            }
-        }
-    }
+    // for _ev in ev_combat_exit.iter()
+    // {
+    //     // and UI is open
+    //     if let Ok((_entity, animator, _style)) = query.get_single()
+    //     {
+    //         if animator.tweenable().unwrap().progress() >= 1.0 {
+    //             close_dialog_box_event.send(CloseDialogBoxEvent);
+    //         }
+    //     }
+    // }
     
     // TODO separate into two function
 
@@ -174,7 +175,7 @@ pub fn create_dialog_box_on_combat_event(
     {
 
         // if already open go to combat tab
-        if let Ok((_entity, animator, _style)) = query.get_single() {
+        if let Ok((_entity, _animator, _style)) = query.get_single() {
             // close any open ui
             // if animator.tweenable().unwrap().progress() >= 1.0 {
             //     close_dialog_box_event.send(CloseDialogBoxEvent);
