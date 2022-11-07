@@ -25,7 +25,7 @@ use std::rc::Rc;
 /// To enable pause/remuse whenever the player wants to
 pub struct DialogState(pub i32);
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 enum DialogType {
     Text(String),
     Choice {
@@ -35,14 +35,14 @@ enum DialogType {
 }
 
 // TODO MOVE IT
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 enum GameEvent {
     BeatTheGame,
     FirstKill,
     AreaCleared,
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 struct DialogCondition {
     /// `(0,0) = infinite / no threshold`
     ///
@@ -152,67 +152,67 @@ impl DialogNode {
 
         return res;
     }
+}
 
-    /// # Argument
-    ///
-    /// * `s` - A string that holds a DialogTree
-    ///
-    /// # Panics
-    ///
-    /// The creation will panic
-    /// if any argument to the process is not valid DialogTree format
-    ///
-    /// # Examples
-    ///
-    /// A NPC's catchphrase followed by two possible outcomes
-    ///
-    /// - a generic one
-    ///   - random chill dialog
-    /// - a huge text to cheer the fact that Olf's reign is over
-    ///   - only enable when the event `Olf's takedown` occurs
-    ///
-    /// ```rust
-    /// # main() -> Result<(), std::num::ParseIntError> {
-    ///
-    /// let tree = init_tree(
-    ///     String::from(
-    ///         "[Hello]->[[I have to tell something],[You beat Olf !,Now you can chill at the hospis]]"
-    ///     )
-    /// );
-    ///
-    /// #     Ok(())
-    /// # }
-    /// ```
-    fn init_tree(s: String) -> Rc<RefCell<DialogNode>> {
-        let root = Rc::new(RefCell::new(DialogNode::new()));
-        let mut current = Rc::clone(&root);
+/// # Argument
+///
+/// * `s` - A string that holds a DialogTree
+///
+/// # Panics
+///
+/// The creation will panic
+/// if any argument to the process is not valid DialogTree format
+///
+/// # Examples
+///
+/// A NPC's catchphrase followed by two possible outcomes
+///
+/// - a generic one
+///   - random chill dialog
+/// - a huge text to cheer the fact that Olf's reign is over
+///   - only enable when the event `Olf's takedown` occurs
+///
+/// ```rust
+/// # main() -> Result<(), std::num::ParseIntError> {
+///
+/// let tree = init_tree(
+///     String::from(
+///         "[Hello]->[[I have to tell something],[You beat Olf !,Now you can chill at the hospis]]"
+///     )
+/// );
+///
+/// #     Ok(())
+/// # }
+/// ```
+fn init_tree(s: String) -> Rc<RefCell<DialogNode>> {
+    let root = Rc::new(RefCell::new(DialogNode::new()));
+    let mut current = Rc::clone(&root);
 
-        let chars = s.chars().collect::<Vec<char>>();
-        for (_, c) in chars
-            .iter()
-            .enumerate()
-            .filter(|(idx, _)| *idx > 0 && *idx + 1 < chars.len())
-        {
-            // if *c == '[' || c.is_alphabetic() {
-            //     let child = Rc::new(RefCell::new(TreeNode::new()));
-            //     current.borrow_mut().children.push(Rc::clone(&child));
-            //     {
-            //         let mut mut_child = child.borrow_mut();
-            //         mut_child.parent = Some(Rc::clone(&current));
-            //         if c.is_alphabetic() {
-            //             mut_child.value.texts[0] = c.to_string();
-            //         }
-            //     }
-            //     current = child;
-            // } else if *c == ',' || *c == ']' {
-            //     let current_clone = Rc::clone(&current);
-            //     current = Rc::clone(current_clone.borrow().parent.as_ref().unwrap());
-            // } else {
-            //     panic!("Unknown character: {}", c);
-            // }
-        }
-        return root;
+    let chars = s.chars().collect::<Vec<char>>();
+    for (_, c) in chars
+        .iter()
+        .enumerate()
+        .filter(|(idx, _)| *idx > 0 && *idx + 1 < chars.len())
+    {
+        // if *c == '[' || c.is_alphabetic() {
+        //     let child = Rc::new(RefCell::new(TreeNode::new()));
+        //     current.borrow_mut().children.push(Rc::clone(&child));
+        //     {
+        //         let mut mut_child = child.borrow_mut();
+        //         mut_child.parent = Some(Rc::clone(&current));
+        //         if c.is_alphabetic() {
+        //             mut_child.value.texts[0] = c.to_string();
+        //         }
+        //     }
+        //     current = child;
+        // } else if *c == ',' || *c == ']' {
+        //     let current_clone = Rc::clone(&current);
+        //     current = Rc::clone(current_clone.borrow().parent.as_ref().unwrap());
+        // } else {
+        //     panic!("Unknown character: {}", c);
+        // }
     }
+    return root;
 }
 
 #[cfg(test)]
@@ -319,11 +319,14 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn test_init_tree_1() {
-    //     let tree = init_tree(String::from("[1,2]"));
-    //     assert_eq!(tree.borrow().children[0].borrow().value.unwrap(), 1);
-    // }
+    #[test]
+    fn test_init_tree_1() {
+        let tree = init_tree(String::from("[Hello]"));
+        assert_eq!(
+            tree.borrow().dialog_type,
+            vec![DialogType::Text("Hello".to_string())]
+        );
+    }
 
     // #[test]
     // fn test_init_tree_2() {
