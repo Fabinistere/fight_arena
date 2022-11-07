@@ -25,18 +25,6 @@ enum DialogType {
     },
 }
 
-/// # Arguments
-///
-/// * `roaster` - Every Answer possible,
-///     A vector of tuple (sentence, karma_point)
-///     the karma point represent directly the answer's category.
-///
-/// # Example
-///
-/// ```rust
-///     new_roaster( vec![("Coucou", 5), ("*ne pas repondre*", 0), ("Je vais te faire payer", -5)] )
-/// ```
-
 // TODO MOVE IT
 #[derive(PartialEq, Clone)]
 enum GameEvent {
@@ -157,6 +145,67 @@ impl DialogNode {
             return res;
         }
         else { return String::new(); }
+    }
+
+    /// # Argument
+    /// 
+    /// * `s` - A string that holds a DialogTree
+    /// 
+    /// # Panics
+    /// 
+    /// The creation will panic
+    /// if any argument to the process is not valid DialogTree format
+    /// 
+    /// # Examples
+    /// 
+    /// A NPC's catchphrase followed by two possible outcomes
+    /// 
+    /// - a generic one 
+    ///   - random chill dialog
+    /// - a huge text to cheer the fact that Olf's reign is over
+    ///   - only enable when the event `Olf's takedown` occurs
+    /// 
+    /// ```rust
+    /// # main() -> Result<(), std::num::ParseIntError> {
+    /// 
+    /// let tree = init_tree(
+    ///     String::from(
+    ///         "[Hello]->[[I have to tell something],[You beat Olf !,Now you can chill at the hospis]]"
+    ///     )
+    /// );
+    /// 
+    /// #     Ok(())
+    /// # }
+    /// ```
+    fn init_tree(s: String) -> Rc<RefCell<DialogNode>> {
+        let root = Rc::new(RefCell::new(DialogNode::new()));
+        let mut current = Rc::clone(&root);
+
+        let chars = s.chars().collect::<Vec<char>>();
+        for (_, c) in chars
+            .iter()
+            .enumerate()
+            .filter(|(idx, _)| *idx > 0 && *idx + 1 < chars.len())
+        {
+            if *c == '[' || c.is_alphabetic() {
+                let child = Rc::new(RefCell::new(TreeNode::new()));
+                current.borrow_mut().children.push(Rc::clone(&child));
+                {
+                    let mut mut_child = child.borrow_mut();
+                    mut_child.parent = Some(Rc::clone(&current));
+                    if c.is_alphabetic() {
+                        mut_child.value.texts[0] = c.to_string();
+                    }
+                }
+                current = child;
+            } else if *c == ',' || *c == ']' {
+                let current_clone = Rc::clone(&current);
+                current = Rc::clone(current_clone.borrow().parent.as_ref().unwrap());
+            } else {
+                panic!("Unknown character: {}", c);
+            }
+        }
+        return root;
     }
 }
 
