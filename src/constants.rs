@@ -75,6 +75,11 @@ pub mod character {
         pub const HUGO_STARTING_ANIM: usize = 36;
         pub const FABICURION_STARTING_ANIM: usize = 40;
     
+        pub mod dialog {
+            pub const RANDOM_DIALOG: &str = "";
+            pub const OLF_DIALOG: &str = "[Il faut absolument sauver les Fabien du Chien Géant]->[[Il me faut donc obtenir le trône...]->[[...,et de l'argent]->[[Et de l'argent]->[[C'est essentiel]]];[C'est essentiel]]]";
+        }
+
         pub mod movement {
             use crate::TILE_SIZE;
 

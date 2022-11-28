@@ -13,22 +13,52 @@
 
 // use bevy::prelude::*;
 
-use std::cell::RefCell;
 use std::rc::Rc;
+use std::{cell::RefCell, fmt};
 
-use bevy::prelude::{info, warn};
+use bevy::prelude::{info, warn, Bundle, Component};
 
-/// TODO This may be not usefull
-/// because the current node will be contained in the npc
+/// Points to the current DialogNode the npc is in.
 ///
-/// The i32 stored will refer to the actual state of the conversation
-/// might rework it to protect overload adn misunderstood
-/// could be a pointer to the current state (position) of the dialog
-/// To enable pause/remuse whenever the player wants to
-pub struct DialogState(pub i32);
+/// Holds a String which can be converted to a Rc<RefCell<DialogNode>>
+/// by print_file()
+///
+/// # Example
+///
+/// ```rust
+/// Dialog {
+///      current_node:
+/// "# Fabien
+///
+/// - Hello
+///
+/// ## Morgan
+///
+/// - Hey | None
+/// - No Hello | None
+/// - Want to share a flat ? | None
+///
+/// ### Fabien
+///
+/// - :)
+///
+/// ### Fabien
+///
+/// - :O
+///
+/// ### Fabien
+///
+/// - Sure"
+/// }
+///
+/// ```
+#[derive(Component, PartialEq, Clone, Debug)]
+pub struct Dialog {
+    pub current_node: Option<String>,
+}
 
 #[derive(PartialEq, Clone, Debug)]
-enum DialogType {
+pub enum DialogType {
     Text(String),
     Choice {
         text: String,
@@ -88,20 +118,32 @@ impl DialogType {
 
 // TODO MOVE IT UP
 #[derive(PartialEq, Clone, Debug)]
-enum GameEvent {
+pub enum GameEvent {
     BeatTheGame,
     FirstKill,
     AreaCleared,
 }
 
+impl fmt::Display for GameEvent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            GameEvent::BeatTheGame => write!(f, "BeatTheGame"),
+            GameEvent::FirstKill => write!(f, "FirstKill"),
+            GameEvent::AreaCleared => write!(f, "AreaCleared"),
+        }
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
-struct DialogCondition {
+pub struct DialogCondition {
     /// `(0,0) = infinite / no threshold`
     ///
     /// A dialog choice with a condition karma_threshold at (0,0)
     /// will always be prompted
     karma_threshold: Option<(i32, i32)>,
-    event: Option<GameEvent>,
+    event: Option<Vec<GameEvent>>,
+    /// TODO REMOVE or REWORK
+    ///
     /// The position of the parent choice made to access this node
     ///
     /// Start at 1 for the first choice
@@ -116,12 +158,12 @@ struct DialogCondition {
 /// Points to the first DialogNode
 /// Used to be linked with an entity
 #[derive(PartialEq, Clone, Debug)]
-struct DialogTree {
-    root: Rc<RefCell<DialogNode>>,
+pub struct DialogTree {
+    pub current: Option<DialogNode>,
 }
 
 #[derive(PartialEq, Clone, Debug)]
-struct DialogNode {
+pub struct DialogNode {
     /// Choice can have multiple children (to give a real impact to the choice)
     ///
     /// Every character can have multitude choice
@@ -136,78 +178,204 @@ struct DialogNode {
     pub dialog_type: Vec<DialogType>,
     /// Actor / Actress
     ///
-    /// can be an npc OR a player
-    pub character: Option<u32>,
+    /// can be an npc OR a player.
+    ///
+    /// The u32 is the id of the entity,
+    /// The String is their name
+    pub character: Option<(u32, String)>,
     pub children: Vec<Rc<RefCell<DialogNode>>>,
-    // maybe too much (prefer a stack in the TreeIterator)
+    /// maybe too much (prefer a stack in the TreeIterator)
     pub parent: Option<Rc<RefCell<DialogNode>>>,
+    // TODO add event throw
 }
 
 impl DialogNode {
-    pub fn new() -> DialogNode {
-        return DialogNode {
-            dialog_type: vec![],
-            character: None,
-            children: vec![],
-            parent: None,
-        };
-    }
+     pub fn new() -> DialogNode {
+          return DialogNode {
+               dialog_type: vec![],
+               character: None,
+               children: vec![],
+               parent: None,
+          };
+     }
 
-    pub fn add_child(&mut self, new_node: Rc<RefCell<DialogNode>>) {
-        self.children.push(new_node);
-    }
+     pub fn add_child(&mut self, new_node: Rc<RefCell<DialogNode>>) {
+          self.children.push(new_node);
+     }
 
-    /// # Convention
-    ///
-    /// - parent->child
-    /// - adelphe_1, adelphe_2
-    /// - [member_1, member_2] == A group
-    ///
-    /// # Examples
-    ///
-    /// `[parent]->[child]`
-    ///      *parent* has only one outcome, *child*
-    ///
-    /// `[obj_1]->[[obj_2], [obj_3]]`
-    ///      *obj_1* has *obj_2* and *obj_3* as children
-    ///      After *obj_1*, the two outcome possible are *obj_2* or *obj_3*
-    ///
-    /// ["CP"]->["Hello"->["NiceTalk"], "No Hello"->["BadTalk"], "Give ChickenSandwich"->["WinTalk"]]
-    ///
-    pub fn print(&self) -> String {
-        let mut res = String::from("[");
-        for dialog in &self.dialog_type {
-            if let DialogType::Text(text) = dialog {
-                res.push_str(&text);
-                res.push_str(", ");
-            } else if let DialogType::Choice { text, condition } = dialog {
-                res.push_str(&text);
-                res.push_str(", ");
-            }
-        }
-        res.push(']');
-        // Each cell is followed by a comma, except the last.
-        res = res.replace(", ]", "]");
+     /// # Convention
+     ///
+     /// - parent->child
+     /// - adelphe_1, adelphe_2
+     /// - [member_1, member_2] == A group
+     ///
+     /// # Examples
+     ///
+     /// `[parent]->[child]`
+     ///      *parent* has only one outcome, *child*
+     ///
+     /// `[obj_1]->[[obj_2], [obj_3]]`
+     ///      *obj_1* has *obj_2* and *obj_3* as children
+     ///      After *obj_1*, the two outcome possible are *obj_2* or *obj_3*
+     ///
+     /// ["CP"]->["Hello"->["NiceTalk"], "No Hello"->["BadTalk"], "Give ChickenSandwich"->["WinTalk"]]
+     ///
+     pub fn print_flat(&self) -> String {
+          let mut res = String::from("[");
+          for dialog in &self.dialog_type {
+               if let DialogType::Text(text) = dialog {
+                    res.push_str(&text);
+                    res.push_str(", ");
+               } else if let DialogType::Choice { text, condition: _ } = dialog {
+                    res.push_str(&text);
+                    res.push_str(", ");
+               }
+          }
+          res.push(']');
+          // Each cell is followed by a comma, except the last.
+          res = res.replace(", ]", "]");
 
-        let children = String::from("->[")
-            + &self
-                .children
-                .iter()
-                .map(|tn| tn.borrow().print())
-                .collect::<Vec<String>>()
-                .join("; ")
-            + "]";
+          let children = String::from("->[")
+               + &self
+                    .children
+                    .iter()
+                    .map(|tn| tn.borrow().print_flat())
+                    .collect::<Vec<String>>()
+                    .join("; ")
+               + "]";
 
-        res.push_str(&children);
+          res.push_str(&children);
 
-        // Each children is followed by a semi-colon, except the last.
-        res = res.replace("; ]", "]");
+          // Each children is followed by a semi-colon, except the last.
+          res = res.replace("; ]", "]");
 
-        // remove when being a leaf (having no child)
-        res = res.replace("->[]", "");
+          // remove when being a leaf (having no child)
+          res = res.replace("->[]", "");
 
-        return res;
-    }
+          return res;
+     }
+
+     /// # Convention
+     ///
+     /// ```markdown
+     /// # Author 1
+     ///
+     /// - first element of a text
+     /// - second element of a text
+     ///
+     /// -> Event
+     ///
+     /// ### Author 2
+     ///
+     /// - first choice for the author 2 only enable when his/her karma is low | karma: -50,0
+     /// - second choice ... only enable when the event OlfIsGone has already occurs | event: OlfIsGone
+     /// - thrid choice always enable | None
+     /// - fourth choice with a high karma and when the events OlfIsGone and PatTheDog already occurs | karma: 10,50; event: OlfIsGone, PatTheDog
+     ///
+     /// #### Author 1
+     ///
+     /// - This text will be prompted only if the first choice is selected by the player
+     /// - This DialogNode (and the three other below) is a direct child of the second DialogNode
+     ///
+     /// #### Author 1
+     ///
+     /// - This text will be prompted only if the second choice is selected by the player
+     ///
+     /// #### Author 1
+     ///
+     /// - This text will be prompted only if the third choice is selected by the player
+     ///
+     /// #### Author 1
+     ///
+     /// - This text will be prompted only if the fourth choice is selected by the player
+     ///
+     /// ```
+     fn print_file(&self) -> String {
+          return self.print_file_aux(String::from("#"));
+     }
+
+     fn print_file_aux(&self, headers: String) -> String {
+          let mut res = headers.clone();
+
+          let character: String;
+          match &self.character {
+               Some((_id, name)) => character = " ".to_string() + name,
+
+               None => character = String::from(" Narator"),
+          }
+          res.push_str(&character);
+          res.push_str("\n\n");
+
+          for dialog in &self.dialog_type {
+               if let DialogType::Text(text) = dialog {
+                    res.push_str("- ");
+                    res.push_str(&text);
+               } else if let DialogType::Choice { text, condition } = dialog {
+                    res.push_str("- ");
+                    res.push_str(&text);
+                    res.push_str(" | ");
+
+                    match condition {
+                         Some(dialog_condition) => {
+                              match dialog_condition.karma_threshold {
+                              Some((min, max)) => {
+                                   res.push_str("karma: min,max; ");
+                                   res = res.replace("min", &min.to_string());
+                                   res = res.replace("max", &max.to_string());
+                              }
+                              None => {}
+                              }
+
+                              match &dialog_condition.event {
+                              Some(events) => {
+                                   if !events.is_empty() {
+                                        // plurial ?
+                                        res.push_str("event: ");
+                                        for event in events {
+                                             res.push_str(&event.to_string());
+                                             res.push_str(",");
+                                        }
+                                        res.push_str(";");
+                                        res = res.replace(",;", ";");
+                                   }
+                              }
+                              None => {}
+                              }
+
+                              // we might remove the index
+                         }
+
+                         None => {
+                              res.push_str("None\n");
+                         }
+                    }
+               }
+          }
+          res.push_str("\n\nEND");
+
+          // res = res.replace("\n\n\n", "\n\n");
+
+          // event
+
+          let children =
+               &self
+                    .children
+                    .iter()
+                    .map(|tn| tn.borrow().print_file_aux(headers.clone()+"#"))
+                    .collect::<Vec<String>>()
+                    .join("\n\n");
+
+          res.push_str(&children);
+
+          res = res.replace("#\n\n#", "##");
+          res = res.replace("\n\n\n", "\n\n");
+
+          // remove the last "\n\n"
+          res = res.replace("END#", "#");
+          res = res.replace("\n\nEND", "");
+
+          return res;
+     }
 }
 
 /// # Argument
@@ -233,7 +401,7 @@ impl DialogNode {
 /// ```rust
 /// # main() -> Result<(), std::num::ParseIntError> {
 ///
-/// let tree = init_tree(
+/// let tree: DialogTree = init_tree_flat(
 ///     String::from(
 ///         "[Hello]->[[I have to tell something], [You beat Olf !]->[[Now you can chill at the hospis]]]"
 ///     )
@@ -254,7 +422,7 @@ impl DialogNode {
 /// 3 = Other_branch
 /// 4 = Olf is dead !
 /// ```
-fn init_tree(s: String) -> Rc<RefCell<DialogNode>> {
+pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
     let root = Rc::new(RefCell::new(DialogNode::new()));
 
     let mut current = root.clone();
@@ -383,324 +551,99 @@ fn init_tree(s: String) -> Rc<RefCell<DialogNode>> {
     return root;
 }
 
-fn is_special_char(c: char) -> bool {
-    // not '-' cause handle differently
-    let special_char: Vec<char> = vec!['\\', ';', ',', '>', '[', ']'];
+/// # Argument
+///
+/// * `s` - A string that holds a DialogTree
+///
+/// # Panics
+///
+/// The creation will panic
+/// if any argument to the process is not valid DialogTree format
+///
+/// # Examples
+///
+/// A NPC's catchphrase followed by two possible outcomes/choices
+///
+/// - a generic one
+///   - random chill dialog,
+///   a simple Text("I have to tell something")
+/// - a huge text to cheer the fact that Olf's reign is over
+///   - only enable when the event `Olf's takedown` occurs
+///   - a first simple Text with a second simple Text as child
+///
+/// ```rust
+/// # main() -> Result<(), std::num::ParseIntError> {
+///
+/// let tree: DialogTree = init_tree_file(
+///     String::from(
+///         "# Morgan
+/// 
+/// - Hello
+/// 
+/// ## Fabien lae Random
+/// 
+/// - I have to tell something | None
+/// - You beat Olf ! | event: OlfBeaten
+/// 
+/// ### Fabien lae Random
+/// 
+/// - Something | None
+/// - Now you can chill at the hospis | event: OpenTheHospis" 
+///     )
+/// );
+///
+/// #     Ok(())
+/// # }
+/// ```
+pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
+     let root = Rc::new(RefCell::new(DialogNode::new()));
 
-    return special_char.contains(&c);
+     let mut current = root.clone();
+
+     let mut save = String::new();
+     // init with text
+     let mut dialog_type: DialogType = DialogType::new_text();
+
+     // Check if a given char should be insert as text
+     // allow to have text with special char (like [ ] > , ;)
+     let mut except = false;
+
+     let mut headers_numbers = 0;
+
+     // root.borrow_mut().dialog_type = vec![DialogType::Text(s.replace("[", "").replace("]", ""))];
+
+     let chars = s.chars().collect::<Vec<char>>();
+     for (_, c) in chars
+          .iter()
+          .enumerate()
+          .filter(|(idx, _)| *idx < chars.len())
+     {
+          if *c == '#' && !except {
+               headers_numbers+=1;
+          }
+          else if c.is_ascii() || c.is_alphanumeric() {
+               // the except char \
+               if *c == '\\' {
+                    except = true;
+               }
+               // ignore the new line: "\n"
+               else if *c=='n' && except {
+                    except = false;
+               } else if !is_special_char(*c) || (is_special_char(*c) && except) {
+                    save.push(*c);
+                    except = false;
+
+                    // println!("add {}", *c);
+               }
+          }
+     }
+
+     return root;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+fn is_special_char(c: char) -> bool {
+    // not '-' cause handle differently
+    let special_char: Vec<char> = vec!['\\', ';', ',', '-'];
 
-    #[test]
-    fn test_child_print() {
-        let dialog = Rc::new(RefCell::new(DialogNode::new()));
-        dialog.borrow_mut().dialog_type = vec![DialogType::Text(String::from("Hello"))];
-
-        let answers = Rc::new(RefCell::new(DialogNode::new()));
-        answers.borrow_mut().dialog_type = vec![
-            DialogType::Choice {
-                text: String::from("Hey"),
-                condition: None,
-            },
-            DialogType::Choice {
-                text: String::from("No Hello"),
-                condition: None,
-            },
-            DialogType::Choice {
-                text: String::from("Want to share a flat ?"),
-                condition: None,
-            },
-        ];
-
-        dialog.borrow_mut().add_child(answers);
-
-        assert_eq!(
-            dialog.borrow().print(),
-            "[Hello]->[[Hey, No Hello, Want to share a flat ?]]".to_string()
-        );
-    }
-
-    #[test]
-    fn test_children_print() {
-        let dialog = Rc::new(RefCell::new(DialogNode::new()));
-        dialog.borrow_mut().dialog_type = vec![DialogType::Choice {
-            text: String::from("Hello"),
-            condition: None,
-        }];
-        // The Player
-        dialog.borrow_mut().character = Some(0b0000001u32);
-
-        let random_dialog = Rc::new(RefCell::new(DialogNode::new()));
-        random_dialog.borrow_mut().dialog_type =
-            vec![DialogType::Text(String::from("I have to tell something"))];
-        // The npc
-        random_dialog.borrow_mut().character = Some(0b0000010u32);
-        dialog.borrow_mut().add_child(random_dialog);
-
-        let olf_no_longer_a_dj = Rc::new(RefCell::new(DialogNode::new()));
-        olf_no_longer_a_dj.borrow_mut().dialog_type = vec![
-            DialogType::Text(String::from("You beat Olf !")),
-            DialogType::Text(String::from("Now you can chill at the hospis")),
-        ];
-        // The npc
-        olf_no_longer_a_dj.borrow_mut().character = Some(0b0000010u32);
-        dialog.borrow_mut().add_child(olf_no_longer_a_dj);
-
-        assert_eq!(dialog.borrow().print(), "[Hello]->[[I have to tell something]; [You beat Olf !, Now you can chill at the hospis]]".to_string());
-    }
-
-    #[test]
-    fn test_complex_print() {
-        let dialog = Rc::new(RefCell::new(DialogNode::new()));
-        dialog.borrow_mut().dialog_type = vec![DialogType::Text(String::from("Hello"))];
-
-        let answers = Rc::new(RefCell::new(DialogNode::new()));
-        answers.borrow_mut().dialog_type = vec![
-            DialogType::Choice {
-                text: String::from("Hey"),
-                condition: None,
-            },
-            DialogType::Choice {
-                text: String::from("No Hello"),
-                condition: None,
-            },
-            DialogType::Choice {
-                text: String::from("Want to share a flat ?"),
-                condition: None,
-            },
-        ];
-
-        let dialog_2 = Rc::new(RefCell::new(DialogNode::new()));
-        dialog_2.borrow_mut().dialog_type = vec![DialogType::Text(String::from(":)"))];
-
-        let dialog_3 = Rc::new(RefCell::new(DialogNode::new()));
-        dialog_3.borrow_mut().dialog_type = vec![DialogType::Text(String::from(":O"))];
-
-        let dialog_4 = Rc::new(RefCell::new(DialogNode::new()));
-        dialog_4.borrow_mut().dialog_type = vec![DialogType::Text(String::from("Sure"))];
-
-        answers.borrow_mut().add_child(dialog_2);
-        answers.borrow_mut().add_child(dialog_3);
-        answers.borrow_mut().add_child(dialog_4);
-
-        dialog.borrow_mut().add_child(answers);
-
-        assert_eq!(
-            dialog.borrow().print(),
-            "[Hello]->[[Hey, No Hello, Want to share a flat ?]->[[:)]; [:O]; [Sure]]]".to_string()
-        );
-    }
-
-    #[test]
-    fn test_init_tree_simple_text_1() {
-        let tree = init_tree(String::from("[Hello]"));
-        assert_eq!(
-            tree.borrow().dialog_type,
-            vec![DialogType::Text("Hello".to_string())]
-        );
-    }
-
-    #[test]
-    fn test_init_tree_simple_text_2() {
-        let tree = init_tree(String::from("[I want to talk]"));
-        assert_eq!(
-            tree.borrow().dialog_type,
-            vec![DialogType::Text("I want to talk".to_string())]
-        );
-    }
-
-    #[test]
-    fn test_init_tree_simple_choice_1() {
-        // carefull with
-        let tree = init_tree(String::from("[Let's talk,I don't wanna talk]"));
-        assert_eq!(
-            tree.borrow().dialog_type,
-            vec![
-                DialogType::Choice {
-                    text: "Let's talk".to_string(),
-                    condition: None
-                },
-                DialogType::Choice {
-                    text: "I don't wanna talk".to_string(),
-                    condition: None
-                }
-            ]
-        );
-    }
-
-    #[test]
-    fn test_init_tree_simple_choice_spaced() {
-        // carefull with
-        let tree = init_tree(String::from("[Let's talk, I don't wanna talk]"));
-        assert_eq!(
-            tree.borrow().dialog_type,
-            vec![
-                DialogType::Choice {
-                    text: "Let's talk".to_string(),
-                    condition: None
-                },
-                DialogType::Choice {
-                    text: "I don't wanna talk".to_string(),
-                    condition: None
-                }
-            ]
-        );
-    }
-
-    #[test]
-    fn test_init_tree_famiglia_figlio_unico() {
-        // TODO find out what the warning referred to
-        // carefull with ???
-        let tree = init_tree(String::from(
-            "[Catchphrase]->[[I love you, Give me your wallet]]",
-        ));
-
-        assert_eq!(
-            tree.borrow().dialog_type,
-            vec![DialogType::Text("Catchphrase".to_string())]
-        );
-
-        assert_eq!(
-            tree.borrow().children[0].borrow().dialog_type,
-            vec![
-                DialogType::Choice {
-                    text: "I love you".to_string(),
-                    condition: None
-                },
-                DialogType::Choice {
-                    text: "Give me your wallet".to_string(),
-                    condition: None
-                }
-            ]
-        );
-    }
-
-    #[test]
-    fn test_init_tree_famiglia() {
-        let tree = init_tree(String::from(
-            "[Catchphrase]->[[I love you, Give me your wallet]->[[Me Too]; [Here all my chicken sandwich]]]",
-        ));
-
-        assert_eq!(
-            tree.borrow().children[0].borrow().dialog_type,
-            vec![
-                DialogType::Choice {
-                    text: String::from("I love you"),
-                    condition: None
-                },
-                DialogType::Choice {
-                    text: String::from("Give me your wallet"),
-                    condition: None
-                }
-            ]
-        );
-
-        assert_eq!(
-            tree.borrow().children[0].borrow().children[0]
-                .borrow()
-                .dialog_type,
-            vec![DialogType::Text("Me Too".to_string())]
-        );
-
-        assert_eq!(
-            tree.borrow().children[0].borrow().children[1]
-                .borrow()
-                .dialog_type,
-            vec![DialogType::Text("Here all my chicken sandwich".to_string())]
-        );
-    }
-
-    #[test]
-    fn test_init_tree_complex_famiglia() {
-        // helped me see that accent wasn't include in the ascii char
-
-        let tree = init_tree(String::from(
-            "[Il faut absolument sauver les Fabien du Chien Géant]->[[Il me faut donc obtenir le trône...]->[[...,et de l'argent]->[[Et de l'argent]->[[C'est essentiel]]];[C'est essentiel]]]",
-        ));
-
-        // root
-        assert_eq!(
-            tree.borrow().dialog_type,
-            vec![DialogType::Text(String::from(
-                "Il faut absolument sauver les Fabien du Chien Géant"
-            ))]
-        );
-
-        // first and only child of root
-        assert_eq!(
-            tree.borrow().children[0].borrow().dialog_type,
-            vec![DialogType::Text(String::from(
-                "Il me faut donc obtenir le trône..."
-            ))]
-        );
-
-        // choose of the player
-        assert_eq!(
-            tree.borrow().children[0].borrow().children[0]
-                .borrow()
-                .dialog_type,
-            vec![
-                DialogType::Choice {
-                    text: "...".to_string(),
-                    condition: None
-                },
-                DialogType::Choice {
-                    text: "et de l'argent".to_string(),
-                    condition: None
-                }
-            ]
-        );
-
-        // two possible outcome from the player's answer
-
-        // first (when the player don't say anything == "...")
-        assert_eq!(
-            tree.borrow().children[0].borrow().children[0]
-                .borrow()
-                .children[0]
-                .borrow()
-                .dialog_type,
-            vec![DialogType::Text("Et de l'argent".to_string())]
-        );
-        // just after the npc said "Et de l'argent"
-        assert_eq!(
-            tree.borrow().children[0].borrow().children[0]
-                .borrow()
-                .children[0]
-                .borrow()
-                .children[0]
-                .borrow()
-                .dialog_type,
-            vec![DialogType::Text("C'est essentiel".to_string())]
-        );
-
-        // println!("{}", tree.borrow().print());
-
-        // second
-        assert_eq!(
-            tree.borrow().children[0].borrow().children[1]
-                .borrow()
-                .dialog_type,
-            vec![DialogType::Text("C'est essentiel".to_string())]
-        );
-
-        // test print
-        assert_eq!(
-            tree.borrow().print(),
-            "[Il faut absolument sauver les Fabien du Chien Géant]->[[Il me faut donc obtenir le trône...]->[[..., et de l'argent]->[[Et de l'argent]->[[C'est essentiel]]]; [C'est essentiel]]]".to_string()
-        );
-    }
-
-    // #[test]
-    // fn test_add_child() {
-    //     let tree = init_tree(String::from("[0,1,[3,4,5,[7,8]],2]"));
-    //     let new_node = Rc::new(RefCell::new(TreeNode::new()));
-    //     new_node.borrow_mut().value = Some(9);
-    //     let child = &tree.borrow().children[2];
-    //     child.borrow_mut().add_child(new_node);
-    //     assert_eq!(tree.borrow().print(), "[0,1,[3,4,5,[7,8],9],2]");
-    // }
+    return special_char.contains(&c);
 }

@@ -311,6 +311,7 @@ fn spawn_aggresives_characters(
             defense: Defense::default(),
             defense_spe: DefenseSpe::default()
         })
+        .insert(Dialog{ current_node: Some(String::from(OLF_DIALOG))})
         // 5 Fabicurion are hidden within Olf's silhouette
         .insert(GroupSize(5))
         .insert(DetectionBehavior)
