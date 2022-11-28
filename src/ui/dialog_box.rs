@@ -1,5 +1,5 @@
-//! All method involved in creating the UI ingame
-//! 
+//! All base method involved in creating the UI ingame
+//!
 //! EventHandler :
 //!     - Enter in Combat
 //!     - Exit in Combat
@@ -14,12 +14,14 @@ use std::time::Duration;
 
 use crate::{
     constants::ui::dialogs::*,
-    npc::aggression::{
-        CombatEvent,
-        CombatExitEvent,
+    npc::{
+        aggression::{CombatEvent, CombatExitEvent},
+        NPC,
     },
+    ui::dialog_system::{init_tree_flat, DialogType},
 };
 
+use super::dialog_system::Dialog;
 
 #[derive(Component)]
 pub struct DialogPanel;
@@ -125,8 +127,7 @@ pub fn create_dialog_box_on_key_press(
     query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::O)
-    {
+    if keyboard_input.just_pressed(KeyCode::O) {
         if let Ok((_entity, animator, _style)) = query.get_single() {
             if animator.tweenable().unwrap().progress() >= 1.0 {
                 close_dialog_box_event.send(CloseDialogBoxEvent);
@@ -143,7 +144,7 @@ pub fn create_dialog_box_on_key_press(
 }
 
 /// Handle the CombatEvent
-/// 
+///
 /// read CombatEvent
 ///     open a new ui / or got to Discussion ui
 /// read CombatExitEvent
@@ -153,11 +154,11 @@ pub fn create_dialog_box_on_combat_event(
     // mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
     query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
     mut ev_combat: EventReader<CombatEvent>,
-    // mut ev_combat_exit: EventReader<CombatExitEvent>,   
-)
-{
-
-    // order : exit combat UI 
+    // mut ev_combat_exit: EventReader<CombatExitEvent>,
+    // with dialog
+    npc_query: Query<(Entity, &Dialog), With<NPC>>,
+) {
+    // order : exit combat UI
     // for _ev in ev_combat_exit.iter()
     // {
     //     // and UI is open
@@ -168,27 +169,76 @@ pub fn create_dialog_box_on_combat_event(
     //         }
     //     }
     // }
-    
+
     // TODO separate into two function
 
-    for _ev in ev_combat.iter() 
-    {
+     for ev in ev_combat.iter() {
+          // if already open go to combat tab
+          if let Ok((_entity, _animator, _style)) = query.get_single() {
+               // close any open ui
+               // if animator.tweenable().unwrap().progress() >= 1.0 {
+               //     close_dialog_box_event.send(CloseDialogBoxEvent);
+               // }
+          } else {
+               // open a new ui with the Combat Choose
+               info!("Open UI Combat");
 
-        // if already open go to combat tab
-        if let Ok((_entity, _animator, _style)) = query.get_single() {
-            // close any open ui
-            // if animator.tweenable().unwrap().progress() >= 1.0 {
-            //     close_dialog_box_event.send(CloseDialogBoxEvent);
-            // }
+               let npc = ev.npc_entity;
+               match npc_query.get(npc) {
+               Ok((_npc_entity, dialog)) => {
+                    match &dialog.current_node {
+                         Some(text) => {
+                              // root
+                              let dialog_tree = init_tree_flat(text.to_string());
+                              let dialog = &dialog_tree.borrow().dialog_type[0];
+                              match dialog {
+                                   DialogType::Text(text) => {
+                                        println!("{}", text);
+                                        create_dialog_box_event.send(CreateDialogBoxEvent {
+                                             dialog: text.to_owned(),
+                                        });
+                                   }
+                                   DialogType::Choice { text, condition } => {
+                                        create_dialog_box_event.send(CreateDialogBoxEvent {
+                                             dialog: text.to_owned(),
+                                        });
+                                   }
+                                   // _ => warn!("Unkown Dialog_type"),
+                              }
 
+                              // for dialog in &dialog_tree.borrow().dialog_type {
+                              //      match dialog {
+                              //           DialogType::Text(text) => {
+                              //                create_dialog_box_event.send(CreateDialogBoxEvent {
+                              //                     dialog: text.to_owned(),
+                              //                });
+                              //           }
+                              //           DialogType::Choice { text, condition } => {
+                              //                create_dialog_box_event.send(CreateDialogBoxEvent {
+                              //                     dialog: text.to_owned(),
+                              //                });
+                              //           }
+                              //           // _ => warn!("Unkown Dialog_type"),
+                              //      }
+                              // }
+                              
+                         }
+
+                         None => {
+                              create_dialog_box_event.send(CreateDialogBoxEvent {
+                                   dialog: "TALK \nFIGHT".to_owned(),
+                              });
+                         }
+                    }
+               }
+
+                Err(_e) => {
+                    create_dialog_box_event.send(CreateDialogBoxEvent {
+                        dialog: "TALK \nFIGHT".to_owned(),
+                    });
+                }
+            }
         }
-        else {
-            // open a new ui with the Combat Choose
-            info!("Open UI Combat");
-            create_dialog_box_event.send(CreateDialogBoxEvent {
-                dialog: "TALK \nFIGHT".to_owned(),
-            });
-        }   
     }
 }
 
@@ -241,6 +291,7 @@ pub fn create_dialog_box(
     mut _meshes: ResMut<Assets<Mesh>>,
     _texture_atlases: Res<Assets<TextureAtlas>>,
     dialog_box_resources: Res<DialogBoxResources>,
+    asset_server: Res<AssetServer>,
 ) {
     for CreateDialogBoxEvent { dialog } in create_dialog_box_events.iter() {
         info!("open dialog event");
@@ -324,26 +375,23 @@ pub fn create_dialog_box(
                     })
                     .insert(Animator::new(panels_tween));
 
-                parent
-                    .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.background.clone().into(),
-                        style: child_sprite_style.clone(),
-                        ..ImageBundle::default()
-                    });
+                parent.spawn_bundle(ImageBundle {
+                    image: dialog_box_resources.background.clone().into(),
+                    style: child_sprite_style.clone(),
+                    ..ImageBundle::default()
+                });
 
-                parent
-                    .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.stained_glass_opened.clone().into(),
-                        style: child_sprite_style.clone(),
-                        ..ImageBundle::default()
-                    });
+                parent.spawn_bundle(ImageBundle {
+                    image: dialog_box_resources.stained_glass_opened.clone().into(),
+                    style: child_sprite_style.clone(),
+                    ..ImageBundle::default()
+                });
 
-                parent
-                    .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.chandelier.clone().into(),
-                        style: child_sprite_style.clone(),
-                        ..ImageBundle::default()
-                    });
+                parent.spawn_bundle(ImageBundle {
+                    image: dialog_box_resources.chandelier.clone().into(),
+                    style: child_sprite_style.clone(),
+                    ..ImageBundle::default()
+                });
 
                 parent
                     .spawn_bundle(ImageBundle {
@@ -406,6 +454,34 @@ pub fn create_dialog_box(
                 //     style: child_sprite_style.clone(),
                 //     ..ImageBundle::default()
                 // });
+
+               // Button
+
+               //  parent
+               //      .spawn_bundle(ButtonBundle {
+               //          style: Style {
+               //              size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+               //              // center button
+               //              margin: UiRect::all(Val::Auto),
+               //              // horizontally center child text
+               //              justify_content: JustifyContent::Center,
+               //              // vertically center child text
+               //              align_items: AlignItems::Center,
+               //              ..default()
+               //          },
+               //          color: NORMAL_BUTTON.into(),
+               //          ..default()
+               //      })
+               //      .with_children(|parent| {
+               //          parent.spawn_bundle(TextBundle::from_section(
+               //              "Button",
+               //              TextStyle {
+               //                  font: asset_server.load("fonts/dpcomic.ttf"),
+               //                  font_size: 40.0,
+               //                  color: Color::rgb(0.9, 0.9, 0.9),
+               //              },
+               //          ));
+               //      });
             })
             .insert(DialogPanel)
             .insert(Animator::new(dialog_box_tween));
@@ -417,20 +493,21 @@ pub fn update_dialog_box(
     mut dialog_box_query: Query<(&mut DialogBox, &Children)>,
     mut text_query: Query<&mut Text>,
 ) {
-    for (mut dialog_box, children) in dialog_box_query.iter_mut() {
-        dialog_box.update_timer.tick(time.delta());
+     for (mut dialog_box, children) in dialog_box_query.iter_mut() {
+          dialog_box.update_timer.tick(time.delta());
 
-        if dialog_box.update_timer.finished() && !dialog_box.finished {
-            let mut text = text_query.get_mut(children[0]).unwrap();
-            let next_letter = dialog_box.text.chars().nth(dialog_box.progress).unwrap();
-            text.sections[0].value.push(next_letter);
+          if dialog_box.update_timer.finished() && !dialog_box.finished {
+               // TODO if the given text contains a accent this will crash
+               let mut text = text_query.get_mut(children[0]).unwrap();
+               let next_letter = dialog_box.text.chars().nth(dialog_box.progress).unwrap();
+               text.sections[0].value.push(next_letter);
 
-            dialog_box.progress += 1;
-            if dialog_box.progress >= dialog_box.text.len() {
-                dialog_box.finished = true;
-            }
-        }
-    }
+               dialog_box.progress += 1;
+               if dialog_box.progress >= dialog_box.text.len() {
+                    dialog_box.finished = true;
+               }
+          }
+     }
 }
 
 pub fn animate_scroll(

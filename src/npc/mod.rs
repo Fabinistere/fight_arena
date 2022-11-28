@@ -376,6 +376,7 @@ fn spawn_aggresives_characters(
             // 2 Fabicurion are hidden behind the representant
             .insert(GroupSize(2))
             .insert(DetectionBehavior)
+            .insert(Dialog{ current_node: Some(String::from(FABIEN_DIALOG))})
             .with_children(|parent| {
                 parent
                     .spawn()

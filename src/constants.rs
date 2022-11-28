@@ -1,5 +1,5 @@
 //! Constants
-//! 
+//!
 //! 1 == one pixel
 //! 0.6 == characters' pixel
 //! magical number = ratio
@@ -11,7 +11,7 @@ pub const BACKGROUND_COLOR: bevy::render::color::Color = bevy::render::color::Co
     alpha: 1.0,
 };
 
-pub const CLEAR: bevy::render::color::Color = bevy::render::color::Color::rgb(0.1,0.1,0.1);
+pub const CLEAR: bevy::render::color::Color = bevy::render::color::Color::rgb(0.1, 0.1, 0.1);
 
 pub const FIXED_TIME_STEP: f32 = 1.0 / 60.0;
 
@@ -22,19 +22,20 @@ pub mod locations {
     pub mod temple {
         use crate::TILE_SIZE;
 
-
         pub const BACKGROUND_Z: f32 = 0.;
 
         // Vec3::splat(TILE_SIZE*0.1)
         pub const TEMPLE_SCALE: (f32, f32, f32) = (-1., 1., 1.);
         pub const TEMPLE_Z: f32 = 2.0;
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
-        
-        pub const BANNERS_POSITION: (f32, f32, f32) = (23.*TILE_SIZE, 935.*TILE_SIZE, THRONE_Z_BACK);
+
+        pub const BANNERS_POSITION: (f32, f32, f32) =
+            (23. * TILE_SIZE, 935. * TILE_SIZE, THRONE_Z_BACK);
 
         pub const THRONE_Z_BACK: f32 = 3.;
         pub const THRONE_Z_FRONT: f32 = 7.;
-        pub const THRONE_POSITION: (f32, f32, f32) = (23.*TILE_SIZE, 74.*TILE_SIZE, THRONE_Z_BACK);
+        pub const THRONE_POSITION: (f32, f32, f32) =
+            (23. * TILE_SIZE, 74. * TILE_SIZE, THRONE_Z_BACK);
 
         pub const PILLAR_Z_BACK: f32 = 3.;
         pub const PILLAR_Z_FRONT: f32 = 7.;
@@ -44,12 +45,18 @@ pub mod locations {
         pub const PILLAR_ADJUST: f32 = 3.;
         pub const PILLAR_HITBOX_Y_OFFSET: f32 = -12.5;
 
-        pub const PILLAR_POSITION_1: (f32, f32, f32) = (48.5*TILE_SIZE, 28.*TILE_SIZE, PILLAR_Z_BACK);
-        pub const PILLAR_POSITION_2: (f32, f32, f32) = (48.5*TILE_SIZE, -12.*TILE_SIZE, PILLAR_Z_BACK);
-        pub const PILLAR_POSITION_3: (f32, f32, f32) = (48.5*TILE_SIZE, -52.*TILE_SIZE, PILLAR_Z_BACK);
-        pub const PILLAR_POSITION_4: (f32, f32, f32) = (-02.5*TILE_SIZE, 28.*TILE_SIZE, PILLAR_Z_BACK);
-        pub const PILLAR_POSITION_5: (f32, f32, f32) = (-02.5*TILE_SIZE, -12.*TILE_SIZE, PILLAR_Z_BACK);
-        pub const PILLAR_POSITION_6: (f32, f32, f32) = (-02.5*TILE_SIZE, -52.*TILE_SIZE, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_1: (f32, f32, f32) =
+            (48.5 * TILE_SIZE, 28. * TILE_SIZE, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_2: (f32, f32, f32) =
+            (48.5 * TILE_SIZE, -12. * TILE_SIZE, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_3: (f32, f32, f32) =
+            (48.5 * TILE_SIZE, -52. * TILE_SIZE, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_4: (f32, f32, f32) =
+            (-02.5 * TILE_SIZE, 28. * TILE_SIZE, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_5: (f32, f32, f32) =
+            (-02.5 * TILE_SIZE, -12. * TILE_SIZE, PILLAR_Z_BACK);
+        pub const PILLAR_POSITION_6: (f32, f32, f32) =
+            (-02.5 * TILE_SIZE, -52. * TILE_SIZE, PILLAR_Z_BACK);
     }
 }
 
@@ -66,7 +73,7 @@ pub mod character {
     pub mod npc {
 
         pub const NPC_SCALE: f32 = super::CHAR_SCALE;
-    
+
         pub const NPC_Z_BACK: f32 = 2.;
         pub const NPC_Z_FRONT: f32 = 8.;
 
@@ -74,10 +81,11 @@ pub mod character {
         pub const OLF_STARTING_ANIM: usize = 16;
         pub const HUGO_STARTING_ANIM: usize = 36;
         pub const FABICURION_STARTING_ANIM: usize = 40;
-    
+
         pub mod dialog {
             pub const RANDOM_DIALOG: &str = "";
-            pub const OLF_DIALOG: &str = "[Il faut absolument sauver les Fabien du Chien Géant]->[[Il me faut donc obtenir le trône...]->[[...,et de l'argent]->[[Et de l'argent]->[[C'est essentiel]]];[C'est essentiel]]]";
+            pub const OLF_DIALOG: &str = "[Il faut absolument sauver les Fabien du Chien Geant]->[[Il me faut donc obtenir le trône...]->[[...,et de l'argent]->[[Et de l'argent]->[[C'est essentiel]]];[C'est essentiel]]]";
+            pub const FABIEN_DIALOG: &str = "[Hello]->[[Hey, No Hello, Want to share a flat ?]->[[:)]; [:O]; [Sure]]]";
         }
 
         pub mod movement {
@@ -91,14 +99,14 @@ pub mod character {
             pub const NPC_SPEED: f32 = 50. * TILE_SIZE; // -> Speed::default()
         }
     }
-    
+
     pub mod player {
 
         pub const PLAYER_STARTING_ANIM: usize = 4;
-    
+
         pub const PLAYER_SCALE: f32 = super::CHAR_SCALE;
         pub const PLAYER_Z: f32 = 6.;
-        
+
         pub const PLAYER_HP: i32 = 50;
         pub const PLAYER_MANA: i32 = 100;
         pub const PLAYER_INITIATIVE: i32 = 40;
@@ -119,11 +127,17 @@ pub mod combat {
 
 pub mod ui {
     pub mod dialogs {
+        use bevy::prelude::Color;
+
         pub const DIALOG_BOX_ANIMATION_OFFSET: f32 = -1000.0;
         pub const DIALOG_BOX_UPDATE_DELTA_S: f32 = 0.05;
         pub const DIALOG_BOX_ANIMATION_TIME_MS: u64 = 500;
         pub const SCROLL_SIZE: (f32, f32) = (490.0, 11700.0 / 45.0);
         pub const SCROLL_ANIMATION_DELTA_S: f32 = 0.1;
         pub const SCROLL_ANIMATION_FRAMES_NUMBER: usize = 45;
+
+        pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+        pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
+        pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
     }
 }
