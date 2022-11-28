@@ -366,126 +366,126 @@ pub fn create_dialog_box(
                     ..Style::default()
                 };
 
-                // panels under the wall to prevent them from sticking out of the window after being lifted.
-                parent
+               // panels under the wall to prevent them from sticking out of the window after being lifted.
+               parent
                     .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.stained_glass_panels.clone().into(),
-                        style: child_sprite_style.clone(),
-                        ..ImageBundle::default()
+                         image: dialog_box_resources.stained_glass_panels.clone().into(),
+                         style: child_sprite_style.clone(),
+                         ..ImageBundle::default()
                     })
                     .insert(Animator::new(panels_tween));
 
-                parent.spawn_bundle(ImageBundle {
+               parent.spawn_bundle(ImageBundle {
                     image: dialog_box_resources.background.clone().into(),
                     style: child_sprite_style.clone(),
                     ..ImageBundle::default()
-                });
+                    });
 
-                parent.spawn_bundle(ImageBundle {
+               parent.spawn_bundle(ImageBundle {
                     image: dialog_box_resources.stained_glass_opened.clone().into(),
                     style: child_sprite_style.clone(),
                     ..ImageBundle::default()
-                });
+                    });
 
-                parent.spawn_bundle(ImageBundle {
+               parent.spawn_bundle(ImageBundle {
                     image: dialog_box_resources.chandelier.clone().into(),
                     style: child_sprite_style.clone(),
                     ..ImageBundle::default()
-                });
+                    });
 
-                parent
+               parent
                     .spawn_bundle(ImageBundle {
-                        image: dialog_box_resources.scroll_animation[0].clone().into(),
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            align_items: AlignItems::FlexStart,
-                            justify_content: JustifyContent::FlexEnd,
-                            ..Style::default()
-                        },
-                        ..ImageBundle::default()
+                         image: dialog_box_resources.scroll_animation[0].clone().into(),
+                         style: Style {
+                              position_type: PositionType::Absolute,
+                              size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                              display: Display::Flex,
+                              flex_direction: FlexDirection::Column,
+                              align_items: AlignItems::FlexStart,
+                              justify_content: JustifyContent::FlexEnd,
+                              ..Style::default()
+                         },
+                         ..ImageBundle::default()
                     })
                     .insert(Scroll {
-                        current_frame: 0,
-                        reverse: false,
+                         current_frame: 0,
+                         reverse: false,
                     })
                     .insert(ScrollTimer(Timer::from_seconds(
-                        SCROLL_ANIMATION_DELTA_S,
-                        false,
+                         SCROLL_ANIMATION_DELTA_S,
+                         false,
                     )))
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
-                            text: Text::from_section(
-                                "",
-                                TextStyle {
-                                    font: dialog_box_resources.text_font.clone(),
-                                    font_size: 30.0,
-                                    color: Color::BLACK,
-                                },
-                            )
-                            .with_alignment(TextAlignment {
-                                vertical: VerticalAlign::Top,
-                                horizontal: HorizontalAlign::Left,
-                            }),
-                            style: Style {
-                                flex_wrap: FlexWrap::Wrap,
-                                margin: UiRect {
-                                    top: Val::Percent(74.0),
-                                    left: Val::Percent(24.0),
-                                    ..UiRect::default()
-                                },
-                                max_size: Size::new(Val::Px(450.0), Val::Percent(100.0)),
-                                ..Style::default()
-                            },
-                            ..TextBundle::default()
-                        });
+                         parent.spawn_bundle(TextBundle {
+                              text: Text::from_section(
+                                   "",
+                                   TextStyle {
+                                        font: dialog_box_resources.text_font.clone(),
+                                        font_size: 30.0,
+                                        color: Color::BLACK,
+                                   },
+                              )
+                              .with_alignment(TextAlignment {
+                                   vertical: VerticalAlign::Top,
+                                   horizontal: HorizontalAlign::Left,
+                              }),
+                              style: Style {
+                                   flex_wrap: FlexWrap::Wrap,
+                                   margin: UiRect {
+                                        top: Val::Percent(74.0),
+                                        left: Val::Percent(24.0),
+                                        ..UiRect::default()
+                                   },
+                                   max_size: Size::new(Val::Px(450.0), Val::Percent(100.0)),
+                                   ..Style::default()
+                              },
+                              ..TextBundle::default()
+                         });
                     })
                     .insert(DialogBox::new(dialog.clone(), DIALOG_BOX_UPDATE_DELTA_S));
 
-                // parent.spawn_bundle(ImageBundle {
-                //     image: texture_atlases
-                //         .get(dialog_box_resources.scroll_animation.clone())
-                //         .unwrap()
-                //         .texture
-                //         .clone_weak()
-                //         .into(),
-                //     style: child_sprite_style.clone(),
-                //     ..ImageBundle::default()
-                // });
+               // parent.spawn_bundle(ImageBundle {
+               //     image: texture_atlases
+               //         .get(dialog_box_resources.scroll_animation.clone())
+               //         .unwrap()
+               //         .texture
+               //         .clone_weak()
+               //         .into(),
+               //     style: child_sprite_style.clone(),
+               //     ..ImageBundle::default()
+               // });
 
                // Button
 
-               //  parent
-               //      .spawn_bundle(ButtonBundle {
-               //          style: Style {
-               //              size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-               //              // center button
-               //              margin: UiRect::all(Val::Auto),
-               //              // horizontally center child text
-               //              justify_content: JustifyContent::Center,
-               //              // vertically center child text
-               //              align_items: AlignItems::Center,
-               //              ..default()
-               //          },
-               //          color: NORMAL_BUTTON.into(),
-               //          ..default()
-               //      })
-               //      .with_children(|parent| {
-               //          parent.spawn_bundle(TextBundle::from_section(
-               //              "Button",
-               //              TextStyle {
-               //                  font: asset_server.load("fonts/dpcomic.ttf"),
-               //                  font_size: 40.0,
-               //                  color: Color::rgb(0.9, 0.9, 0.9),
-               //              },
-               //          ));
-               //      });
-            })
-            .insert(DialogPanel)
-            .insert(Animator::new(dialog_box_tween));
-    }
+               parent
+                    .spawn_bundle(ButtonBundle {
+                         style: Style {
+                              size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                              // center button
+                              margin: UiRect::all(Val::Auto),
+                              // horizontally center child text
+                              justify_content: JustifyContent::Center,
+                              // vertically center child text
+                              align_items: AlignItems::Center,
+                              ..default()
+                         },
+                         color: NORMAL_BUTTON.into(),
+                         ..default()
+                    })
+                    .with_children(|parent| {
+                         parent.spawn_bundle(TextBundle::from_section(
+                              "Button",
+                              TextStyle {
+                                   font: asset_server.load("fonts/dpcomic.ttf"),
+                                   font_size: 40.0,
+                                   color: Color::rgb(0.9, 0.9, 0.9),
+                              },
+                         ));
+                    });
+               })
+               .insert(DialogPanel)
+               .insert(Animator::new(dialog_box_tween));
+     }
 }
 
 pub fn update_dialog_box(
