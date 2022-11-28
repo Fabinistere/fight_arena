@@ -643,7 +643,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
 fn is_special_char(c: char) -> bool {
     // not '-' cause handle differently
-    let special_char: Vec<char> = vec!['\\', ';', ',', '-'];
+    let special_char: Vec<char> = vec!['\\', ';', ',', '>', '[', ']'];
 
     return special_char.contains(&c);
 }
