@@ -10,13 +10,15 @@
 //!     - Karma based
 //!     - Event based
 //!     - Choice based
+//!
+//! Tree structure based on https://applied-math-coding.medium.com/a-tree-structure-implemented-in-rust-8344783abd75
 
 // use bevy::prelude::*;
 
 use std::rc::Rc;
 use std::{cell::RefCell, fmt};
 
-use bevy::prelude::{info, warn, Bundle, Component};
+use bevy::prelude::{info, warn, Bundle, Component, Query, Entity};
 
 /// Points to the current DialogNode the npc is in.
 ///
@@ -27,7 +29,7 @@ use bevy::prelude::{info, warn, Bundle, Component};
 ///
 /// ```rust
 /// Dialog {
-///      current_node:
+///      current_node: Some(
 /// "# Fabien
 ///
 /// - Hello
@@ -49,6 +51,7 @@ use bevy::prelude::{info, warn, Bundle, Component};
 /// ### Fabien
 ///
 /// - Sure"
+/// .to_string())
 /// }
 ///
 /// ```
@@ -155,6 +158,22 @@ pub struct DialogCondition {
     index_parent: Option<i32>,
 }
 
+impl DialogCondition {
+    pub fn is_verified(&self, karma: i32) -> bool {
+        // TODO verify also if event is inclueded in all game's event triggered
+
+        match self.karma_threshold {
+            Some(karma_threshold) => {
+                if karma >= karma_threshold.0 && karma <= karma_threshold.1 {
+                    return true;
+                }
+            }
+            None => {}
+        }
+        return false;
+    }
+}
+
 /// Points to the first DialogNode
 /// Used to be linked with an entity
 #[derive(PartialEq, Clone, Debug)]
@@ -190,192 +209,191 @@ pub struct DialogNode {
 }
 
 impl DialogNode {
-     pub fn new() -> DialogNode {
-          return DialogNode {
-               dialog_type: vec![],
-               character: None,
-               children: vec![],
-               parent: None,
-          };
-     }
+    pub fn new() -> DialogNode {
+        return DialogNode {
+            dialog_type: vec![],
+            character: None,
+            children: vec![],
+            parent: None,
+        };
+    }
 
-     pub fn add_child(&mut self, new_node: Rc<RefCell<DialogNode>>) {
-          self.children.push(new_node);
-     }
+    pub fn add_child(&mut self, new_node: Rc<RefCell<DialogNode>>) {
+        self.children.push(new_node);
+    }
 
-     /// # Convention
-     ///
-     /// - parent->child
-     /// - adelphe_1, adelphe_2
-     /// - [member_1, member_2] == A group
-     ///
-     /// # Examples
-     ///
-     /// `[parent]->[child]`
-     ///      *parent* has only one outcome, *child*
-     ///
-     /// `[obj_1]->[[obj_2], [obj_3]]`
-     ///      *obj_1* has *obj_2* and *obj_3* as children
-     ///      After *obj_1*, the two outcome possible are *obj_2* or *obj_3*
-     ///
-     /// ["CP"]->["Hello"->["NiceTalk"], "No Hello"->["BadTalk"], "Give ChickenSandwich"->["WinTalk"]]
-     ///
-     pub fn print_flat(&self) -> String {
-          let mut res = String::from("[");
-          for dialog in &self.dialog_type {
-               if let DialogType::Text(text) = dialog {
-                    res.push_str(&text);
-                    res.push_str(", ");
-               } else if let DialogType::Choice { text, condition: _ } = dialog {
-                    res.push_str(&text);
-                    res.push_str(", ");
-               }
-          }
-          res.push(']');
-          // Each cell is followed by a comma, except the last.
-          res = res.replace(", ]", "]");
+    /// # Convention
+    ///
+    /// - parent->child
+    /// - adelphe_1, adelphe_2
+    /// - [member_1, member_2] == A group
+    ///
+    /// # Examples
+    ///
+    /// `[parent]->[child]`
+    ///      *parent* has only one outcome, *child*
+    ///
+    /// `[obj_1]->[[obj_2], [obj_3]]`
+    ///      *obj_1* has *obj_2* and *obj_3* as children
+    ///      After *obj_1*, the two outcome possible are *obj_2* or *obj_3*
+    ///
+    /// ["CP"]->["Hello"->["NiceTalk"], "No Hello"->["BadTalk"], "Give ChickenSandwich"->["WinTalk"]]
+    ///
+    pub fn print_flat(&self) -> String {
+        let mut res = String::from("[");
+        for dialog in &self.dialog_type {
+            if let DialogType::Text(text) = dialog {
+                res.push_str(&text);
+                res.push_str(", ");
+            } else if let DialogType::Choice { text, condition: _ } = dialog {
+                res.push_str(&text);
+                res.push_str(", ");
+            }
+        }
+        res.push(']');
+        // Each cell is followed by a comma, except the last.
+        res = res.replace(", ]", "]");
 
-          let children = String::from("->[")
-               + &self
-                    .children
-                    .iter()
-                    .map(|tn| tn.borrow().print_flat())
-                    .collect::<Vec<String>>()
-                    .join("; ")
-               + "]";
+        let children = String::from("->[")
+            + &self
+                .children
+                .iter()
+                .map(|tn| tn.borrow().print_flat())
+                .collect::<Vec<String>>()
+                .join("; ")
+            + "]";
 
-          res.push_str(&children);
+        res.push_str(&children);
 
-          // Each children is followed by a semi-colon, except the last.
-          res = res.replace("; ]", "]");
+        // Each children is followed by a semi-colon, except the last.
+        res = res.replace("; ]", "]");
 
-          // remove when being a leaf (having no child)
-          res = res.replace("->[]", "");
+        // remove when being a leaf (having no child)
+        res = res.replace("->[]", "");
 
-          return res;
-     }
+        return res;
+    }
 
-     /// # Convention
-     ///
-     /// ```markdown
-     /// # Author 1
-     ///
-     /// - first element of a text
-     /// - second element of a text
-     ///
-     /// -> Event
-     ///
-     /// ### Author 2
-     ///
-     /// - first choice for the author 2 only enable when his/her karma is low | karma: -50,0
-     /// - second choice ... only enable when the event OlfIsGone has already occurs | event: OlfIsGone
-     /// - thrid choice always enable | None
-     /// - fourth choice with a high karma and when the events OlfIsGone and PatTheDog already occurs | karma: 10,50; event: OlfIsGone, PatTheDog
-     ///
-     /// #### Author 1
-     ///
-     /// - This text will be prompted only if the first choice is selected by the player
-     /// - This DialogNode (and the three other below) is a direct child of the second DialogNode
-     ///
-     /// #### Author 1
-     ///
-     /// - This text will be prompted only if the second choice is selected by the player
-     ///
-     /// #### Author 1
-     ///
-     /// - This text will be prompted only if the third choice is selected by the player
-     ///
-     /// #### Author 1
-     ///
-     /// - This text will be prompted only if the fourth choice is selected by the player
-     ///
-     /// ```
-     fn print_file(&self) -> String {
-          return self.print_file_aux(String::from("#"));
-     }
+    /// # Convention
+    ///
+    /// ```markdown
+    /// # Author 1
+    ///
+    /// - first element of a text
+    /// - second element of a text
+    ///
+    /// -> Event
+    ///
+    /// ### Author 2
+    ///
+    /// - first choice for the author 2 only enable when his/her karma is low | karma: -50,0
+    /// - second choice ... only enable when the event OlfIsGone has already occurs | event: OlfIsGone
+    /// - thrid choice always enable | None
+    /// - fourth choice with a high karma and when the events OlfIsGone and PatTheDog already occurs | karma: 10,50; event: OlfIsGone, PatTheDog
+    ///
+    /// #### Author 1
+    ///
+    /// - This text will be prompted only if the first choice is selected by the player
+    /// - This DialogNode (and the three other below) is a direct child of the second DialogNode
+    ///
+    /// #### Author 1
+    ///
+    /// - This text will be prompted only if the second choice is selected by the player
+    ///
+    /// #### Author 1
+    ///
+    /// - This text will be prompted only if the third choice is selected by the player
+    ///
+    /// #### Author 1
+    ///
+    /// - This text will be prompted only if the fourth choice is selected by the player
+    ///
+    /// ```
+    fn print_file(&self) -> String {
+        return self.print_file_aux(String::from("#"));
+    }
 
-     fn print_file_aux(&self, headers: String) -> String {
-          let mut res = headers.clone();
+    fn print_file_aux(&self, headers: String) -> String {
+        let mut res = headers.clone();
 
-          let character: String;
-          match &self.character {
-               Some((_id, name)) => character = " ".to_string() + name,
+        let character: String;
+        match &self.character {
+            Some((_id, name)) => character = " ".to_string() + name,
 
-               None => character = String::from(" Narator"),
-          }
-          res.push_str(&character);
-          res.push_str("\n\n");
+            None => character = String::from(" Narator"),
+        }
+        res.push_str(&character);
+        res.push_str("\n\n");
 
-          for dialog in &self.dialog_type {
-               if let DialogType::Text(text) = dialog {
-                    res.push_str("- ");
-                    res.push_str(&text);
-               } else if let DialogType::Choice { text, condition } = dialog {
-                    res.push_str("- ");
-                    res.push_str(&text);
-                    res.push_str(" | ");
+        for dialog in &self.dialog_type {
+            if let DialogType::Text(text) = dialog {
+                res.push_str("- ");
+                res.push_str(&text);
+            } else if let DialogType::Choice { text, condition } = dialog {
+                res.push_str("- ");
+                res.push_str(&text);
+                res.push_str(" | ");
 
-                    match condition {
-                         Some(dialog_condition) => {
-                              match dialog_condition.karma_threshold {
-                              Some((min, max)) => {
-                                   res.push_str("karma: min,max; ");
-                                   res = res.replace("min", &min.to_string());
-                                   res = res.replace("max", &max.to_string());
-                              }
-                              None => {}
-                              }
+                match condition {
+                    Some(dialog_condition) => {
+                        match dialog_condition.karma_threshold {
+                            Some((min, max)) => {
+                                res.push_str("karma: min,max; ");
+                                res = res.replace("min", &min.to_string());
+                                res = res.replace("max", &max.to_string());
+                            }
+                            None => {}
+                        }
 
-                              match &dialog_condition.event {
-                              Some(events) => {
-                                   if !events.is_empty() {
-                                        // plurial ?
-                                        res.push_str("event: ");
-                                        for event in events {
-                                             res.push_str(&event.to_string());
-                                             res.push_str(",");
-                                        }
-                                        res.push_str(";");
-                                        res = res.replace(",;", ";");
-                                   }
-                              }
-                              None => {}
-                              }
+                        match &dialog_condition.event {
+                            Some(events) => {
+                                if !events.is_empty() {
+                                    // plurial ?
+                                    res.push_str("event: ");
+                                    for event in events {
+                                        res.push_str(&event.to_string());
+                                        res.push_str(",");
+                                    }
+                                    res.push_str(";");
+                                    res = res.replace(",;", ";");
+                                }
+                            }
+                            None => {}
+                        }
 
-                              // we might remove the index
-                         }
-
-                         None => {
-                              res.push_str("None\n");
-                         }
+                        // we might remove the index
                     }
-               }
-          }
-          res.push_str("\n\nEND");
 
-          // res = res.replace("\n\n\n", "\n\n");
+                    None => {
+                        res.push_str("None\n");
+                    }
+                }
+            }
+        }
+        res.push_str("\n\nEND");
 
-          // event
+        // res = res.replace("\n\n\n", "\n\n");
 
-          let children =
-               &self
-                    .children
-                    .iter()
-                    .map(|tn| tn.borrow().print_file_aux(headers.clone()+"#"))
-                    .collect::<Vec<String>>()
-                    .join("\n\n");
+        // event
 
-          res.push_str(&children);
+        let children = &self
+            .children
+            .iter()
+            .map(|tn| tn.borrow().print_file_aux(headers.clone() + "#"))
+            .collect::<Vec<String>>()
+            .join("\n\n");
 
-          res = res.replace("#\n\n#", "##");
-          res = res.replace("\n\n\n", "\n\n");
+        res.push_str(&children);
 
-          // remove the last "\n\n"
-          res = res.replace("END#", "#");
-          res = res.replace("\n\nEND", "");
+        res = res.replace("#\n\n#", "##");
+        res = res.replace("\n\n\n", "\n\n");
 
-          return res;
-     }
+        // remove the last "\n\n"
+        res = res.replace("END#", "#");
+        res = res.replace("\n\nEND", "");
+
+        return res;
+    }
 }
 
 /// # Argument
@@ -577,18 +595,18 @@ pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
 /// let tree: DialogTree = init_tree_file(
 ///     String::from(
 ///         "# Morgan
-/// 
+///
 /// - Hello
-/// 
+///
 /// ## Fabien lae Random
-/// 
+///
 /// - I have to tell something | None
 /// - You beat Olf ! | event: OlfBeaten
-/// 
+///
 /// ### Fabien lae Random
-/// 
+///
 /// - Something | None
-/// - Now you can chill at the hospis | event: OpenTheHospis" 
+/// - Now you can chill at the hospis | event: OpenTheHospis"
 ///     )
 /// );
 ///
@@ -596,49 +614,48 @@ pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
 /// # }
 /// ```
 pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
-     let root = Rc::new(RefCell::new(DialogNode::new()));
+    let root = Rc::new(RefCell::new(DialogNode::new()));
 
-     let mut current = root.clone();
+    let mut current = root.clone();
 
-     let mut save = String::new();
-     // init with text
-     let mut dialog_type: DialogType = DialogType::new_text();
+    let mut save = String::new();
+    // init with text
+    let mut dialog_type: DialogType = DialogType::new_text();
 
-     // Check if a given char should be insert as text
-     // allow to have text with special char (like [ ] > , ;)
-     let mut except = false;
+    // Check if a given char should be insert as text
+    // allow to have text with special char (like [ ] > , ;)
+    let mut except = false;
 
-     let mut headers_numbers = 0;
+    let mut headers_numbers = 0;
 
-     // root.borrow_mut().dialog_type = vec![DialogType::Text(s.replace("[", "").replace("]", ""))];
+    // root.borrow_mut().dialog_type = vec![DialogType::Text(s.replace("[", "").replace("]", ""))];
 
-     let chars = s.chars().collect::<Vec<char>>();
-     for (_, c) in chars
-          .iter()
-          .enumerate()
-          .filter(|(idx, _)| *idx < chars.len())
-     {
-          if *c == '#' && !except {
-               headers_numbers+=1;
-          }
-          else if c.is_ascii() || c.is_alphanumeric() {
-               // the except char \
-               if *c == '\\' {
-                    except = true;
-               }
-               // ignore the new line: "\n"
-               else if *c=='n' && except {
-                    except = false;
-               } else if !is_special_char(*c) || (is_special_char(*c) && except) {
-                    save.push(*c);
-                    except = false;
+    let chars = s.chars().collect::<Vec<char>>();
+    for (_, c) in chars
+        .iter()
+        .enumerate()
+        .filter(|(idx, _)| *idx < chars.len())
+    {
+        if *c == '#' && !except {
+            headers_numbers += 1;
+        } else if c.is_ascii() || c.is_alphanumeric() {
+            // the except char \
+            if *c == '\\' {
+                except = true;
+            }
+            // ignore the new line: "\n"
+            else if *c == 'n' && except {
+                except = false;
+            } else if !is_special_char(*c) || (is_special_char(*c) && except) {
+                save.push(*c);
+                except = false;
 
-                    // println!("add {}", *c);
-               }
-          }
-     }
+                // println!("add {}", *c);
+            }
+        }
+    }
 
-     return root;
+    return root;
 }
 
 fn is_special_char(c: char) -> bool {
