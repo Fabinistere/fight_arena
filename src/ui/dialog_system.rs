@@ -18,7 +18,9 @@
 use std::rc::Rc;
 use std::{cell::RefCell, fmt};
 
-use bevy::prelude::{info, warn, Bundle, Component, Query, Entity};
+use bevy::prelude::{info, warn, Component};
+
+use crate::constants::character::{KARMA_MAX, KARMA_MIN};
 
 /// Points to the current DialogNode the npc is in.
 ///
@@ -82,7 +84,7 @@ impl DialogType {
     }
 
     /// Only compare the type,
-    /// it don't compare fields
+    /// it don't compare content
     fn eq(&self, comp: DialogType) -> bool {
         match (self.clone(), comp) {
             (DialogType::Text(_), DialogType::Text(_)) => return true,
@@ -120,11 +122,12 @@ impl DialogType {
 }
 
 // TODO MOVE IT UP
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum GameEvent {
     BeatTheGame,
     FirstKill,
     AreaCleared,
+    HasCharisma,
 }
 
 impl fmt::Display for GameEvent {
@@ -133,6 +136,7 @@ impl fmt::Display for GameEvent {
             GameEvent::BeatTheGame => write!(f, "BeatTheGame"),
             GameEvent::FirstKill => write!(f, "FirstKill"),
             GameEvent::AreaCleared => write!(f, "AreaCleared"),
+            GameEvent::HasCharisma => write!(f, "HasCharisma"),
         }
     }
 }
@@ -145,20 +149,27 @@ pub struct DialogCondition {
     /// will always be prompted
     karma_threshold: Option<(i32, i32)>,
     event: Option<Vec<GameEvent>>,
-    /// TODO REMOVE or REWORK
-    ///
-    /// The position of the parent choice made to access this node
-    ///
-    /// Start at 1 for the first choice
-    ///
-    /// Does not require to imply :
-    ///
-    /// - that a child Node will be treated after the last sentence of a `Vec<Text>`
-    /// as if the `index_parent` = index of the last sentence (length)
-    index_parent: Option<i32>,
+    // TODO REMOVE or REWORK
+    //
+    // The position of the parent choice made to access this node
+    //
+    // Start at 1 for the first choice
+    //
+    // Does not require to imply :
+    //
+    // - that a child Node will be treated after the last sentence of a `Vec<Text>`
+    // as if the `index_parent` = index of the last sentence (length)
+    // index_parent: Option<i32>,
 }
 
 impl DialogCondition {
+    pub fn new() -> DialogCondition {
+        DialogCondition {
+            karma_threshold: None,
+            event: None,
+        }
+    }
+
     pub fn is_verified(&self, karma: i32) -> bool {
         // TODO verify also if event is inclueded in all game's event triggered
 
@@ -407,7 +418,7 @@ impl DialogNode {
 ///
 /// # Examples
 ///
-/// A NPC's catchphrase followed by two possible outcomes
+/// The MainCharacter's catchphrase followed by two possible outcomes
 ///
 /// - a generic one
 ///   - random chill dialog,
@@ -576,11 +587,58 @@ pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
 /// # Panics
 ///
 /// The creation will panic
-/// if any argument to the process is not valid DialogTree format
+/// if any argument to the process is not valid DialogTree format.
+///
+/// # Conventions
+///
+/// ## Dialog Creation
+///
+/// A Dialog can involve as many characters as you like.
+/// A Dialog's Node is composed of:
+///
+/// - the author
+/// - the content
+///   - A serie of text;
+///   To create a monologue.
+///   - A serie of choice.
+///
+///     If the author of this serie is
+///     - a NPC:
+///     The choice will be selected by a priority system,
+///     Important Event dialog before random dialog.
+///     - the Main Character:
+///     The choices to be made will be indicated to the player.
+///     In The player scroll at the bottom the UI Wall.
+/// - the event the Node will launch when it's exited.
+///
+/// ## Rules
+///
+/// A choice is made of:
+///
+/// - a text
+/// - condition; Must end by `;` if != None
+///   - karma threshold; (x,y) with x, y ∈ N.
+///   The player's karma must be within this certain range
+///   - event;
+///   All followed events must be triggered to enable this choice.
+/// 
+///
+/// ***The end marker of the dialog is `\n`.***
+/// You **MUST** end this string by a `\n`.
+///
+/// ## Tips
+///
+/// - You can type
+///   - `k: x,y` instead of `karma: x,y`
+///   - `e: Event1, Event2` instead of `event: Event1, Event2`
+/// - You can use `MAX`/`MIN` to pick the highest/lowest karma threshold possible
+/// - Prefere not typing anything if it's something like this: `k: MIN,MAX`
+/// - If you want to
 ///
 /// # Examples
 ///
-/// A NPC's catchphrase followed by two possible outcomes/choices
+/// The MainCharacter's catchphrase is followed
+/// by two possible outcomes/choices for the interlocutor.
 ///
 /// - a generic one
 ///   - random chill dialog,
@@ -590,23 +648,70 @@ pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
 ///   - a first simple Text with a second simple Text as child
 ///
 /// ```rust
+/// # // ignore the extra '#' on the example (code block )
 /// # main() -> Result<(), std::num::ParseIntError> {
 ///
 /// let tree: DialogTree = init_tree_file(
 ///     String::from(
-///         "# Morgan
+/// "# Morgan
 ///
 /// - Hello
 ///
-/// ## Fabien lae Random
-///
-/// - I have to tell something | None
-/// - You beat Olf ! | event: OlfBeaten
-///
 /// ### Fabien lae Random
 ///
-/// - Something | None
-/// - Now you can chill at the hospis | event: OpenTheHospis"
+/// - I have to tell something | None
+/// - You beat Olf ! | event: OlfBeaten;
+///
+/// #### Fabien lae Random
+///
+/// - Something
+///
+/// #### Fabien lae Random
+///
+/// - Now you can chill at the hospis
+///
+/// -> OpenTheHospis\n"
+///     )
+/// );
+/// #     Ok(())
+/// # }
+/// ```
+///
+/// To create a long monologue,
+/// avoid using `\n`, prefere using `-`
+/// to seperated paragraph
+///
+/// ```rust
+/// # main() -> Result<(), std::num::ParseIntError> {
+///
+/// let tree: DialogTree = init_tree_file(
+///     String::from(
+/// "# Olf
+///
+/// - Hello
+/// - Do you mind giving me your belongings ?
+/// - Or maybe...
+/// - You want to fight me ?
+///
+/// ### Morgan
+///
+/// - Here my money | e: WonTheLottery;
+/// - You will feel my guitar | None
+/// - Call Homie | k: 10,MAX;
+///
+/// #### Olf
+///
+/// - Thank you very much
+///
+/// #### Olf
+///
+/// - Nice
+/// -> CombatEvent
+///
+/// #### Olf
+///
+/// - Not Nice
+/// -> CombatEvent\n"
 ///     )
 /// );
 ///
@@ -618,34 +723,208 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
     let mut current = root.clone();
 
+    let mut author = String::new();
     let mut save = String::new();
+    // k, e, karma or event
+    let mut condition = DialogCondition::new();
+    // CANT due to reading text one letter/number by one: avoid using karma as a string into .parse::<i32>().unwrap()
+    // let mut negative_karma = false;
+    let mut karma = String::new();
+    let mut event = String::new();
+
     // init with text
     let mut dialog_type: DialogType = DialogType::new_text();
 
     // Check if a given char should be insert as text
-    // allow to have text with special char (like [ ] > , ;)
+    // allow to have text with special char (like - / # )
     let mut except = false;
 
     let mut headers_numbers = 0;
 
-    // root.borrow_mut().dialog_type = vec![DialogType::Text(s.replace("[", "").replace("]", ""))];
+    let mut author_phase = false;
+    let mut content_phase = false;
+    let mut condition_phase = false;
+
+    let mut karma_phase = false;
+    let mut event_phase = false;
+
+    // let mut new_line = false;
 
     let chars = s.chars().collect::<Vec<char>>();
+    println!("{}", chars.len());
+    println!("{}", s);
+
     for (_, c) in chars
         .iter()
         .enumerate()
         .filter(|(idx, _)| *idx < chars.len())
     {
+        println!("c: {}", *c);
+
+        if (content_phase && author_phase)
+            || (content_phase && condition_phase)
+            || (author_phase && condition_phase)
+        {
+            warn!(
+                "author phase: {}, content phase: {}, condition phase: {}",
+                author_phase, content_phase, condition_phase
+            );
+            panic!("Illegal Combinaison of phase");
+        }
+
+        // transitions
+
         if *c == '#' && !except {
             headers_numbers += 1;
-        } else if c.is_ascii() || c.is_alphanumeric() {
-            // the except char \
-            if *c == '\\' {
+            author_phase = true;
+        }
+        // !condition_phase to permit negative number in the karma threshold
+        else if *c == '-' && !condition_phase {
+            content_phase = true;
+        } else if *c == '|' && content_phase {
+            // remove the space on the first position
+            while save.starts_with(" ") {
+                save.remove(0);
+            }
+
+            dialog_type = DialogType::new_choice();
+
+            condition_phase = true;
+            content_phase = !content_phase;
+        } else if *c == ',' && karma_phase && condition_phase {
+            // can be solved with karma_min, karma_max
+            // println!("karma 1rst elem: {}", karma);
+            condition.karma_threshold = Some((karma.parse::<i32>().unwrap(), KARMA_MAX));
+
+            // reuse this variable
+            karma.clear();
+        } 
+
+        // End of Phase
+
+        else if *c == '\n' && author_phase {
+            while author.starts_with(" ") {
+                author.remove(0);
+            }
+            println!("author: {}", author);
+            // TODO give the real entity_id
+            current.borrow_mut().character = Some((0, author.to_owned()));
+
+            author.clear();
+
+            headers_numbers = 0;
+
+            except = false;
+            author_phase = !author_phase;
+        } else if *c == ';' {
+            let k = karma.parse::<i32>().unwrap();
+            match condition.karma_threshold {
+                // _ cause the second i32 is KARMA_MAX
+                Some((x, _)) => {
+                    if x <= k {
+                        condition.karma_threshold = Some((x, k));
+                    } else {
+                        condition.karma_threshold = Some((k, x));
+                    }
+                }
+                None => {
+                    warn!("init creation condition has been skipped");
+                }
+            }
+
+            karma.clear();
+        } else if *c == '\n' && condition_phase && dialog_type.is_choice() {
+            // remove the space on the first position
+            while save.starts_with(" ") {
+                save.remove(0);
+            }
+
+            // remove the space on the last position
+            while save.ends_with(" ") {
+                save.remove(save.len() - 1);
+            }
+
+            println!("choice inserted: {}", save);   
+            
+            let choice: DialogType;
+
+            match (condition.karma_threshold, condition.clone().event) {
+                (Some(_), None) | (None, Some(_)) | (Some(_), Some(_)) => {
+                    choice = DialogType::Choice {
+                        text: save.clone(),
+                        condition: Some(condition.clone()),
+                    };
+                }
+                // (None, None)
+                _ => {
+                    choice = DialogType::Choice {
+                        text: save.clone(),
+                        condition: None,
+                    }
+                }
+            }
+
+            current.borrow_mut().dialog_type.push(choice);
+
+            condition_phase = false;
+
+            save.clear();
+        } else if *c == '\n' && content_phase && !save.is_empty() && dialog_type.is_text() {
+            // remove the space on the first position
+            while save.starts_with(" ") {
+                save.remove(0);
+            }
+
+            // remove the space on the last position
+            while save.ends_with(" ") {
+                save.remove(save.len() - 1);
+            }
+
+            println!("text inserted: {}", save);
+
+            let dialog = DialogType::Text(save.clone());
+            current.borrow_mut().dialog_type.push(dialog);
+
+            save.clear();
+
+            content_phase = false;
+        }
+        // read text or condition
+        else if c.is_ascii() || c.is_alphanumeric() {
+            // the except char is /
+            if *c == '/' {
+                info!("except");
                 except = true;
             }
+            // `;` or `\n` put an end to the selection of condtion
+            else if condition_phase {
+                if *c == 'k' {
+                    karma_phase = true;
+                } else if (c.is_numeric() || *c == '-') && karma_phase
+                // && *c != ':'
+                {
+                    // negative symbol -
+                    karma.push(*c);
+
+                    // println!("karma: {}", karma);
+                }
+            }
             // ignore the new line: "\n"
-            else if *c == 'n' && except {
-                except = false;
+            // the \n is a marker to end some phase
+            else if *c == '\n' {
+                // new_line = true;
+                println!("skip");
+
+                // full reset
+
+                dialog_type = DialogType::new_text();
+
+                author_phase = false;
+                content_phase = false;
+                // useless protection cause by if condition_phase just above
+                // condition_phase = false;
+            } else if author_phase && *c != '#' {
+                author.push(*c);
             } else if !is_special_char(*c) || (is_special_char(*c) && except) {
                 save.push(*c);
                 except = false;
@@ -659,8 +938,255 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 }
 
 fn is_special_char(c: char) -> bool {
-    // not '-' cause handle differently
-    let special_char: Vec<char> = vec!['\\', ';', ',', '>', '[', ']'];
+    let special_char: Vec<char> = vec!['/', '-', '|', ';'];
 
     return special_char.contains(&c);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ui::dialog_system::*;
+
+    #[test]
+    fn test_init_tree_from_file_simple_text_1() {
+        let root = init_tree_file(String::from("# Olf\n\n- Hello\n"));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Olf"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![DialogType::Text("Hello".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_space_overdose_1() {
+        let root = init_tree_file(String::from("#            Olf\n\n-      Hello\n"));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Olf"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![DialogType::Text("Hello".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_space_overdose_2() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello         |   None\n- No Hello    | None\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Choice {
+                    text: "Hello".to_string(),
+                    condition: None
+                },
+                DialogType::Choice {
+                    text: "No Hello".to_string(),
+                    condition: None
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_space_deficiency_1() {
+        let root = init_tree_file(String::from("#Olf\n\n-Hello\n"));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Olf"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![DialogType::Text("Hello".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_space_deficiency_2() {
+        let root = init_tree_file(String::from("# Morgan\n\n- Hello|None\n- No Hello|None\n"));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Choice {
+                    text: "Hello".to_string(),
+                    condition: None
+                },
+                DialogType::Choice {
+                    text: "No Hello".to_string(),
+                    condition: None
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_monologue_1() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello\n- I was wondering\n-Alone...\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Text("Hello".to_string()),
+                DialogType::Text("I was wondering".to_string()),
+                DialogType::Text("Alone...".to_string())
+            ]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_simple_choice_1() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello | None\n- No Hello | None\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Choice {
+                    text: "Hello".to_string(),
+                    condition: None
+                },
+                DialogType::Choice {
+                    text: "No Hello".to_string(),
+                    condition: None
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_complex_choice_1() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello | None\n- No Hello | k: -10,0;\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Choice {
+                    text: "Hello".to_string(),
+                    condition: None
+                },
+                DialogType::Choice {
+                    text: "No Hello".to_string(),
+                    condition: Some(DialogCondition {
+                        karma_threshold: Some((-10, 0)),
+                        event: None
+                    })
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_complex_choice_2() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello | None\n- Mary me Hugo. | e: HasCharisma;\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Choice {
+                    text: "Hello".to_string(),
+                    condition: None
+                },
+                DialogType::Choice {
+                    text: "Mary me Hugo.".to_string(),
+                    condition: Some(DialogCondition {
+                        karma_threshold: None,
+                        event: Some(vec![GameEvent::HasCharisma])
+                    })
+                }
+            ]
+        );
+    }
+
+    // allow to explicit/implicit karma/k; event/e
+    // extend the tolerance
+
+    #[test]
+    fn test_init_tree_from_file_complex_choice_3() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello | k: -50,100;\n- No Hello | karma : -100,0;\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Choice {
+                    text: "Hello".to_string(),
+                    condition: Some(DialogCondition {
+                        karma_threshold: Some((-50, 100)),
+                        event: None
+                    })
+                },
+                DialogType::Choice {
+                    text: "No Hello".to_string(),
+                    condition: Some(DialogCondition {
+                        karma_threshold: Some((-100, 0)),
+                        event: None
+                    })
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_simple_kinship_1() {
+        let root = init_tree_file(String::from(
+            "# Morgan\n\n- Hello\n## Hugo\n- Hey! How are you ?\n",
+        ));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+        assert_eq!(
+            root.borrow().children[0].borrow().character,
+            Some((0, String::from("Hugo")))
+        );
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![DialogType::Text("Hello".to_string())]
+        );
+        assert_eq!(
+            root.borrow().children[0].borrow().dialog_type,
+            vec![DialogType::Text("Hey! How are you ?".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_init_tree_from_file_monologue_2() {
+        let root = init_tree_file(String::from("# Morgan\n\n- Hello\n- I was wondering\n ## Morgan - With Friends ! | event: HasFriend\n- Alone... | None\n"));
+
+        assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+        assert_eq!(
+            root.borrow().dialog_type,
+            vec![
+                DialogType::Text("Hello".to_string()),
+                DialogType::Text("I was wondering".to_string()),
+                DialogType::Text("Alone...".to_string())
+            ]
+        );
+    }
 }
