@@ -129,6 +129,7 @@ pub enum GameEvent {
     FirstKill,
     AreaCleared,
     HasCharisma,
+    HasFriend,
 }
 
 impl fmt::Display for GameEvent {
@@ -138,6 +139,7 @@ impl fmt::Display for GameEvent {
             GameEvent::FirstKill => write!(f, "FirstKill"),
             GameEvent::AreaCleared => write!(f, "AreaCleared"),
             GameEvent::HasCharisma => write!(f, "HasCharisma"),
+            GameEvent::HasFriend => write!(f, "HasFriend"),
         }
     }
 }
@@ -147,11 +149,12 @@ impl FromStr for GameEvent {
 
     fn from_str(input: &str) -> Result<GameEvent, Self::Err> {
         match input {
-            "BeatTheGame"  => Ok(GameEvent::BeatTheGame),
-            "FirstKill"  => Ok(GameEvent::FirstKill),
-            "AreaCleared"  => Ok(GameEvent::AreaCleared),
+            "BeatTheGame" => Ok(GameEvent::BeatTheGame),
+            "FirstKill" => Ok(GameEvent::FirstKill),
+            "AreaCleared" => Ok(GameEvent::AreaCleared),
             "HasCharisma" => Ok(GameEvent::HasCharisma),
-            _      => Err(()),
+            "HasFriend" => Ok(GameEvent::HasFriend),
+            _ => Err(()),
         }
     }
 }
@@ -596,7 +599,7 @@ pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
 }
 
 fn is_special_char_flat(c: char) -> bool {
-    let special_char: Vec<char> = vec!['/', '[', ']', '|', '-', ';', ','];
+    let special_char: Vec<char> = vec!['/', '[', ']', '|', '>', ';', ','];
 
     return special_char.contains(&c);
 }
@@ -768,6 +771,8 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
     let mut karma_phase = false;
     let mut event_phase = false;
+    // allow to write `event:` or `ejhlksdfh:` instend of `e:`
+    let mut post_colon = false;
 
     // let mut new_line = false;
 
@@ -786,11 +791,12 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             || (content_phase && condition_phase)
             || (author_phase && condition_phase)
         {
-            warn!(
-                "author phase: {}, content phase: {}, condition phase: {}",
-                author_phase, content_phase, condition_phase
-            );
-            panic!("Illegal Combinaison of phase");
+            // warn!(
+            //     "author phase: {}, content phase: {}, condition phase: {}",
+            //     author_phase, content_phase, condition_phase
+            // );
+            panic!("Illegal Combinaison of phase; author phase: {}, content phase: {}, condition phase: {}",
+            author_phase, content_phase, condition_phase);
         }
 
         // transitions
@@ -828,6 +834,22 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 author.remove(0);
             }
             println!("author: {}", author);
+
+            if headers_numbers > 1 {
+                let child = Rc::new(RefCell::new(DialogNode::new()));
+                current.borrow_mut().children.push(Rc::clone(&child));
+                {
+                    let mut mut_child = child.borrow_mut();
+                    mut_child.parent = Some(Rc::clone(&current));
+                }
+
+                // setting up the *second* link parent
+                child.borrow_mut().parent = Some(current);
+
+                // go down into a new child
+                current = child;
+            }
+
             // TODO give the real entity_id
             current.borrow_mut().character = Some((0, author.to_owned()));
 
@@ -836,7 +858,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             // headers_numbers = 0;
 
             except = false;
-            author_phase = !author_phase;
+            author_phase = false;
         } else if *c == ';' && karma_phase {
             let k = karma.parse::<i32>().unwrap();
             match condition.karma_threshold {
@@ -867,14 +889,15 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 None => condition.event = Some(vec![e]),
             }
 
+            // println!("event cleared");
             event.clear();
 
-            event_phase = false;
-        } else if *c == '\n'
-            && condition_phase && dialog_type.is_choice()
-            // && !karma_phase
-            // && !event_phase
-            
+            if *c == ';' {
+                event_phase = false;
+            }
+        } else if *c == '\n' && condition_phase && dialog_type.is_choice()
+        // && !karma_phase
+        // && !event_phase
         {
             // remove the space on the first position
             while save.starts_with(" ") {
@@ -911,6 +934,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             condition_phase = false;
 
             save.clear();
+            condition = DialogCondition::new();
         } else if *c == '\n' && content_phase && !save.is_empty() && dialog_type.is_text() {
             // remove the space on the first position
             while save.starts_with(" ") {
@@ -949,13 +973,15 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                     karma.push(*c);
 
                     // println!("karma: {}", karma);
-                } else if *c == 'e' {
+                } else if *c == 'e' && !event_phase {
                     event_phase = true;
-                } else if event_phase && *c != ' ' && *c != ':'
-                {
+                    post_colon = true;
+                } else if *c == ':' && event_phase {
+                    post_colon = false;
+                } else if event_phase && *c != ' ' && !post_colon {
                     event.push(*c);
 
-                    // println!("event: {}", event);
+                    // println!("e: {}", event);
                 }
             }
             // ignore the new line: "\n"
@@ -1588,6 +1614,35 @@ mod tests {
         }
 
         #[test]
+        fn test_init_tree_from_file_complex_choice_4() {
+            let root = init_tree_file(String::from(
+                "# Morgan\n\n- Hello my Friend | e: HasFriend;\n- You droped this (*crown*) | event: HasCharisma;\n",
+            ));
+
+            assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+            assert_eq!(
+                root.borrow().dialog_type,
+                vec![
+                    DialogType::Choice {
+                        text: "Hello my Friend".to_string(),
+                        condition: Some(DialogCondition {
+                            karma_threshold: None,
+                            event: Some(vec![GameEvent::HasFriend])
+                        })
+                    },
+                    DialogType::Choice {
+                        text: "You droped this (*crown*)".to_string(),
+                        condition: Some(DialogCondition {
+                            karma_threshold: None,
+                            event: Some(vec![GameEvent::HasCharisma])
+                        })
+                    }
+                ]
+            );
+        }
+
+        #[test]
         fn test_init_tree_from_file_simple_kinship_1() {
             let root = init_tree_file(String::from(
                 "# Morgan\n\n- Hello\n## Hugo\n- Hey! How are you ?\n",
@@ -1611,7 +1666,7 @@ mod tests {
 
         #[test]
         fn test_init_tree_from_file_monologue_2() {
-            let root = init_tree_file(String::from("# Morgan\n\n- Hello\n- I was wondering\n ## Morgan - With Friends ! | event: HasFriend\n- Alone... | None\n"));
+            let root = init_tree_file(String::from("# Morgan\n\n- Hello\n- I was wondering\n\n## Morgan\n\n- With Friends ! | event: HasFriend;\n- Alone... | None\n"));
 
             assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
 
@@ -1619,9 +1674,74 @@ mod tests {
                 root.borrow().dialog_type,
                 vec![
                     DialogType::Text("Hello".to_string()),
-                    DialogType::Text("I was wondering".to_string()),
-                    DialogType::Text("Alone...".to_string())
+                    DialogType::Text("I was wondering".to_string())
                 ]
+            );
+
+            assert_eq!(
+                root.borrow().children[0].borrow().character,
+                Some((0, String::from("Morgan")))
+            );
+
+            assert_eq!(
+                root.borrow().children[0].borrow().dialog_type,
+                vec![
+                    DialogType::Choice {
+                        text: "With Friends !".to_string(),
+                        condition: Some(DialogCondition {
+                            karma_threshold: None,
+                            event: Some(vec![GameEvent::HasFriend])
+                        })
+                    },
+                    DialogType::Choice {
+                        text: "Alone...".to_string(),
+                        condition: None
+                    }
+                ]
+            );
+        }
+
+        #[test]
+        fn test_init_tree_from_file_complex_kinship_1() {
+            let root = init_tree_file(String::from(
+                "# Morgan\n\n- Hello | None\n- Do you want to work with me ? | None\n\n## Hugo\n- Hey! How are you ?\n\n## Hugo\n- I'm sure you'll do just fine without me.\n",
+            ));
+
+            assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+            assert_eq!(
+                root.borrow().dialog_type,
+                vec![
+                    DialogType::Choice {
+                        text: "Hello".to_string(),
+                        condition: None
+                    },
+                    DialogType::Choice {
+                        text: "Do you want to work with me ?".to_string(),
+                        condition: None
+                    }
+                ]
+            );
+
+            println!("{}", root.borrow().print_file());
+
+            // By choosing the n-eme choice, you get the result of the n-eme child.
+
+            assert_eq!(
+                root.borrow().children[0].borrow().character,
+                Some((0, String::from("Hugo")))
+            );
+            assert_eq!(
+                root.borrow().children[0].borrow().dialog_type,
+                vec![DialogType::Text("Hey! How are you ?".to_string())]
+            );
+
+            assert_eq!(
+                root.borrow().children[1].borrow().character,
+                Some((0, String::from("Hugo")))
+            );
+            assert_eq!(
+                root.borrow().children[1].borrow().dialog_type,
+                vec![DialogType::Text("I'm sure you'll do just fine without me.".to_string())]
             );
         }
     }
