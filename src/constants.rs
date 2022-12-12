@@ -70,6 +70,9 @@ pub mod character {
     pub const CHAR_HITBOX_WIDTH: f32 = 5. * CHAR_SCALE;
     pub const CHAR_HITBOX_Y_OFFSET: f32 = -8.5 * CHAR_SCALE;
 
+    pub const KARMA_MIN: i32 = -100;
+    pub const KARMA_MAX: i32 = 100;
+
     pub mod npc {
 
         pub const NPC_SCALE: f32 = super::CHAR_SCALE;
@@ -139,5 +142,7 @@ pub mod ui {
         pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
         pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
         pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+
+
     }
 }
