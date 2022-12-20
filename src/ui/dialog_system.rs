@@ -261,7 +261,7 @@ pub struct DialogNode {
     pub children: Vec<Rc<RefCell<DialogNode>>>,
     /// maybe too much (prefer a stack in the TreeIterator)
     pub parent: Option<Rc<RefCell<DialogNode>>>,
-    // TODO add event throw
+    pub trigger_event: Vec<ThrowableEvent>,
 }
 
 impl DialogNode {
@@ -271,6 +271,7 @@ impl DialogNode {
             character: None,
             children: vec![],
             parent: None,
+            trigger_event: vec![],
         };
     }
 
@@ -853,7 +854,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             // karma = karma.to_uppercase();
             if karma == "MAX".to_string() || karma == "max".to_string() {
                 k = KARMA_MAX;
-            } else if karma == "MIN".to_string() || karma == "min".to_string(){
+            } else if karma == "MIN".to_string() || karma == "min".to_string() {
                 k = KARMA_MIN;
             } else {
                 k = karma.parse::<i32>().unwrap();
@@ -874,7 +875,6 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
             // root: header_numbers != 1
             if last_header_numbers != 0 {
-
                 println!("previous:\n{}", current.borrow().print_file());
                 println!("last_header_numbers {}", last_header_numbers);
                 println!("header_numbers {}", header_numbers);
@@ -889,7 +889,11 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                     println!("step {}", _step);
                     // should not panic anyway
                     let parent = current.clone().borrow().parent.clone();
-                    println!("parent {}:\n{}", _step, parent.clone().unwrap().borrow().print_file());
+                    println!(
+                        "parent {}:\n{}",
+                        _step,
+                        parent.clone().unwrap().borrow().print_file()
+                    );
                     current = parent.clone().unwrap();
 
                     // match &current.borrow_mut().parent {
@@ -928,7 +932,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             // karma = karma.to_uppercase();
             if karma == "MAX".to_string() || karma == "max".to_string() {
                 k = KARMA_MAX;
-            } else if karma == "MIN".to_string() || karma == "min".to_string(){
+            } else if karma == "MIN".to_string() || karma == "min".to_string() {
                 k = KARMA_MIN;
             } else {
                 k = karma.parse::<i32>().unwrap();
@@ -1718,7 +1722,7 @@ mod tests {
             );
         }
 
-        // allow to type MAX or MIN to select 
+        // allow to type MAX or MIN to select
 
         #[test]
         fn test_init_tree_from_file_complex_choice_karma_max_min() {
@@ -1851,6 +1855,62 @@ mod tests {
                 vec![DialogType::Text(
                     "I'm sure you'll do just fine without me.".to_string()
                 )]
+            );
+        }
+
+        // TODO add test for multiple throwable event `-> HasFriend, FightEvent\n`
+
+        #[test]
+        fn test_init_tree_from_file_throwable_event_1() {
+            let root = init_tree_file(String::from(
+                "# Morgan\n\n- Let's Talk | None\n- Let's Fight | None\n\n## Hugo\n\n- :)\n\n-> HasFriend\n\n## Hugo\n\n- :(\n\n-> FightEvent\n",
+            ));
+
+            assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+            assert_eq!(
+                root.borrow().dialog_type,
+                vec![
+                    DialogType::Choice {
+                        text: "Let's Talk".to_string(),
+                        condition: None
+                    },
+                    DialogType::Choice {
+                        text: "Let's Fight".to_string(),
+                        condition: None
+                    }
+                ]
+            );
+
+            println!("{}", root.borrow().print_file());
+
+            // By choosing the n-eme choice, you will get the result of the n-eme child.
+
+            // first child
+            assert_eq!(
+                root.borrow().children[0].borrow().character,
+                Some((0, String::from("Hugo")))
+            );
+            assert_eq!(
+                root.borrow().children[0].borrow().dialog_type,
+                vec![DialogType::Text(":)".to_string())]
+            );
+            assert_eq!(
+                root.borrow().children[0].borrow().trigger_event,
+                vec![ThrowableEvent::HasFriend]
+            );
+
+            // second child
+            assert_eq!(
+                root.borrow().children[1].borrow().character,
+                Some((0, String::from("Hugo")))
+            );
+            assert_eq!(
+                root.borrow().children[1].borrow().dialog_type,
+                vec![DialogType::Text(":(".to_string())]
+            );
+            assert_eq!(
+                root.borrow().children[1].borrow().trigger_event,
+                vec![ThrowableEvent::FightEvent]
             );
         }
     }
