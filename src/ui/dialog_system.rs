@@ -159,6 +159,33 @@ impl FromStr for GameEvent {
     }
 }
 
+#[derive(PartialEq, Clone, Copy, Debug)]
+pub enum ThrowableEvent {
+    FightEvent,
+    HasFriend,
+}
+
+impl fmt::Display for ThrowableEvent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ThrowableEvent::FightEvent => write!(f, "FightEvent"),
+            ThrowableEvent::HasFriend => write!(f, "HasFriend"),
+        }
+    }
+}
+
+impl FromStr for ThrowableEvent {
+    type Err = (); // ParseIntError;
+
+    fn from_str(input: &str) -> Result<ThrowableEvent, Self::Err> {
+        match input {
+            "FightEvent" => Ok(ThrowableEvent::FightEvent),
+            "HasFriend" => Ok(ThrowableEvent::HasFriend),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct DialogCondition {
     /// `(0,0) = infinite / no threshold`
@@ -763,7 +790,8 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
     // allow to have text with special char (like - / # )
     let mut except = false;
 
-    let mut headers_numbers = 0;
+    let mut header_numbers = 0;
+    let mut last_header_numbers = 0;
 
     let mut author_phase = false;
     let mut content_phase = false;
@@ -802,7 +830,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
         // transitions
 
         if *c == '#' && !except {
-            headers_numbers += 1;
+            header_numbers += 1;
             author_phase = true;
         }
         // !condition_phase to permit negative number in the karma threshold
@@ -821,7 +849,16 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
         } else if *c == ',' && karma_phase && condition_phase {
             // can be solved with karma_min, karma_max
             // println!("karma 1rst elem: {}", karma);
-            condition.karma_threshold = Some((karma.parse::<i32>().unwrap(), KARMA_MAX));
+            let k: i32;
+            // karma = karma.to_uppercase();
+            if karma == "MAX".to_string() || karma == "max".to_string() {
+                k = KARMA_MAX;
+            } else if karma == "MIN".to_string() || karma == "min".to_string(){
+                k = KARMA_MIN;
+            } else {
+                k = karma.parse::<i32>().unwrap();
+            }
+            condition.karma_threshold = Some((k, KARMA_MAX));
 
             // reuse this variable
             karma.clear();
@@ -835,7 +872,32 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             }
             println!("author: {}", author);
 
-            if headers_numbers > 1 {
+            // root: header_numbers != 1
+            if last_header_numbers != 0 {
+
+                println!("previous:\n{}", current.borrow().print_file());
+                println!("last_header_numbers {}", last_header_numbers);
+                println!("header_numbers {}", header_numbers);
+
+                // set current to the parent of the incomming node
+                // if last_header_numbers - header_numbers +1 == 0;
+                //     cause 0..0 = 0 iteration
+                // then current = incomming node's parent
+                // so skip this step
+                let limit = last_header_numbers - header_numbers + 1;
+                for _step in 0..limit {
+                    println!("step {}", _step);
+                    // should not panic anyway
+                    let parent = current.clone().borrow().parent.clone();
+                    println!("parent {}:\n{}", _step, parent.clone().unwrap().borrow().print_file());
+                    current = parent.clone().unwrap();
+
+                    // match &current.borrow_mut().parent {
+                    //     Some(parent) => current.borrow_mut() = parent.to_owned(),
+                    //     None => panic!("no parent"),
+                    // }
+                }
+
                 let child = Rc::new(RefCell::new(DialogNode::new()));
                 current.borrow_mut().children.push(Rc::clone(&child));
                 {
@@ -855,12 +917,22 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
             author.clear();
 
-            // headers_numbers = 0;
+            last_header_numbers = header_numbers;
+            header_numbers = 0;
 
             except = false;
             author_phase = false;
         } else if *c == ';' && karma_phase {
-            let k = karma.parse::<i32>().unwrap();
+            // println!("karma: {}", karma);
+            let k: i32;
+            // karma = karma.to_uppercase();
+            if karma == "MAX".to_string() || karma == "max".to_string() {
+                k = KARMA_MAX;
+            } else if karma == "MIN".to_string() || karma == "min".to_string(){
+                k = KARMA_MIN;
+            } else {
+                k = karma.parse::<i32>().unwrap();
+            }
             match condition.karma_threshold {
                 // _ cause the second i32 is KARMA_MAX
                 Some((x, _)) => {
@@ -966,17 +1038,21 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             else if condition_phase {
                 if *c == 'k' {
                     karma_phase = true;
-                } else if (c.is_numeric() || *c == '-') && karma_phase
+                    post_colon = true;
+                }
+                // c.is_numeric() ||
+                // authorize MAX or MIN input
+                else if karma_phase && !post_colon && *c != ' ' || *c == '-'
                 // && *c != ':'
                 {
                     // negative symbol -
                     karma.push(*c);
 
-                    // println!("karma: {}", karma);
+                    println!("k: {}", karma);
                 } else if *c == 'e' && !event_phase {
                     event_phase = true;
                     post_colon = true;
-                } else if *c == ':' && event_phase {
+                } else if *c == ':' && (event_phase || karma_phase) {
                     post_colon = false;
                 } else if event_phase && *c != ' ' && !post_colon {
                     event.push(*c);
@@ -1642,6 +1718,37 @@ mod tests {
             );
         }
 
+        // allow to type MAX or MIN to select 
+
+        #[test]
+        fn test_init_tree_from_file_complex_choice_karma_max_min() {
+            let root = init_tree_file(String::from(
+                "# Morgan\n\n- Hello | k: -10,MAX;\n- No Hello | k: MIN,0;\n",
+            ));
+
+            assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+            assert_eq!(
+                root.borrow().dialog_type,
+                vec![
+                    DialogType::Choice {
+                        text: "Hello".to_string(),
+                        condition: Some(DialogCondition {
+                            karma_threshold: Some((-10, KARMA_MAX)),
+                            event: None
+                        })
+                    },
+                    DialogType::Choice {
+                        text: "No Hello".to_string(),
+                        condition: Some(DialogCondition {
+                            karma_threshold: Some((KARMA_MIN, 0)),
+                            event: None
+                        })
+                    }
+                ]
+            );
+        }
+
         #[test]
         fn test_init_tree_from_file_simple_kinship_1() {
             let root = init_tree_file(String::from(
@@ -1704,7 +1811,7 @@ mod tests {
         #[test]
         fn test_init_tree_from_file_complex_kinship_1() {
             let root = init_tree_file(String::from(
-                "# Morgan\n\n- Hello | None\n- Do you want to work with me ? | None\n\n## Hugo\n- Hey! How are you ?\n\n## Hugo\n- I'm sure you'll do just fine without me.\n",
+                "# Morgan\n\n- Hello | None\n- Do you want to work with me ? | None\n\n## Hugo\n\n- Hey! How are you ?\n\n## Hugo\n\n- I'm sure you'll do just fine without me.\n",
             ));
 
             assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
@@ -1724,7 +1831,7 @@ mod tests {
 
             println!("{}", root.borrow().print_file());
 
-            // By choosing the n-eme choice, you get the result of the n-eme child.
+            // By choosing the n-eme choice, you will get the result of the n-eme child.
 
             assert_eq!(
                 root.borrow().children[0].borrow().character,
@@ -1741,7 +1848,9 @@ mod tests {
             );
             assert_eq!(
                 root.borrow().children[1].borrow().dialog_type,
-                vec![DialogType::Text("I'm sure you'll do just fine without me.".to_string())]
+                vec![DialogType::Text(
+                    "I'm sure you'll do just fine without me.".to_string()
+                )]
             );
         }
     }
