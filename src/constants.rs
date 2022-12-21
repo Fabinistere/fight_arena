@@ -91,7 +91,7 @@ pub mod character {
 - Mais j'ai toujours voulu un agneau\n";
             pub const OLF_DIALOG: &str = "# Olf
 
-- Il faut absolument sauver les Fabien du Chien Géant
+- Il faut absolument sauver les Fabien du Chien Geant
 
 ## Morgan
 

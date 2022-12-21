@@ -20,7 +20,7 @@ use crate::{
         NPC,
     },
     player::Player,
-    ui::dialog_system::{init_tree_flat, DialogType},
+    ui::dialog_system::{init_tree_file, DialogType},
 };
 
 use super::dialog_system::Dialog;
@@ -268,6 +268,7 @@ pub fn create_dialog_box_on_combat_event(
                                         match dialog {
                                             DialogType::Choice { text, condition } => {
                                                 // TODO find a way to include condition
+                                                // COUNTER TODO handle the send of choice **here**
                                                 match condition {
                                                     Some(cond) => {
                                                         let (_player, karma) =

@@ -224,8 +224,10 @@ impl DialogCondition {
                     return true;
                 }
             }
-            None => {}
+            // no karma condition
+            None => return true,
         }
+
         return false;
     }
 }
@@ -816,7 +818,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
         .enumerate()
         .filter(|(idx, _)| *idx < chars.len())
     {
-        println!("c: {}", *c);
+        // println!("c: {}", *c);
 
         if (content_phase && author_phase)
             || (content_phase && condition_phase)
@@ -876,7 +878,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             while author.starts_with(" ") {
                 author.remove(0);
             }
-            println!("author: {}", author);
+            // println!("author: {}", author);
 
             // root: header_numbers != 1
             if last_header_numbers != 0 {
@@ -1027,7 +1029,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 save.remove(save.len() - 1);
             }
 
-            println!("text inserted: {}", save);
+            // println!("text inserted: {}", save);
 
             let dialog = DialogType::Text(save.clone());
             current.borrow_mut().dialog_type.push(dialog);
@@ -1088,7 +1090,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             // the \n is a marker to end some phase
             else if *c == '\n' {
                 // new_line = true;
-                println!("skip");
+                // println!("skip");
 
                 // full reset
 
