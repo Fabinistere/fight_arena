@@ -496,6 +496,7 @@ impl DialogNode {
 /// 3 = Other_branch
 /// 4 = Olf is dead !
 /// ```
+#[deprecated(since = "0.3.0", note = "init_tree_flat doesn't implement enought features and is less intuitive than init_tree_file. Users should instead use init_tree_file")]
 pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
     let root = Rc::new(RefCell::new(DialogNode::new()));
 

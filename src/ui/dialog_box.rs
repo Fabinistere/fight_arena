@@ -5,12 +5,12 @@
 //!     - Exit in Combat
 //!     - Open HUD manually (pressing 'o')
 
-use bevy::{prelude::*, asset};
+use bevy::{asset, prelude::*};
 // render::RenderWorld,
 // sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 // ui::{ExtractedUiNode, ExtractedUiNodes},
 use bevy_tweening::{lens::UiPositionLens, *};
-use std::{cell::RefCell, rc::Rc, time::Duration};
+use std::time::Duration;
 
 use crate::{
     combat::Karma,
@@ -238,7 +238,7 @@ pub fn create_dialog_box_on_combat_event(
                     match &dialog.current_node {
                         Some(text) => {
                             // root
-                            let dialog_tree = init_tree_flat(text.to_string());
+                            let dialog_tree = init_tree_file(text.to_string());
 
                             let dialogs = &dialog_tree.borrow().dialog_type;
 
@@ -537,7 +537,8 @@ pub fn create_dialog_box(
 
                 // Player Scroll
 
-                let player_scroll_img = asset_server.load("textures/hud/HUD_1px_parchemin_MC_ouvert.png");
+                let player_scroll_img =
+                    asset_server.load("textures/hud/HUD_1px_parchemin_MC_ouvert.png");
 
                 parent
                     .spawn_bundle(ImageBundle {
@@ -644,7 +645,7 @@ pub fn update_scroll(
 
     for _ev in scroll_event.iter() {
         info!("Scroll Event !");
-        
+
         let (mut upper_scroll, upper_scroll_entity) = upper_scroll_query.single_mut();
 
         // let text = upper_scroll.texts.pop();
@@ -663,7 +664,9 @@ pub fn update_scroll(
         let (player_scroll, player_scroll_entity) = player_scroll_query.single();
 
         for choice in player_scroll.choices.iter() {
-            // count
+            commands
+                .entity(player_scroll_entity)
+                .insert(DialogBox::new(choice.clone(), DIALOG_BOX_UPDATE_DELTA_S));
         }
     }
 }
@@ -701,7 +704,10 @@ pub fn animate_scroll(
     // texture_atlases: Res<Assets<TextureAtlas>>,
     dialog_box_resources: Res<DialogBoxResources>,
     mut commands: Commands,
-    mut scroll_query: Query<(&mut UiImage, &mut Scroll, &mut ScrollTimer, Entity), (With<UpperScroll>, Without<PlayerScroll>)>,
+    mut scroll_query: Query<
+        (&mut UiImage, &mut Scroll, &mut ScrollTimer, Entity),
+        (With<UpperScroll>, Without<PlayerScroll>),
+    >,
 ) {
     for (mut image, mut scroll, mut timer, entity) in scroll_query.iter_mut() {
         timer.tick(time.delta());

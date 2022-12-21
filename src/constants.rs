@@ -86,9 +86,56 @@ pub mod character {
         pub const FABICURION_STARTING_ANIM: usize = 40;
 
         pub mod dialog {
-            pub const RANDOM_DIALOG: &str = "";
-            pub const OLF_DIALOG: &str = "[Il faut absolument sauver les Fabien du Chien Geant]->[[Il me faut donc obtenir le trône...]->[[...,et de l'argent]->[[Et de l'argent]->[[C'est essentiel]]];[C'est essentiel]]]";
-            pub const FABIEN_DIALOG: &str = "[Hello]->[[Hey, No Hello, Want to share a flat ?]->[[:)]; [:O]; [Sure]]]";
+            pub const RANDOM_DIALOG: &str = "# Fabien\n
+- Enfant, j'ai eu un poney
+- Mais j'ai toujours voulu un agneau\n";
+            pub const OLF_DIALOG: &str = "# Olf
+
+- Il faut absolument sauver les Fabien du Chien Géant
+
+## Morgan
+
+- ... | None
+
+### Olf
+
+- Il me faut donc obtenir le trône
+
+#### Morgan
+
+- ... | None
+- et de l'$ | None
+
+##### Olf
+
+- Et de l'$
+- C'est essentiel
+
+##### Olf
+
+- C'est essentiel\n";
+            pub const FABIEN_DIALOG: &str =
+            "# Fabien
+
+- Hello
+
+## Morgan
+
+- Hey | None
+- No Hello | None
+- Want to share a flat ? | None
+
+### Fabien
+
+- :)
+
+### Fabien
+
+- :O
+
+### Fabien
+
+- Sure\n";
         }
 
         pub mod movement {
@@ -142,7 +189,5 @@ pub mod ui {
         pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
         pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
         pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
-
-
     }
 }
