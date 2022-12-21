@@ -667,15 +667,19 @@ fn is_special_char_flat(c: char) -> bool {
 ///
 /// ## Rules
 ///
-/// A choice is made of:
-///
-/// - a text
-/// - condition; Must end by `;` if != None
-///   - karma threshold; (x,y) with x, y ∈ N.
-///   The player's karma must be within this certain range
-///   - event;
-///   All followed events must be triggered to enable this choice.
-///
+/// - A choice is made of
+///   - a text
+///   - condition; Must end by `;` if != None
+///     - karma threshold; (x,y) with x, y ∈ N.
+///     The player's karma must be within this certain range
+///     - event;
+///     All followed events must be triggered to enable this choice.
+/// - A text can have only one child
+/// - A dialog node cannot have more than one type of dialog_type
+///   - for example
+///   within a same DialogNode, having a text and a choice in the dialog_type field
+///   will break soon or later
+///   TODO break sooner
 ///
 /// ***The end marker of the dialog is `\n`.***
 /// You **MUST** end this string by a `\n`.
@@ -683,11 +687,13 @@ fn is_special_char_flat(c: char) -> bool {
 /// ## Tips
 ///
 /// - You can type
-///   - `k: x,y` instead of `karma: x,y`
-///   - `e: Event1, Event2` instead of `event: Event1, Event2`
+///   - `k: x,y;` instead of `karma: x,y;`
+///   - `e: Event1, Event2;` instead of `event: Event1, Event2;`
 /// - You can use `MAX`/`MIN` to pick the highest/lowest karma threshold possible
-/// - Prefere not typing anything if it's something like this: `k: MIN,MAX`
-/// - If you want to
+/// - Prefere not typing anything if it's something like this: `k: MIN,MAX;`
+/// - No matter in the order: `karma: 50,-50;` will result by `karma_threshold: Some((-50,50))`
+/// - To use '-', '\n', '|', '#' or '>' prefere use the char '/' just before these chars
+/// to prevent unwanted phase transition (from content phase to whatever phase)
 ///
 /// # Examples
 ///
@@ -839,12 +845,12 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             author_phase = true;
         }
         // !condition_phase to permit negative number in the karma threshold
-        else if *c == '-' && !condition_phase {
+        else if *c == '-' && !condition_phase && !except {
             content_phase = true;
-        } else if *c == '>' && content_phase {
+        } else if *c == '>' && content_phase && !except {
             content_phase = false;
             trigger_phase = true;
-        } else if *c == '|' && content_phase {
+        } else if *c == '|' && content_phase && !except {
             // remove the space on the first position
             while save.starts_with(" ") {
                 save.remove(0);
@@ -992,7 +998,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 save.remove(save.len() - 1);
             }
 
-            println!("choice inserted: {}", save);
+            // println!("choice inserted: {}", save);
 
             let choice: DialogType;
 
