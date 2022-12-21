@@ -15,7 +15,7 @@
 
 // use bevy::prelude::*;
 
-use std::{cell::RefCell, fmt, num::ParseIntError, rc::Rc, str::FromStr};
+use std::{cell::RefCell, fmt, rc::Rc, str::FromStr};
 
 use bevy::prelude::{info, warn, Component};
 
@@ -417,8 +417,6 @@ impl DialogNode {
                             }
                             None => {}
                         }
-
-                        // we might remove the index
                     }
 
                     None => {
@@ -447,7 +445,8 @@ impl DialogNode {
 
         // remove the last "\n\n"
         res = res.replace("END#", "#");
-        res = res.replace("\n\nEND", "");
+        // keep only one last '\n' (to respect init rules)
+        res = res.replace("\n\nEND", "\n");
 
         return res;
     }
@@ -758,12 +757,12 @@ fn is_special_char_flat(c: char) -> bool {
 /// #### Olf
 ///
 /// - Nice
-/// -> CombatEvent
+/// -> FightEvent
 ///
 /// #### Olf
 ///
 /// - Not Nice
-/// -> CombatEvent\n"
+/// -> FightEvent\n"
 ///     )
 /// );
 ///
@@ -1505,7 +1504,7 @@ mod tests {
 
 ### Fabien
 
-- Sure"
+- Sure\n"
                     .to_string()
             );
         }
