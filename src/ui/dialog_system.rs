@@ -803,6 +803,8 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
     // allow to write `event:` or `ejhlksdfh:` instend of `e:`
     let mut post_colon = false;
 
+    let mut trigger_phase = false;
+
     // let mut new_line = false;
 
     let chars = s.chars().collect::<Vec<char>>();
@@ -837,6 +839,9 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
         // !condition_phase to permit negative number in the karma threshold
         else if *c == '-' && !condition_phase {
             content_phase = true;
+        } else if *c == '>' && content_phase {
+            content_phase = false;
+            trigger_phase = true;
         } else if *c == '|' && content_phase {
             // remove the space on the first position
             while save.starts_with(" ") {
@@ -875,9 +880,9 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
             // root: header_numbers != 1
             if last_header_numbers != 0 {
-                println!("previous:\n{}", current.borrow().print_file());
-                println!("last_header_numbers {}", last_header_numbers);
-                println!("header_numbers {}", header_numbers);
+                // println!("previous:\n{}", current.borrow().print_file());
+                // println!("last_header_numbers {}", last_header_numbers);
+                // println!("header_numbers {}", header_numbers);
 
                 // set current to the parent of the incomming node
                 // if last_header_numbers - header_numbers +1 == 0;
@@ -886,14 +891,14 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 // so skip this step
                 let limit = last_header_numbers - header_numbers + 1;
                 for _step in 0..limit {
-                    println!("step {}", _step);
+                    // println!("step {}", _step);
                     // should not panic anyway
                     let parent = current.clone().borrow().parent.clone();
-                    println!(
-                        "parent {}:\n{}",
-                        _step,
-                        parent.clone().unwrap().borrow().print_file()
-                    );
+                    // println!(
+                    //     "parent {}:\n{}",
+                    //     _step,
+                    //     parent.clone().unwrap().borrow().print_file()
+                    // );
                     current = parent.clone().unwrap();
 
                     // match &current.borrow_mut().parent {
@@ -954,7 +959,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
             karma_phase = false;
         } else if (*c == ';' || *c == ',') && event_phase {
-            println!("event : {}", event);
+            // println!("event : {}", event);
             let e = event.parse::<GameEvent>().unwrap();
             match condition.event {
                 Some(vec) => {
@@ -1030,6 +1035,19 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             save.clear();
 
             content_phase = false;
+        } else if (*c == ',' || *c == '\n') && trigger_phase {
+            // println!("event : {}", event);
+            let e = event.parse::<ThrowableEvent>().unwrap();
+
+            // add the triggered event to the vector of the current DialogNode
+            current.borrow_mut().trigger_event.push(e);
+
+            // println!("event cleared");
+            event.clear();
+
+            if *c == '\n' {
+                trigger_phase = false;
+            }
         }
         // read text or condition
         else if c.is_ascii() || c.is_alphanumeric() {
@@ -1043,26 +1061,28 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 if *c == 'k' {
                     karma_phase = true;
                     post_colon = true;
-                }
-                // c.is_numeric() ||
-                // authorize MAX or MIN input
-                else if karma_phase && !post_colon && *c != ' ' || *c == '-'
-                // && *c != ':'
-                {
-                    // negative symbol -
-                    karma.push(*c);
-
-                    println!("k: {}", karma);
                 } else if *c == 'e' && !event_phase {
                     event_phase = true;
                     post_colon = true;
                 } else if *c == ':' && (event_phase || karma_phase) {
                     post_colon = false;
+                }
+                // c.is_numeric() ||
+                // authorize MAX or MIN input
+                else if karma_phase && !post_colon && *c != ' '
+                // || *c == '-'
+                {
+                    // negative symbol -
+                    karma.push(*c);
+
+                    println!("k: {}", karma);
                 } else if event_phase && *c != ' ' && !post_colon {
                     event.push(*c);
 
                     // println!("e: {}", event);
                 }
+            } else if trigger_phase && *c != ' ' {
+                event.push(*c);
             }
             // ignore the new line: "\n"
             // the \n is a marker to end some phase
@@ -1080,7 +1100,9 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 // condition_phase = false;
             } else if author_phase && *c != '#' {
                 author.push(*c);
-            } else if !is_special_char_file(*c) || (is_special_char_file(*c) && except) {
+            }
+            // if !is_special_char_file(*c) || (is_special_char_file(*c) && except)
+            else {
                 save.push(*c);
                 except = false;
 
@@ -1093,7 +1115,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 }
 
 fn is_special_char_file(c: char) -> bool {
-    let special_char: Vec<char> = vec!['/', '-', '|', ';'];
+    let special_char: Vec<char> = vec!['/', '-', '|', ';', '>'];
 
     return special_char.contains(&c);
 }
