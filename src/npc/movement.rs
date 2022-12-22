@@ -54,7 +54,7 @@ impl Default for Target {
     }
 }
 
-// TODO use ColliderType::Sensor to delimiter zone
+// TODO: feature - use ColliderType::Sensor to delimiter zone
 
 /// For a certain destination contained in [RunToDestinationbehavior], make the npc run towards it
 pub fn just_walk(
@@ -71,7 +71,7 @@ pub fn just_walk(
     for (npc, mut behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
         let direction: Vec3 = behavior.destination;
 
-        // TODO Approximation Louche
+        // XXX: Approximation Louche
         if !close(transform.translation, direction, TILE_SIZE/2.0)
         {
 
@@ -96,14 +96,14 @@ pub fn just_walk(
             // rb_vel.linvel.y = 0.;
 
             // change their destiantion before resting
-            // TODO event like in do_flexing
+            // REFACTOR: event like in do_flexing
             behavior.destination = give_a_direction();
 
             commands.entity(npc)
                     .insert(IdleBehavior);
             // println!("postChange: npc's state: {:#?}", npc.state);
             
-            // TODO change this part by sending a event : FREEZE
+            // REFACTOR: change this part by sending a event : FREEZE
             commands.entity(npc)
                     .insert(RestTime {
                         // create the non-repeating rest timer
@@ -116,7 +116,7 @@ pub fn just_walk(
 /// Entity gently follows their target.
 /// depending the team
 /// 
-/// TODO: Follow an ally by the component Target 
+/// TODO: feature - Follow an ally by the component Target 
 pub fn follow(
     // mut commands: Commands,
     mut npc_query: Query<(
@@ -136,11 +136,10 @@ pub fn follow(
 
             // println!("target: {}, Leader of team {}", name, target_team.0);
             if team.0 == target_team.0 {
-                // TODO
-                // Rework this Approximation Louche
                 // carefull with more than one leader per team
                 // it will be not nice
 
+                // XXX: Rework this Approximation Louche
                 if !close(transform.translation, target_transform.translation(), 20.*TILE_SIZE)
                 {
                     
@@ -155,7 +154,7 @@ pub fn follow(
                 }
                 // if reached the target
                 else {
-                    // TODO AVOID npc to merge with the target
+                    // TODO: AVOID npc to merge with the target
                     rb_vel.linvel.x = 0.;
                     rb_vel.linvel.y = 0.;
                 }
@@ -306,17 +305,19 @@ fn move_to_dest(
     return (vel_x, vel_y);
 }
 
-/**
- * @param
- * position: of a entity
- * direction: the middle of the future zone, 
- *            is on the middle of the segment [a,c]
- * @return true
- * if the entity is on the square around the direction point
- * 
- * TODO
- * Rework this Approximation Louche
- */
+
+/// # Parameters
+/// 
+/// position: of a entity
+/// direction: the middle of the future zone, 
+///            is on the middle of the segment [a,c]
+/// 
+/// # Return 
+/// returns true if the entity is on the square around the direction point
+/// 
+/// # Note
+/// 
+/// XXX: Rework this Approximation Louche
 fn close(
     position: Vec3,
     direction: Vec3,

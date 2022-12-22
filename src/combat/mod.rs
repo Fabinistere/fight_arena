@@ -287,7 +287,8 @@ pub fn exit_combat(
             commands.entity(allie).remove::<InCombat>();
         }
 
-        // TODO foes AND being an enemy
+        // foes AND being an enemy
+        // With InCombat and Without Recruted mean that these entities are enemies.
         for (foes, _name) in foes_query.iter() {
             commands.entity(foes).insert(FairPlayTimer {
                 timer: Timer::new(Duration::from_secs(EVASION_TIMER), false),

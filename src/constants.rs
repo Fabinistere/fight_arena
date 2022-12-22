@@ -142,7 +142,7 @@ pub mod character {
             use crate::TILE_SIZE;
 
             pub const REST_TIMER: u64 = 3;
-            // TODO adjust EVASION_TIMER / FAIR_PLAY_TIMER
+            // TODO: adjust EVASION_TIMER / FAIR_PLAY_TIMER
             pub const EVASION_TIMER: u64 = 5;
 
             pub const NPC_SPEED_LEADER: f32 = 70. * TILE_SIZE;

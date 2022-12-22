@@ -106,8 +106,7 @@ pub fn create_convex_collider_from_image(
     density_mesh_generator.process_wait().ok()?;
 
     let density_mesh = density_mesh_generator.into_mesh()?;
-    // TODO debug
-    // dbg!(&density_mesh);
+    // DEBUG: dbg!(&density_mesh);
 
     let points = density_mesh
         .points
@@ -142,7 +141,7 @@ pub struct TesselatedColliderConfig {
     /// "resolution" of the mesh, with a value of 0 meaning that vertices may be placed on each
     /// individual pixel, producing the maximum accuracy convex collision shape.
     ///
-    /// **Default:** `0.0`
+    /// **Default:** `10.0`
     pub vertice_separation: f32,
     /// The distance to extrude the generated mesh. Adding an extrusion can prevent panics from
     /// being caused when you try to tesselate a collision shape that is only one pixel high.

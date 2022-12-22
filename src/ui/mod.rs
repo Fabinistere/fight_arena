@@ -9,7 +9,7 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app
-            // TODO Only run the app when there is user input. This will significantly reduce CPU/GPU use.
+            // OPTIMIZE: Only run the app when there is user input. This will significantly reduce CPU/GPU use.
             .insert_resource(WinitSettings::game())
 
             .add_event::<dialog_box::CreateDialogBoxEvent>()

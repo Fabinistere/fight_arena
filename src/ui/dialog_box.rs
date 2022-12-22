@@ -28,7 +28,7 @@ use super::dialog_system::Dialog;
 #[derive(Component)]
 pub struct DialogPanel;
 
-/// TODO add entity id (u32) into the DialogBox
+/// TODO: feature - add entity id (u32) into the DialogBox
 #[derive(Debug, Component)]
 pub struct DialogBox {
     text: String,
@@ -163,7 +163,7 @@ pub fn load_textures(
     });
 }
 
-// TODO PB Spamming the ui key 'o' throws an error
+// FIXME: PB Spamming the ui key 'o' throws an error
 pub fn create_dialog_box_on_key_press(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
     mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
@@ -218,7 +218,7 @@ pub fn create_dialog_box_on_combat_event(
     //     }
     // }
 
-    // TODO separate into two function
+    // TODO: separate into two function
 
     for ev in ev_combat.iter() {
         // if already open go to combat tab
@@ -267,8 +267,8 @@ pub fn create_dialog_box_on_combat_event(
                                     for dialog in dialogs.iter() {
                                         match dialog {
                                             DialogType::Choice { text, condition } => {
-                                                // TODO find a way to include condition
-                                                // COUNTER TODO handle the send of choice **here**
+                                                // handle the send of choice **here**
+                                                // depending of its condition
                                                 match condition {
                                                     Some(cond) => {
                                                         let (_player, karma) =
@@ -285,8 +285,7 @@ pub fn create_dialog_box_on_combat_event(
                                             }
                                         }
                                     }
-                                    // TODO send the vec of text/choice or the first ?
-                                    // conserve the previous text
+                                    // XXX: does not show the question/text that was potentially before this choice
                                     create_dialog_box_event.send(CreateDialogBoxEvent {
                                         dialog: vec![],
                                         choice: choices,
@@ -693,7 +692,7 @@ pub fn update_dialog_box(
                         dialog_box.finished = true;
                     }
                 }
-                // TODO if the given text contains a accent this will crash
+                // FIXME: if the given text contains a accent this will crash
                 Err(e) => warn!("Accent Typical Crash: {:?}", e),
             }
         }

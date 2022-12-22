@@ -122,7 +122,7 @@ impl DialogType {
     }
 }
 
-// TODO MOVE IT UP
+// TODO: MOVE IT UP
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum GameEvent {
     BeatTheGame,
@@ -194,17 +194,6 @@ pub struct DialogCondition {
     /// will always be prompted
     karma_threshold: Option<(i32, i32)>,
     event: Option<Vec<GameEvent>>,
-    // TODO REMOVE or REWORK
-    //
-    // The position of the parent choice made to access this node
-    //
-    // Start at 1 for the first choice
-    //
-    // Does not require to imply :
-    //
-    // - that a child Node will be treated after the last sentence of a `Vec<Text>`
-    // as if the `index_parent` = index of the last sentence (length)
-    // index_parent: Option<i32>,
 }
 
 impl DialogCondition {
@@ -216,7 +205,7 @@ impl DialogCondition {
     }
 
     pub fn is_verified(&self, karma: i32) -> bool {
-        // TODO verify also if event is inclueded in all game's event triggered
+        // TODO: feature - also check if its event has been already triggered in the game
 
         match self.karma_threshold {
             Some(karma_threshold) => {
@@ -679,7 +668,7 @@ fn is_special_char_flat(c: char) -> bool {
 ///   - for example
 ///   within a same DialogNode, having a text and a choice in the dialog_type field
 ///   will break soon or later
-///   TODO break sooner
+///   FIXME: make it break soon as possible
 ///
 /// ***The end marker of the dialog is `\n`.***
 /// You **MUST** end this string by a `\n`.
@@ -929,7 +918,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 current = child;
             }
 
-            // TODO give the real entity_id
+            // TODO: give the real entity_id
             current.borrow_mut().character = Some((0, author.to_owned()));
 
             author.clear();
@@ -1297,7 +1286,7 @@ mod tests {
 
         #[test]
         fn test_init_tree_flat_famiglia_figlio_unico() {
-            // TODO find out what the warning referred to
+            // TODO: find out what the warning referred to
             // carefull with ???
             let root = init_tree_flat(String::from(
                 "[Catchphrase]->[[I love you, Give me your wallet]]",
@@ -1888,7 +1877,7 @@ mod tests {
             );
         }
 
-        // TODO add test for multiple throwable event `-> HasFriend, FightEvent\n`
+        // TODO: add test for multiple throwable event `-> HasFriend, FightEvent\n`
 
         #[test]
         fn test_init_tree_from_file_throwable_event_1() {

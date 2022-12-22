@@ -1,0 +1,82 @@
+{
+     // Swellaby.vscode-rust-test-adapter
+     // rust-lang.rust-analyzer
+     "todo-tree.general.tags": [
+        "BUG",
+        "HACK",
+        "FIXME",
+        "TODO",
+        "XXX",
+        "OPTIMIZE",
+        "NOTE",
+        "TEMP",
+        "IDEA",
+        "DEBUG",
+        "DOC",
+        "TOTEST",
+        "REFACTOR",
+    ],
+    "todo-tree.highlights.customHighlight": {
+        "BUG": {
+            "foreground": "#D2691E",
+            "icon": "bug"
+        },
+        "DEBUG": {
+            "foreground": "#D2691E",
+            "icon": "bug"
+        },
+        "DOC": {
+            "foreground": "#6d15a6",
+            "icon": "book"
+        },
+        "FIXME": {
+            "foreground": "#B22222",
+            "icon": "flame"
+        },
+        "HACK": {
+            "foreground": "#483D8B",
+            "icon": "tools"
+        },
+        "IDEA": {
+            "foreground": "#FFD700",
+            "icon": "light-bulb"
+        },
+        "NOTE": {
+            "foreground": "#4169E1",
+            "icon": "quote"
+        },
+        "OPTIMIZE": {
+            "foreground": "#00CED1",
+            "icon": "rocket"
+        },
+        "REFACTOR": {
+            "foreground": "#00CED1",
+            "icon": "cpu"
+        },
+        "TEMP": {
+            "foreground": "#008080",
+            "icon": "kebab-horizontal"
+        },
+        "TODO": {
+            "foreground": "#006400",
+            "icon": "check"
+        },
+        "TOTEST": {
+            "foreground": "#008080",
+            "icon": "beaker"
+        },
+        "XXX": {
+            "foreground": "#000000",
+            "icon": "x"
+        },
+    },
+    "todo-tree.highlights.defaultHighlight": {
+        "background": "#000000",
+        "fontStyle": "italic",
+        "foreground": "#006400",
+        "gutterIcon": true,
+        "opacity": 0,
+        "type": "text-and-comment"
+    },
+    "todo-tree.regex.regex": "((//|#|%|<!--|;|/\\*|^|\"\"\"|'|-\\s\\[(\\s|x)\\])\\s*($TAGS))"
+}

@@ -71,12 +71,12 @@ fn run_if_in_temple(
     }
 }
 
-/// TODO doesn't work well
+/// XXX: doesn't work well
 fn npc_z_position(
     mut npc_query: Query<&mut Transform, With<NPC>>,
     pillar_query: Query<&GlobalTransform, With<Pillar>>,
 ) {
-    // TODO prevent no transform in npc
+    // TODO: prevent no transform in npc
     for mut npc_transform in npc_query.iter_mut() {
         for pillar_transform in pillar_query.iter() {
             // put the npc in front cause above the last pillar
@@ -257,7 +257,7 @@ fn spawn_pillars(
     // let mut elements = Vec::new();
     // elements.push(t_banners);
 
-    // TODO CHECK https://bevy-cheatbook.github.io/features/parent-child.html
+    // TODO: CHECK https://bevy-cheatbook.github.io/features/parent-child.html
 
     // All 6 PILLARS
     commands

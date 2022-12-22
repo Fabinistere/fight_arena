@@ -24,7 +24,7 @@ pub struct RestTime {
     pub timer: Timer,
 }
 
-// TODO Create a starting idleBehavior
+// TODO: Create a starting idleBehavior
 // to avoid: 
 // - to give a direction in the spawn NPC
 // - To give a RestTime in spwan
@@ -57,8 +57,8 @@ pub fn do_flexing(
 
             info!(target: "Stop Rest", "{:?}, {}", npc, name);
 
-            // restart previous behavior
-            // TODO or new one
+            // restart previous behavior or new one
+            // TODO: after the rest, npc will select a behavior
             commands.entity(npc)
                     .remove::<IdleBehavior>();
             commands.entity(npc)

@@ -139,8 +139,8 @@ pub fn threat_detection(
         let entity_1 = collision_event.entities().0;
         let entity_2 = collision_event.entities().1;
 
-        // TODO find a nicer solution instead of this "copy paste"
-        // it's pbly opti cause (TODO complexity calc) enter in the if or the else if
+        // REFACTOR: find a nicer solution instead of this "copy paste"
+        // it's pbly opti cause (TODO: complexity calc) enter in the if or the else if
 
         // one of these two colliders is a sensor && are in collision
         if rapier_context.intersection_pair(entity_1, entity_2) == Some(true) {
@@ -281,7 +281,8 @@ pub fn fair_play_wait(
 
         // not required to control velocity because it is managed elsewhere
 
-        // TODO query player to get his TEAM (it's the player who switch team not all npc)
+        // REFACTOR: compare NPC's team with Player's Team instead of a global Player Team CST
+        // query player to get his TEAM (it's the player who switch team not all npc)
         if fair_play_timer.timer.finished() || team.0 == TEAM_MC {
             info!("{:?}, {} can now aggro", npc, name);
 
@@ -389,7 +390,7 @@ pub fn remove_pursuit_urge(
                     match pursuit_sensor_query.get(*collider) {
                         // returned pursuit_sensor: Entity
                         Ok(_pursuit_sensor) => {
-                            // TODO detach the child from their parent
+                            // FIXME: detach the child from their parent
                             commands.entity(*collider).despawn();
                         }
 
