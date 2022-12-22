@@ -8,7 +8,7 @@
 
 ### Olf
 
-- Il me faut donc obtenir le thrône
+- Il me faut donc obtenir le trône
 
 #### Morgan
 
@@ -20,10 +20,6 @@
 - Et de l'$
 - C'est essentiel
 
--> EndDialog
-
 ##### Olf
 
 - C'est essentiel
-
--> EndDialog
