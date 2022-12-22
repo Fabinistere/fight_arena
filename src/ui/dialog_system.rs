@@ -334,10 +334,10 @@ impl DialogNode {
     ///
     /// ### Author 2
     ///
-    /// - first choice for the author 2 only enable when his/her karma is low | karma: -50,0
-    /// - second choice ... only enable when the event OlfIsGone has already occurs | event: OlfIsGone
+    /// - first choice for the author 2 only enable when his/her karma is low | karma: -50,0;
+    /// - second choice ... only enable when the event OlfIsGone has already occurs | event: OlfIsGone;
     /// - thrid choice always enable | None
-    /// - fourth choice with a high karma and when the events OlfIsGone and PatTheDog already occurs | karma: 10,50; event: OlfIsGone, PatTheDog
+    /// - fourth choice with a high karma and when the events OlfIsGone and PatTheDog already occurs | karma: 10,50; event: OlfIsGone, PatTheDog;
     ///
     /// #### Author 1
     ///
@@ -357,7 +357,7 @@ impl DialogNode {
     /// - This text will be prompted only if the fourth choice is selected by the player
     ///
     /// ```
-    fn print_file(&self) -> String {
+    pub fn print_file(&self) -> String {
         return self.print_file_aux(String::from("#"));
     }
 
@@ -430,6 +430,9 @@ impl DialogNode {
             .join("\n\n");
 
         res.push_str(&children);
+
+        // smooth the end of phase
+        res = res.replace(" \n", "\n");
 
         res = res.replace("#\n\n#", "##");
         res = res.replace("\n\n\n", "\n\n");
@@ -1120,6 +1123,7 @@ fn is_special_char_file(c: char) -> bool {
 #[cfg(test)]
 mod tests {
 
+    #[allow(deprecated)]
     mod flat {
         use crate::ui::dialog_system::*;
 
@@ -1932,6 +1936,19 @@ mod tests {
                 vec![ThrowableEvent::FightEvent]
             );
         }
+
+        #[test]
+        fn test_init_tree_from_file_except_1() {
+            let root = init_tree_file(String::from("# Morgan\n\n- Bonjour Florian. /\nComment vas-tu ? /\nJ'ai faim.\n"));
+
+            assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
+
+            assert_eq!(
+                root.borrow().dialog_type,
+                vec![DialogType::Text("Bonjour Florian. \nComment vas-tu ? \nJ'ai faim.".to_string())]
+            );
+        }
+        
     }
 
     // #[test]

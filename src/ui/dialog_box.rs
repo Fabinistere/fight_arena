@@ -26,7 +26,9 @@ use crate::{
 use super::dialog_system::Dialog;
 
 #[derive(Component)]
-pub struct DialogPanel;
+pub struct DialogPanel {
+    pub main_interlocutor: Entity,
+}
 
 /// TODO: feature - add entity id (u32) into the DialogBox
 #[derive(Debug, Component)]
@@ -110,6 +112,7 @@ pub struct CreateScrollEvent;
 ///   - ui::dialog_box::create_dialog_box
 ///     - for a given String, creates a ui + fx
 pub struct CreateDialogBoxEvent {
+    interlocutor: Entity,
     dialog: Vec<String>,
     choice: Vec<String>,
 }
@@ -172,6 +175,7 @@ pub fn create_dialog_box_on_key_press(
 
     query: Query<(Entity, &Animator<Style>, &Style), With<DialogPanel>>,
     keyboard_input: Res<Input<KeyCode>>,
+    player_query: Query<Entity, With<Player>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::O) {
         if let Ok((_entity, animator, _style)) = query.get_single() {
@@ -182,7 +186,11 @@ pub fn create_dialog_box_on_key_press(
             }
         } else {
             info!("here second");
+
+            let player = player_query.single();
             create_dialog_box_event.send(CreateDialogBoxEvent {
+                // keep track of player's personal thoughts
+                interlocutor: player,
                 dialog: vec!["Bonjour Florian. \nComment vas-tu ? \nJ'ai faim.".to_owned()],
                 choice: vec![],
             });
@@ -242,7 +250,11 @@ pub fn create_dialog_box_on_combat_event(
 
                             let dialogs = &dialog_tree.borrow().dialog_type;
 
-                            // TODO throw Err(outOfBound) when dialog_type is empty (not intended)
+                            // throw Err(outOfBound) when dialog_type is empty (not intended)
+                            if dialogs.len() < 1 {
+                                panic!("Err: dialog_type is empty");
+                            }
+
                             // check the first elem of the DialogType's Vector
                             match &dialogs[0] {
                                 DialogType::Text(_) => {
@@ -253,8 +265,8 @@ pub fn create_dialog_box_on_combat_event(
                                             _ => panic!("A texts' vector contains something else"),
                                         }
                                     }
-                                    // TODO send the vec of text/choice or the first ?
                                     create_dialog_box_event.send(CreateDialogBoxEvent {
+                                        interlocutor: npc,
                                         dialog: texts,
                                         choice: vec![],
                                     });
@@ -277,7 +289,8 @@ pub fn create_dialog_box_on_combat_event(
                                                             choices.push(text.to_owned())
                                                         }
                                                     }
-                                                    None => {}
+                                                    // no condition
+                                                    None => choices.push(text.to_owned()),
                                                 }
                                             }
                                             _ => {
@@ -287,6 +300,7 @@ pub fn create_dialog_box_on_combat_event(
                                     }
                                     // XXX: does not show the question/text that was potentially before this choice
                                     create_dialog_box_event.send(CreateDialogBoxEvent {
+                                        interlocutor: npc,
                                         dialog: vec![],
                                         choice: choices,
                                     });
@@ -296,6 +310,7 @@ pub fn create_dialog_box_on_combat_event(
 
                         None => {
                             create_dialog_box_event.send(CreateDialogBoxEvent {
+                                interlocutor: npc,
                                 dialog: vec!["Node currently EMPTY WTF".to_owned()],
                                 choice: vec!["TALK".to_owned(), "FIGHT".to_owned()],
                             });
@@ -367,7 +382,12 @@ pub fn create_dialog_box(
     dialog_box_resources: Res<DialogBoxResources>,
     asset_server: Res<AssetServer>,
 ) {
-    for CreateDialogBoxEvent { dialog, choice } in create_dialog_box_events.iter() {
+    for CreateDialogBoxEvent {
+        interlocutor,
+        dialog,
+        choice,
+    } in create_dialog_box_events.iter()
+    {
         info!("open dialog event");
         let dialog_box_tween = Tween::new(
             EaseFunction::QuadraticOut,
@@ -621,12 +641,27 @@ pub fn create_dialog_box(
                         ));
                     });
             })
-            .insert(DialogPanel)
+            .insert(DialogPanel {
+                main_interlocutor: *interlocutor,
+            })
             .insert(Animator::new(dialog_box_tween));
 
         // check with system ordering if this event will be catch
         create_scroll_content.send(CreateScrollEvent);
     }
+}
+
+// TODO: merge the create_dialog_box_on_combat_event and skip_forward_dialog here
+// then in these systems, we just have to give/modify the correct current DialogTree to the interlocutor
+
+/// # Argument
+/// 
+/// # Purpose
+/// 
+/// When the dialog file implied in the talk is changed,
+/// update scrolls' content
+pub fn update_dialog_panel() {
+
 }
 
 /// Create the perfect amount of DialogBox for each Scroll

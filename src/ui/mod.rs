@@ -22,7 +22,10 @@ impl Plugin for UiPlugin {
             .add_system(dialog_box::update_dialog_box)
             .add_system(dialog_box::animate_scroll)
             .add_system(dialog_box::create_dialog_box)
+            
             .add_system(dialog_player::button_system)
+            .add_system(dialog_player::skip_forward_dialog)
+
             .add_system(dialog_box::close_dialog_box)
             .add_system(dialog_box::create_dialog_box_on_key_press)
             .add_system(dialog_box::create_dialog_box_on_combat_event)
