@@ -67,8 +67,6 @@ enum CombatState {
     // ShowExecution,
     Evasion,
 }
-#[derive(Component)]
-pub struct InCombat;
 
 pub struct CombatPlugin;
 
@@ -123,6 +121,12 @@ impl Plugin for CombatPlugin {
 fn observation() {
     // println!("Now it's your turn...")
 }
+
+#[derive(Component)]
+pub struct Karma(pub i32);
+
+#[derive(Component)]
+pub struct InCombat;
 
 #[derive(Clone, Copy, Component)]
 pub struct Leader;
@@ -254,11 +258,11 @@ pub fn freeze_in_combat(mut characters_query: Query<(Entity, &mut Velocity), Wit
 
 /// Event Handler of SpawnCombatFoesEvent
 pub fn spawn_party_members(
-    mut commands: Commands,
+    // mut commands: Commands,
 
     mut ev_spawn_party_members: EventReader<SpawnCombatFoesEvent>,
 ) {
-    for ev in ev_spawn_party_members.iter() {
+    for _ev in ev_spawn_party_members.iter() {
         // ev.group_size
     }
 }

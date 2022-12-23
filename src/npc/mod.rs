@@ -23,7 +23,7 @@ use crate::{
         // idle::IdleBehavior,
         movement::{give_a_direction, DetectionBehavior, FollowupBehavior, JustWalkBehavior},
     },
-    ui::dialog_system::{init_tree_flat, Dialog},
+    ui::dialog_system::Dialog,
     FabienSheet,
 };
 

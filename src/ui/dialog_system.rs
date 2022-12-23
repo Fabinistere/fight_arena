@@ -1114,12 +1114,6 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
     return root;
 }
 
-fn is_special_char_file(c: char) -> bool {
-    let special_char: Vec<char> = vec!['/', '-', '|', ';', '>'];
-
-    return special_char.contains(&c);
-}
-
 #[cfg(test)]
 mod tests {
 

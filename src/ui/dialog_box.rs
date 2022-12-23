@@ -5,7 +5,7 @@
 //!     - Exit in Combat
 //!     - Open HUD manually (pressing 'o')
 
-use bevy::{asset, prelude::*};
+use bevy::prelude::*;
 // render::RenderWorld,
 // sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 // ui::{ExtractedUiNode, ExtractedUiNodes},
@@ -655,14 +655,12 @@ pub fn create_dialog_box(
 // then in these systems, we just have to give/modify the correct current DialogTree to the interlocutor
 
 /// # Argument
-/// 
+///
 /// # Purpose
-/// 
+///
 /// When the dialog file implied in the talk is changed,
 /// update scrolls' content
-pub fn update_dialog_panel() {
-
-}
+pub fn update_dialog_panel() {}
 
 /// Create the perfect amount of DialogBox for each Scroll
 /// Decrement the save on UpperScroll when the text is prompted

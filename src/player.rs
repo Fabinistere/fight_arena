@@ -1,63 +1,52 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable};
+use bevy_inspector_egui::Inspectable;
 use bevy_rapier2d::prelude::*;
-
 
 use crate::{
     // collisions::{TesselatedCollider, TesselatedColliderConfig},
-    combat::{
-        InCombat,
-        Leader,
-        stats::*,
-        Team,
-    },
+    combat::{stats::*, InCombat, Karma, Leader, Team},
     constants::{
-        character::{
-            player::*,
-            CHAR_HITBOX_HEIGHT,
-            CHAR_HITBOX_WIDTH,
-            CHAR_HITBOX_Y_OFFSET,
-        },
-        combat::team::TEAM_MC
+        character::{player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH, CHAR_HITBOX_Y_OFFSET},
+        combat::team::TEAM_MC,
     },
-    FabienSheet,
     movement::*,
+    FabienSheet,
 };
 
 pub struct PlayerPlugin;
 
 #[derive(Component, Inspectable)]
 pub struct Player;
+
 #[derive(Component)]
 pub struct PlayerSensor;
 
-impl Plugin  for PlayerPlugin {
+impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_startup_system(spawn_player)
+        app.add_startup_system(spawn_player)
             .add_system(player_movement.label("movement"))
             .add_system(camera_follow.after("movement"));
-
     }
 }
 
 fn camera_follow(
     player_query: Query<&Transform, With<Player>>,
     mut camera_query: Query<&mut Transform, (Without<Player>, With<Camera>)>,
-){
+) {
     let player_transform = player_query.single();
     let mut camera_transform = camera_query.single_mut();
 
     camera_transform.translation.x = player_transform.translation.x;
     camera_transform.translation.y = player_transform.translation.y;
-    
 }
 
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_query: Query<(&Speed, &mut Velocity), (With<Player>, Without<InCombat>)>,
 ) {
-    for (speed, mut rb_vel) in player_query.iter_mut() {
+    // check if player_query is not empty
+    if !player_query.is_empty() {
+        let (speed, mut rb_vel) = player_query.single_mut();
 
         let up = keyboard_input.pressed(KeyCode::Z);
         let down = keyboard_input.pressed(KeyCode::S);
@@ -75,17 +64,14 @@ fn player_movement(
             vel_y *= (std::f32::consts::PI / 4.0).cos();
         }
 
+        
+
         rb_vel.linvel.x = vel_x;
         rb_vel.linvel.y = vel_y;
     }
 }
 
-fn spawn_player(
-    mut commands: Commands,
-    fabiens: Res<FabienSheet>,
-)
-{
-
+fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
     commands
         .spawn_bundle(SpriteSheetBundle {
             sprite: TextureAtlasSprite::new(PLAYER_STARTING_ANIM),
@@ -96,11 +82,7 @@ fn spawn_player(
                 ..default()
             },
             ..default()
-        }) 
-        .insert(Name::new("Player"))
-        .insert(Player)
-        .insert(Leader)
-        .insert(Team(TEAM_MC))
+        })
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(MovementBundle {
@@ -108,22 +90,28 @@ fn spawn_player(
             velocity: Velocity {
                 linvel: Vect::ZERO,
                 angvel: 0.0,
-            }
+            },
         })
+        .insert(Name::new("Player"))
+        .insert(Player)
+        .insert(Karma(10))
+        // Combat
+        .insert(Leader)
+        .insert(Team(TEAM_MC))
         .insert_bundle(CombatBundle {
             hp: HP {
                 current_hp: PLAYER_HP,
-                max_hp: PLAYER_HP
+                max_hp: PLAYER_HP,
             },
             mana: MANA {
                 current_mana: PLAYER_MANA,
-                max_mana: PLAYER_MANA
+                max_mana: PLAYER_MANA,
             },
-            initiative: Initiative (PLAYER_INITIATIVE),
-            attack: Attack (PLAYER_ATTACK),
+            initiative: Initiative(PLAYER_INITIATIVE),
+            attack: Attack(PLAYER_ATTACK),
             attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
-            defense: Defense (PLAYER_DEFENSE),
-            defense_spe: DefenseSpe (PLAYER_DEFENSE_SPE)
+            defense: Defense(PLAYER_DEFENSE),
+            defense_spe: DefenseSpe(PLAYER_DEFENSE_SPE),
         })
         .with_children(|parent| {
             parent
@@ -142,6 +130,5 @@ fn spawn_player(
             //     .insert(ActiveEvents::COLLISION_EVENTS)
             //     .insert(ActiveCollisionTypes::STATIC_STATIC)
             //     .insert(PlayerSensor);
-        })     
-        ;
+        });
 }

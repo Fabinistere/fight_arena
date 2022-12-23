@@ -51,6 +51,7 @@ fn main() {
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(ImageSettings::default_nearest())
         .insert_resource(Msaa { samples: 1 })
+        // hitbox
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()
