@@ -6,6 +6,7 @@
 //!     - Open HUD manually (pressing 'o')
 
 use bevy::prelude::*;
+use bevy_inspector_egui::Inspectable;
 // render::RenderWorld,
 // sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 // ui::{ExtractedUiNode, ExtractedUiNodes},
@@ -85,7 +86,7 @@ pub struct ScrollTimer(Timer);
 /// about the previous text displayed.
 /// All choice need to be prompted (not especially on the same page)
 /// so we need this kind of save
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 pub struct PlayerScroll {
     pub choices: Vec<String>,
 }
@@ -101,7 +102,7 @@ pub struct PlayerScroll {
 /// about the previous text displayed.
 /// All choice need to be prompted (not especially on the same page)
 /// so we need this kind of save
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 pub struct UpperScroll {
     pub texts: Vec<String>,
 }
@@ -177,7 +178,10 @@ pub fn load_textures(
     });
 }
 
+/// # Note
+/// 
 /// TODO: feature - exit the personal thought or any tab when being touch by aggro
+/// 
 /// FIXME: PB Spamming the ui key 'o'; ?throws an error
 pub fn create_dialog_box_on_key_press(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
@@ -217,10 +221,30 @@ pub fn create_dialog_box_on_key_press(
     }
 }
 
-/// Handle the CombatEvent
+/// # Event Handler
+/// 
+/// **Handle** the CombatEvent
 ///
-/// read CombatEvent
+/// **Read** CombatEvent
 ///     open a new ui / or got to Discussion ui
+/// 
+/// # Behavior
+/// 
+/// Interpret the dialog carried by the entity.
+/// 
+/// In Dialog Sequence,
+/// we might -want to- have the last text
+/// when the player is ask to choose a answer.
+/// 
+/// For simplificity,
+/// the feature: `recreate the dialog tree to include the last text in the root`
+/// is deactivated.
+/// 
+/// So, when the dialog is stopped during a choice,
+/// the root of the dialog tree is not modified and contains only the previous choice.
+/// 
+/// Unlucky situation :
+/// having to answer something without the context.
 pub fn create_dialog_box_on_combat_event(
     mut ev_combat: EventReader<CombatEvent>,
 
@@ -454,6 +478,7 @@ pub fn create_dialog_box(
                         // will be changed in update_dialog_panel
                         texts: vec![],
                     })
+                    .insert(Name::new("Upper Scroll"))
                     .insert(ScrollTimer(Timer::from_seconds(
                         SCROLL_ANIMATION_DELTA_S,
                         false,
@@ -526,6 +551,7 @@ pub fn create_dialog_box(
                         // will be changed in update_dialog_panel
                         choices: vec![],
                     })
+                    .insert(Name::new("Player Scroll"))
                     .insert(ScrollTimer(Timer::from_seconds(
                         SCROLL_ANIMATION_DELTA_S,
                         false,
@@ -704,6 +730,13 @@ pub fn update_dialog_panel(
                                 let (mut upper_scroll, _upper_scroll_entity) =
                                     upper_scroll_query.single_mut();
                                 upper_scroll.texts = texts;
+
+                                // Clear the previous choice if there is any
+                                // OPTIMIZE: same query call in the next section of the match - merge code -
+                                let (mut player_scroll, _player_scroll_entity) =
+                                    player_scroll_query.single_mut();
+                                player_scroll.choices.clear();
+                                
                             }
                             DialogType::Choice {
                                 text: _,
