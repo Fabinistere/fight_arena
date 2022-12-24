@@ -810,7 +810,6 @@ pub fn update_scroll(
                             // FIXME: bug - Reset the text even if there is no change
                             info!("// DEBUG: DialogBox in the UScroll Detected");
                             // Clear the DialogBox Child: the Text
-                            // OPTIMIZE: need to be mutable ?
                             match text_query.get_mut(children[0]) {
                                 Ok(mut text) => {
                                     text.sections[0].value.clear();
@@ -858,10 +857,10 @@ pub fn update_dialog_box(
                 Ok(mut text) => {
                     // prompt the simple text
                     // FIXME: bug - if the given text contains a accent this will crash
-                    match dialog_box.text.chars().nth(dialog_box.progress).unwrap() {
+                    match dialog_box.text.chars().nth(dialog_box.progress) {
                         // will ignore any louche symbol
-                        Err(e) => warn!("Accent Typical Crash: {:?}", e),
-                        Ok(next_letter) => {
+                        None => warn!("Accent Typical Crash"),
+                        Some(next_letter) => {
                             text.sections[0].value.push(next_letter);
 
                             dialog_box.progress += 1;
