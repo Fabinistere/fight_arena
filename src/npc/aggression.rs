@@ -42,6 +42,8 @@ pub struct CombatEvent {
 /// Happens when:
 ///   - ???
 ///     - combat was stoped by the player
+///   - ui::dialog_box::update_dialog_panel
+///     - End of the dialog
 /// Read in
 ///   - combat::exit_combat
 ///     - Add a FairPlayTimer to all enemies involved in the fight

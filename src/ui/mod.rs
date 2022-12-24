@@ -14,10 +14,12 @@ impl Plugin for UiPlugin {
 
             .add_event::<dialog_box::CreateDialogBoxEvent>()
             .add_event::<dialog_box::CloseDialogBoxEvent>()
-            .add_event::<dialog_box::CreateScrollEvent>()
+            .add_event::<dialog_box::UpdateScrollEvent>()
 
             .add_startup_system(dialog_box::load_textures)
             
+            .add_system(dialog_box::update_dialog_panel)
+            .add_system(dialog_box::update_dialog_tree)
             .add_system(dialog_box::update_scroll)
             .add_system(dialog_box::update_dialog_box)
             .add_system(dialog_box::animate_scroll)

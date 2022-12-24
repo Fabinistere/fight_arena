@@ -266,6 +266,20 @@ impl DialogNode {
         };
     }
 
+    pub fn is_end_node(&self) -> bool {
+        return self.children.is_empty();
+    }
+
+    /// # Return
+    ///
+    /// true if the type of the first element (of dialog_type) is choice
+    pub fn is_choice(&self) -> bool {
+        if !self.dialog_type.is_empty() {
+            return self.dialog_type[0].is_choice();
+        }
+        return false;
+    }
+
     pub fn add_child(&mut self, new_node: Rc<RefCell<DialogNode>>) {
         self.children.push(new_node);
     }
@@ -490,7 +504,10 @@ impl DialogNode {
 /// 3 = Other_branch
 /// 4 = Olf is dead !
 /// ```
-#[deprecated(since = "0.3.0", note = "init_tree_flat doesn't implement enought features and is less intuitive than init_tree_file. Users should instead use init_tree_file")]
+#[deprecated(
+    since = "0.3.0",
+    note = "init_tree_flat doesn't implement enought features and is less intuitive than init_tree_file. Users should instead use init_tree_file"
+)]
 pub fn init_tree_flat(s: String) -> Rc<RefCell<DialogNode>> {
     let root = Rc::new(RefCell::new(DialogNode::new()));
 
@@ -1016,7 +1033,12 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
 
             save.clear();
             condition = DialogCondition::new();
-        } else if *c == '\n' && content_phase && !save.is_empty() && dialog_type.is_text() {
+        } else if *c == '\n'
+            && content_phase
+            && !save.is_empty()
+            && dialog_type.is_text()
+            && !except
+        {
             // remove the space on the first position
             while save.starts_with(" ") {
                 save.remove(0);
@@ -1086,7 +1108,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
             }
             // ignore the new line: "\n"
             // the \n is a marker to end some phase
-            else if *c == '\n' {
+            else if *c == '\n' && !except {
                 // new_line = true;
                 // println!("skip");
 
@@ -1933,16 +1955,19 @@ mod tests {
 
         #[test]
         fn test_init_tree_from_file_except_1() {
-            let root = init_tree_file(String::from("# Morgan\n\n- Bonjour Florian. /\nComment vas-tu ? /\nJ'ai faim.\n"));
+            let root = init_tree_file(String::from(
+                "# Morgan\n\n- Bonjour Florian. /\nComment vas/-tu :/# ? /\nJ'ai faim. /<3 /</|3\n",
+            ));
 
             assert_eq!(root.borrow().character, Some((0, String::from("Morgan"))));
 
             assert_eq!(
                 root.borrow().dialog_type,
-                vec![DialogType::Text("Bonjour Florian. \nComment vas-tu ? \nJ'ai faim.".to_string())]
+                vec![DialogType::Text(
+                    "Bonjour Florian. \nComment vas-tu :# ? \nJ'ai faim. <3 <|3".to_string()
+                )]
             );
         }
-        
     }
 
     // #[test]

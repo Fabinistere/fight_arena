@@ -6,11 +6,11 @@ use crate::{
     // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{stats::*, InCombat, Karma, Leader, Team},
     constants::{
-        character::{player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH, CHAR_HITBOX_Y_OFFSET},
+        character::{player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH, CHAR_HITBOX_Y_OFFSET, npc::dialog::MORGAN_DIALOG},
         combat::team::TEAM_MC,
     },
     movement::*,
-    FabienSheet,
+    FabienSheet, ui::dialog_system::Dialog,
 };
 
 pub struct PlayerPlugin;
@@ -94,6 +94,7 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
         })
         .insert(Name::new("Player"))
         .insert(Player)
+        .insert(Dialog { current_node: Some(MORGAN_DIALOG.to_owned()) })
         .insert(Karma(10))
         // Combat
         .insert(Leader)

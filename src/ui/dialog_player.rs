@@ -3,16 +3,11 @@
 use bevy::prelude::*;
 use bevy_tweening::Animator;
 
-use crate::{
-    combat::Karma,
-    constants::ui::dialogs::*,
-    npc::{aggression::CombatExitEvent, NPC},
-    player::Player,
-};
+use crate::constants::ui::dialogs::*;
 
 use super::{
-    dialog_box::{CloseDialogBoxEvent, DialogPanel, PlayerScroll, Scroll, UpperScroll},
-    dialog_system::{init_tree_file, Dialog, DialogType},
+    dialog_box::{DialogPanel, Scroll, UpperScroll},
+    dialog_system::{init_tree_file, Dialog},
 };
 
 pub fn button_system(
@@ -43,158 +38,88 @@ pub fn button_system(
 
 pub fn skip_forward_dialog(
     mut upper_scroll_query: Query<(&mut UpperScroll, Entity), With<Scroll>>,
-    mut player_scroll_query: Query<(&mut PlayerScroll, Entity), With<Scroll>>,
+    // mut player_scroll_query: Query<(&mut PlayerScroll, Entity), With<Scroll>>,
     query: Query<(Entity, &Animator<Style>, &DialogPanel)>,
-    mut npc_query: Query<(Entity, &mut Dialog), With<NPC>>,
-    player_query: Query<(Entity, &Karma), With<Player>>,
+    
+    mut interlocutor_query: Query<(Entity, &mut Dialog)>, //, With<NPC>
 
     keyboard_input: Res<Input<KeyCode>>,
-
-    mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
-    mut ev_combat_exit: EventWriter<CombatExitEvent>,
 ) {
-    // let any = keyboard_input.any_just_pressed([0, 162]);
-    // TODO: don't pop the last text if there is a choice
-    // only replace when there is a new text
-    // !keyboard_input.get_just_pressed().is_empty()
-    if keyboard_input.just_pressed(KeyCode::P) {
-        info!("P pressed");
-        let (_ui_wall, animator, panel) = query.single();
-        let interlocutor = panel.main_interlocutor;
+    if let Ok((_ui_wall, animator, panel)) = query.get_single() {
 
-        match npc_query.get_mut(interlocutor) {
-            Ok((_npc_entity, mut dialog)) => {
-                // check what is the next dialog node
-                match &dialog.current_node {
-                    Some(text) => {
-                        let dialog_tree = init_tree_file(text.to_string());
+        // let any = keyboard_input.any_just_pressed([0, 162]);
+        // !keyboard_input.get_just_pressed().is_empty()
+        if keyboard_input.just_pressed(KeyCode::P) {
+            info!("// DEBUG: P pressed");
 
-                        let current = &dialog_tree.borrow();
+            let interlocutor = panel.main_interlocutor;
+ 
+            // prevent skip while opening the panel (be patient for god sake)
+            if animator.tweenable().unwrap().progress() < 1.0 {
+                // be patient for god sake
+                warn!("attempt of skip while the panel was opening");
+                // TODO: skip the animation ?! (i think it's already fast, so no)
+            }
 
-                        let dialogs = &current.dialog_type;
+            // check the upper scroll content
+            // if len > 1
+            //   pop the first elem from the vector texts
+            // else (if) only one text remain or none
+            //   replace the current of the interlocutor by its child (of the current)
 
-                        // throw Err(outOfBound) when dialog_type is empty (not intended)
-                        if dialogs.len() < 1 {
-                            panic!("Err: dialog_type is empty");
-                        }
+            match interlocutor_query.get_mut(interlocutor) {
+                Err(e) => {
+                    warn!("no interloctor with NPC and Dialog: {:?}", e);
+                }
+                Ok((_interlocutor, mut dialog)) => {
+                    // check what is the current dialog node
+                    match &dialog.current_node {
+                        None => warn!("Empty DialogTree; The Interlocutor is still in dialog but has nothing to say."),
+                        Some(texts) => {
+                            let (mut upper_scroll, _upper_scroll_entity) =
+                                upper_scroll_query.single_mut();
 
-                        // check the first elem of the DialogType's Vector
-                        match &dialogs[0] {
-                            DialogType::Text(_) => {
-                                let (mut upper_scroll, _upper_scroll_entity) =
-                                    upper_scroll_query.single_mut();
 
-                                if upper_scroll.texts.len() > 1 {
-                                    // pop first
-                                    match upper_scroll.texts.split_first() {
-                                        Some((_first, rem)) => {
-                                            upper_scroll.texts = rem.to_vec();
-                                        }
-                                        // empty vec
-                                        None => warn!("early destruction; Iteration Error"),
-                                    }
+                            // REFACTOR: don't pop the upper_scroll.texts but call a event to change theDialogBox 
+                            // still in monologue ?
+                            if upper_scroll.texts.len() > 1 {
+                                // if there is at least 2 elem in the upper scroll
+                                if let Some((_first, rem)) = upper_scroll.texts.split_first() {
+                                    // pop first only
+                                    upper_scroll.texts = rem.to_vec();
                                 }
-                                // we are in the last text of the node
-                                // let's check its child
-                                else if !&dialog_tree.borrow().children.is_empty() {
-                                    // a text node can have a only one child max
-                                    // let child = &dialog_tree.borrow().children[0].borrow();
-                                    let child_type = &current.children[0].borrow().dialog_type;
-
-                                    match &child_type[0] {
-                                        DialogType::Text(_) => {
-                                            // replace current by the new text
-                                            let mut texts = Vec::<String>::new();
-                                            for dialog in child_type.iter() {
-                                                match dialog {
-                                                    DialogType::Text(text) => {
-                                                        texts.push(text.to_owned())
-                                                    }
-                                                    _ => panic!(
-                                                         "Err: DialogTree Incorrect; A texts' vector contains something else"
-                                                    ),
-                                                }
-                                            }
-                                            upper_scroll.texts = texts;
-
-                                            // update the dialog tree contain within the main interlocutor
-                                            let next_tree: String = dialog_tree.borrow()
-                                                .children[0]
-                                                .borrow()
-                                                .print_file();
-                                            dialog.current_node = Some(next_tree);
-                                        }
-                                        DialogType::Choice {
-                                            text: _,
-                                            condition: _,
-                                        } => {
-                                            // update the player_scroll
-                                            let (mut player_scroll, _player_scroll_entity) =
-                                                player_scroll_query.single_mut();
-                                            // replace current by the new set of choices
-                                            let mut choices = Vec::<String>::new();
-                                            for dialog in child_type.iter() {
-                                                match dialog {
-                                                    DialogType::Choice { text, condition } => {
-                                                        match condition {
-                                                            Some(cond) => {
-                                                                let (_player, karma) =
-                                                                    player_query.single();
-                                                                if cond.is_verified(karma.0) {
-                                                                    choices.push(text.to_owned())
-                                                                }
-                                                            }
-                                                            // no condition
-                                                            None => choices.push(text.to_owned()),
-                                                        }
-                                                    }
-                                                    _ => {
-                                                        panic!("Err: DialogTree Incorrect; A choices' vector contains something else")
-                                                    }
-                                                }
-                                            }
-                                            player_scroll.choices = choices;
-
-                                            // update the dialog tree contain within the main interlocutor
-                                            let next_tree: String = dialog_tree.borrow()
-                                                .children[0]
-                                                .borrow()
-                                                .print_file();
-                                            dialog.current_node = Some(next_tree);
-                                        }
-                                    }
-                                } else {
-                                    // if we were in the last node of this path
-                                    // exit the dialog
-                                    // TODO: feature - find a way to execute trigger_event somewhere
-
-                                    if animator.tweenable().unwrap().progress() >= 1.0 {
-                                        close_dialog_box_event.send(CloseDialogBoxEvent);
-
-                                        ev_combat_exit.send(CombatExitEvent);
-                                    }
+                                else {
+                                    info!("upper scroll is empty");
                                 }
                             }
-                            DialogType::Choice {
-                                text: _,
-                                condition: _,
-                            } => {
-                                // see choose_choice method
-                                // or check here if any button were pressed
+                            else {
+                                let dialog_tree = init_tree_file(texts.to_owned());
+
+                                // XXX: Care about skip choice here
+                                // a test to check if the panel is on Choice Phase ?
+                                // must cancel the skip possibility while still in choice phase
+
+                                if dialog_tree.borrow().is_end_node() {
+                                    // will be handle by the update_dialog_panel system
+                                    // as Exit the Combat
+                                    dialog.current_node = None; 
+                                } else if !dialog_tree.borrow().is_choice() {
+                                    // go down on the first child
+                                    // ignore the other child if there is one
+                                    // **the rule implied not**
+                                    // cause a text must have one child or none
+
+                                    let child = dialog_tree.borrow()
+                                        .children[0].borrow()
+                                        .print_file();
+
+                                    dialog.current_node = Some(child);
+                                }
                             }
                         }
-                    }
-
-                    None => {
-                        warn!("Interlocutor's dialog is empty")
                     }
                 }
             }
-
-            Err(e) => warn!(
-                "The entity in the CombatEvent is not a npc with a dialog: {:?}",
-                e
-            ),
         }
     }
 }

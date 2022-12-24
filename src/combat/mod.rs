@@ -301,6 +301,18 @@ pub fn exit_combat(
             commands.entity(foes).remove::<InCombat>();
         }
 
+        // FIXME: case the ui is not fully open
+        // normally we cannot exit while opening (skip is block, and ... no action can yet)
+        // so is kinda secure (without certitude)
         close_dialog_box_event.send(CloseDialogBoxEvent);
+
+        // UI is open
+        // if let Ok((_entity, animator, _style)) = query.get_single()
+        // {
+        //     // FULLY OPEN    
+        //     if animator.tweenable().unwrap().progress() >= 1.0 {
+        //         close_dialog_box_event.send(CloseDialogBoxEvent);
+        //     }
+        // }
     }
 }

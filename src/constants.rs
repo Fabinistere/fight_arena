@@ -86,6 +86,11 @@ pub mod character {
         pub const FABICURION_STARTING_ANIM: usize = 40;
 
         pub mod dialog {
+            // Flibittygibbit
+
+            // TODO: feature - Read at dialog_file instead of CST
+            // CST = path to the file
+
             pub const RANDOM_DIALOG: &str = "# Fabien\n
 - Enfant, j'ai eu un poney
 - Mais j'ai toujours voulu un agneau\n";
@@ -114,28 +119,34 @@ pub mod character {
 ##### Olf
 
 - C'est essentiel\n";
-            pub const FABIEN_DIALOG: &str =
-            "# Fabien
+            pub const FABIEN_DIALOG: &str = "# Fabien
 
 - Hello
 
-## Morgan
+## Fabien
+
+- /<3 (This is a new text in a new node)
+
+### Morgan
 
 - Hey | None
 - No Hello | None
 - Want to share a flat ? | None
 
-### Fabien
+#### Fabien
 
 - :)
 
-### Fabien
+#### Fabien
 
 - :O
 
-### Fabien
+#### Fabien
 
 - Sure\n";
+
+            pub const MORGAN_DIALOG: &str =
+                "# Morgan\n\n- Bonjour Florian. /\nComment vas/-tu ? /\nJ'ai faim.\n";
         }
 
         pub mod movement {
