@@ -58,7 +58,7 @@ pub fn do_flexing(
             info!(target: "Stop Rest", "{:?}, {}", npc, name);
 
             // restart previous behavior or new one
-            // TODO: after the rest, npc will select a behavior
+            // TODO: feature - after the rest, npc will select a behavior
             commands.entity(npc)
                     .remove::<IdleBehavior>();
             commands.entity(npc)

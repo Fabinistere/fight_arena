@@ -58,7 +58,7 @@ pub fn skip_forward_dialog(
             if animator.tweenable().unwrap().progress() < 1.0 {
                 // be patient for god sake
                 warn!("attempt of skip while the panel was opening");
-                // TODO: skip the animation ?! (i think it's already fast, so no)
+                // TODO: feature - skip the animation ?! (i think it's already fast, so no)
             }
 
             // check the upper scroll content

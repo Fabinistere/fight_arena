@@ -25,6 +25,7 @@ use crate::{
 
 use super::dialog_system::Dialog;
 
+/// TODO: feature - sync author with interlocutor (to know which one is talking)
 #[derive(Component)]
 pub struct DialogPanel {
     // keep track of the origanal interlocutor
@@ -34,7 +35,6 @@ pub struct DialogPanel {
     dialog_tree: String,
 }
 
-/// TODO: feature - add entity id (u32) into the DialogBox
 #[derive(Debug, Component)]
 pub struct DialogBox {
     text: String,
@@ -123,7 +123,6 @@ pub struct UpdateScrollEvent;
 /// Read in
 ///   - ui::dialog_box::create_dialog_box
 ///     - for a given String, creates a ui + fx
-/// TODO: remove dialog and choice ?
 pub struct CreateDialogBoxEvent {
     interlocutor: Entity,
     dialog_tree: String,
@@ -178,7 +177,7 @@ pub fn load_textures(
     });
 }
 
-/// TODO: feature - leave the personal thought or any tab when being touch by aggro
+/// TODO: feature - exit the personal thought or any tab when being touch by aggro
 /// FIXME: PB Spamming the ui key 'o'; ?throws an error
 pub fn create_dialog_box_on_key_press(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
@@ -261,13 +260,12 @@ pub fn create_dialog_box_on_combat_event(
                 }
 
                 Err(e) => {
+                    // FIXME: Handle this error
+                    // exit the combat and log the name of this weird entity
                     warn!(
                         "The entity {:?} in the CombatEvent is not a npc with a dialog: {:?}",
                         npc, e
                     );
-
-                    // FIXME: Handle this error
-                    // exit the combat and log the name of this weird entity
                 }
             }
         }
@@ -641,8 +639,6 @@ pub fn update_dialog_panel(
     if let Ok((_ui_wall, _animator, panel)) = query.get_single() {
         let interlocutor = panel.main_interlocutor;
 
-        // FIXME: detect change when creating the dialog_panel (change in the DialogPanel while inserted in the ui wall)
-
         match interlocutor_query.get_mut(interlocutor) {
             Err(_e) => {
                 // just wait for the DialogTree to change
@@ -708,7 +704,6 @@ pub fn update_dialog_panel(
                                 let (mut upper_scroll, _upper_scroll_entity) =
                                     upper_scroll_query.single_mut();
                                 upper_scroll.texts = texts;
-                                // TODO: ? retrigger the animation of the dialogBox letter by letter (with Changed Filter on the update_dialog_box system)
                             }
                             DialogType::Choice {
                                 text: _,
@@ -759,7 +754,7 @@ pub fn update_dialog_panel(
 /// Each time the dialog_tree of the panel is changed (?OR can be delay to the end of fight)
 /// XXX: little trick to detect change especially in the creation phase
 pub fn update_dialog_tree(
-    // XXX: will detect change if the interlocutor is switch (issue?)
+    // XXX: issue? - will detect change if the interlocutor is switch
     dialog_panel_query: Query<&DialogPanel, Changed<DialogPanel>>,
     mut interlocutor_query: Query<(Entity, &mut Dialog)>,
 ) {
@@ -812,7 +807,7 @@ pub fn update_scroll(
                                 .insert(DialogBox::new(dialog_box_text.clone(), DIALOG_BOX_UPDATE_DELTA_S));
                         }
                         Ok((mut dialog_box, children, _)) => {
-                            // FIXME: Reset the text even 
+                            // FIXME: bug - Reset the text even if there is no change
                             info!("// DEBUG: DialogBox in the UScroll Detected");
                             // Clear the DialogBox Child: the Text
                             // OPTIMIZE: need to be mutable ?
@@ -862,16 +857,23 @@ pub fn update_dialog_box(
             match text_query.get_mut(children[0]) {
                 Ok(mut text) => {
                     // prompt the simple text
-                    let next_letter = dialog_box.text.chars().nth(dialog_box.progress).unwrap();
-                    text.sections[0].value.push(next_letter);
+                    // FIXME: bug - if the given text contains a accent this will crash
+                    match dialog_box.text.chars().nth(dialog_box.progress).unwrap() {
+                        // will ignore any louche symbol
+                        Err(e) => warn!("Accent Typical Crash: {:?}", e),
+                        Ok(next_letter) => {
+                            text.sections[0].value.push(next_letter);
 
-                    dialog_box.progress += 1;
-                    if dialog_box.progress >= dialog_box.text.len() {
-                        dialog_box.finished = true;
+                            dialog_box.progress += 1;
+                            if dialog_box.progress >= dialog_box.text.len() {
+                                dialog_box.finished = true;
+                            }
+                        }
                     }
                 }
-                // FIXME: if the given text contains a accent this will crash
-                Err(e) => warn!("Accent Typical Crash: {:?}", e),
+                // FIXME: If there is no TEXT then insert one in it
+                // pb: on which scroll...
+                Err(e) => warn!("No Text in the Dialog Wall: {:?}", e),
             }
         }
     }

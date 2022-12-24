@@ -96,7 +96,7 @@ pub fn just_walk(
             // rb_vel.linvel.y = 0.;
 
             // change their destiantion before resting
-            // REFACTOR: event like in do_flexing
+            // REFACTOR: handle the direction change with event like in do_flexing
             behavior.destination = give_a_direction();
 
             commands.entity(npc)
@@ -116,7 +116,7 @@ pub fn just_walk(
 /// Entity gently follows their target.
 /// depending the team
 /// 
-/// TODO: feature - Follow an ally by the component Target 
+/// TODO: feature - Follow an ally by the component Target instead of Leader
 pub fn follow(
     // mut commands: Commands,
     mut npc_query: Query<(
@@ -139,7 +139,7 @@ pub fn follow(
                 // carefull with more than one leader per team
                 // it will be not nice
 
-                // XXX: Rework this Approximation Louche
+                // XXX: Approximation Louche
                 if !close(transform.translation, target_transform.translation(), 20.*TILE_SIZE)
                 {
                     
@@ -154,7 +154,7 @@ pub fn follow(
                 }
                 // if reached the target
                 else {
-                    // TODO: AVOID npc to merge with the target
+                    // TODO: feature - AVOID npc to merge with the target
                     rb_vel.linvel.x = 0.;
                     rb_vel.linvel.y = 0.;
                 }

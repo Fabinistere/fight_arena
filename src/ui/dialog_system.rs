@@ -938,7 +938,7 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
                 current = child;
             }
 
-            // TODO: give the real entity_id
+            // TODO: give the real entity_id or remove id
             current.borrow_mut().character = Some((0, author.to_owned()));
 
             author.clear();
