@@ -60,6 +60,6 @@ Indeed store image in git means if only one pixel changed the git will save the 
 Which happens to be a pure waste of energy in my case.
 
 SO, to have the assets of the last commit, please download this folder:
-[assets](https://drive.google.com/drive/folders/1jcYH7U0qzLvyE25JEkXixoA6EWw6KNN5?usp=sharing)
+[assets](https://drive.google.com/drive/folders/1jcYH7U0qzLvyE25JEkXixoA6EWw6KNN5?usp=share_link)
 
 To find previous assets, they will be given in the given realase
