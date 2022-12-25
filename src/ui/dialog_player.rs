@@ -15,21 +15,24 @@ pub fn button_system(
         (&Interaction, &mut UiColor, &Children),
         (Changed<Interaction>, With<Button>),
     >,
-    mut text_query: Query<&mut Text>,
+    // mut text_query: Query<&mut Text>,
 ) {
     for (interaction, mut color, children) in &mut interaction_query {
-        let mut text = text_query.get_mut(children[0]).unwrap();
+        // let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
-                text.sections[0].value = "Press".to_string();
+                // text.sections[0].value = "Press".to_string();
                 *color = PRESSED_BUTTON.into();
+
+                // TODO: feature - send event to go down in the tree (retrieve the correct index)
+                // maybe with the index in PlayerChoice(pub i32)
             }
             Interaction::Hovered => {
-                text.sections[0].value = "Hover".to_string();
+                // text.sections[0].value = "Hover".to_string();
                 *color = HOVERED_BUTTON.into();
             }
             Interaction::None => {
-                text.sections[0].value = "Button".to_string();
+                // text.sections[0].value = "Button".to_string();
                 *color = NORMAL_BUTTON.into();
             }
         }
