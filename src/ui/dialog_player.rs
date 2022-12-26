@@ -12,7 +12,7 @@ use super::{
 
 pub fn button_system(
     mut interaction_query: Query<
-        (&Interaction, &mut UiColor, &Children),
+        (&Interaction, &mut UiColor, &Children), // &PlayerChoice to retrive the index
         (Changed<Interaction>, With<Button>),
     >,
     // mut text_query: Query<&mut Text>,
@@ -82,17 +82,17 @@ pub fn skip_forward_dialog(
                             let (mut upper_scroll, _upper_scroll_entity) =
                                 upper_scroll_query.single_mut();
 
-
                             // REFACTOR: don't pop the upper_scroll.texts but call a event to change theDialogBox 
                             // still in monologue ?
+
+                            // if there is at least 2 elem in the upper scroll
                             if upper_scroll.texts.len() > 1 {
-                                // if there is at least 2 elem in the upper scroll
                                 if let Some((_first, rem)) = upper_scroll.texts.split_first() {
                                     // pop first only
                                     upper_scroll.texts = rem.to_vec();
-                                }
-                                else {
-                                    info!("upper scroll is empty");
+                                }else {
+                                    // shouldn't be the case
+                                    warn!("The UpperScroll does not contain text")
                                 }
                             }
                             else {
@@ -101,6 +101,7 @@ pub fn skip_forward_dialog(
                                 // XXX: Care about skip choice here
                                 // a test to check if the panel is on Choice Phase ?
                                 // must cancel the skip possibility while still in choice phase
+
 
                                 if dialog_tree.borrow().is_end_node() {
                                     // will be handle by the update_dialog_panel system
@@ -111,11 +112,11 @@ pub fn skip_forward_dialog(
                                     // ignore the other child if there is one
                                     // **the rule implied not**
                                     // cause a text must have one child or none
-
-                                    let child = dialog_tree.borrow()
+                            
+                                    let child = dialog_tree.borrow()    
                                         .children[0].borrow()
                                         .print_file();
-
+                            
                                     dialog.current_node = Some(child);
                                 }
                             }

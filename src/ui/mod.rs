@@ -20,7 +20,8 @@ impl Plugin for UiPlugin {
             
             .add_system(dialog_box::update_dialog_panel)
             .add_system(dialog_box::update_dialog_tree)
-            .add_system(dialog_box::update_scroll)
+            .add_system(dialog_box::update_upper_scroll)
+            .add_system(dialog_box::update_player_scroll)
             .add_system(dialog_box::update_dialog_box)
             .add_system(dialog_box::animate_scroll)
             .add_system(dialog_box::create_dialog_box)

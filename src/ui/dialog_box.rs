@@ -91,6 +91,10 @@ pub struct PlayerScroll {
     pub choices: Vec<String>,
 }
 
+/// Indicate a place where a choice can written
+#[derive(Component)]
+pub struct PlayerChoice;
+
 /// save all choice we could have to display
 /// Two options :
 ///
@@ -111,9 +115,13 @@ pub struct UpperScroll {
 ///   - ui::dialog_box::create_dialog_box
 ///     - UI Wall creation
 /// Read in
-///   - ui::dialog_box::update_scroll
-///     - Have to insert DialogBox into the scroll
-///     With correct amount / position
+///   - ui::dialog_box::update_upper_scroll
+///     - create a dialogBox with the text contained in the UpperScroll,
+///     or update Text in existing dialogBox.
+///   - ui::dialog_box::update_player_scroll
+///     - update choices displayed in the player scroll.
+///     Have to insert DialogBox into the scroll,
+///     With correct amount / position.
 pub struct UpdateScrollEvent;
 
 /// Happens when
@@ -179,9 +187,9 @@ pub fn load_textures(
 }
 
 /// # Note
-/// 
+///
 /// TODO: feature - exit the personal thought or any tab when being touch by aggro
-/// 
+///
 /// FIXME: PB Spamming the ui key 'o'; ?throws an error
 pub fn create_dialog_box_on_key_press(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
@@ -222,27 +230,27 @@ pub fn create_dialog_box_on_key_press(
 }
 
 /// # Event Handler
-/// 
+///
 /// **Handle** the CombatEvent
 ///
 /// **Read** CombatEvent
 ///     open a new ui / or got to Discussion ui
-/// 
+///
 /// # Behavior
-/// 
+///
 /// Interpret the dialog carried by the entity.
-/// 
+///
 /// In Dialog Sequence,
 /// we might -want to- have the last text
 /// when the player is ask to choose a answer.
-/// 
+///
 /// For simplificity,
 /// the feature: `recreate the dialog tree to include the last text in the root`
 /// is deactivated.
-/// 
+///
 /// So, when the dialog is stopped during a choice,
 /// the root of the dialog tree is not modified and contains only the previous choice.
-/// 
+///
 /// Unlucky situation :
 /// having to answer something without the context.
 pub fn create_dialog_box_on_combat_event(
@@ -513,16 +521,17 @@ pub fn create_dialog_box(
                     // .insert(DialogBox::new(dialog[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
                     ;
 
-                // parent.spawn_bundle(ImageBundle {
-                //     image: texture_atlases
-                //         .get(dialog_box_resources.scroll_animation.clone())
-                //         .unwrap()
-                //         .texture
-                //         .clone_weak()
-                //         .into(),
-                //     style: child_sprite_style.clone(),
-                //     ..ImageBundle::default()
-                // });
+                // parent
+                //     .spawn_bundle(ImageBundle {
+                //         image: texture_atlases
+                //             .get(dialog_box_resources.scroll_animation.clone())
+                //             .unwrap()
+                //             .texture
+                //             .clone_weak()
+                //             .into(),
+                //         style: child_sprite_style.clone(),
+                //         ..ImageBundle::default()
+                //     });
 
                 // Player Scroll
 
@@ -557,60 +566,201 @@ pub fn create_dialog_box(
                         false,
                     )))
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
-                            text: Text::from_section(
-                                "",
-                                TextStyle {
-                                    font: dialog_box_resources.text_font.clone(),
-                                    font_size: 30.0,
-                                    color: Color::BLACK,
+                        // TODO: feature - 3 PlayerChoice is enough, to have much reuse theses three in another page
+
+                        // TODO: feature - Activate/Deactivate Button display when no text
+                        // see https://bevy-cheatbook.github.io/features/visibility.html
+
+                        // TODO: stop center text and button
+                        // TODO: regain control on margin style (taken by button)
+
+                        // First potential choice
+                        parent
+                            .spawn_bundle(ButtonBundle {
+                                style: Style {
+                                    // TODO: custom size ? (text dependent)
+                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                    margin: UiRect::all(Val::Auto),
+                                    // margin: UiRect {
+                                    //     top: Val::Percent(105.0),
+                                    //     left: Val::Percent(24.0),
+                                    //     ..UiRect::default()
+                                    // },
+                                    justify_content: JustifyContent::SpaceAround,
+                                    position: UiRect {
+                                        top: Val::Percent(105.0),
+                                        left: Val::Percent(24.0),
+                                        ..UiRect::default()
+                                    },
+                                    ..default()
                                 },
-                            )
-                            .with_alignment(TextAlignment {
-                                vertical: VerticalAlign::Top,
-                                horizontal: HorizontalAlign::Left,
-                            }),
-                            style: Style {
-                                flex_wrap: FlexWrap::Wrap,
-                                margin: UiRect {
-                                    top: Val::Percent(74.0),
-                                    left: Val::Percent(24.0),
-                                    ..UiRect::default()
+                                color: NORMAL_BUTTON.into(),
+                                ..default()
+                            })
+                            .insert(PlayerChoice)
+                            .with_children(|parent| {
+                                parent.spawn_bundle(TextBundle {
+                                    text: Text::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: dialog_box_resources.text_font.clone(),
+                                            // TODO: Find the correct value for the choice font size
+                                            font_size: 20.0,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_alignment(TextAlignment {
+                                        vertical: VerticalAlign::Top,
+                                        horizontal: HorizontalAlign::Left,
+                                    }),
+                                    style: Style {
+                                        flex_wrap: FlexWrap::Wrap,
+                                        margin: UiRect {
+                                            top: Val::Percent(100.0),
+                                            left: Val::Percent(0.0),
+                                            ..UiRect::default()
+                                        },
+                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        ..Style::default()
+                                    },
+                                    ..TextBundle::default()
+                                });
+                            });
+
+                        // Second potential choice
+                        parent
+                            .spawn_bundle(ButtonBundle {
+                                style: Style {
+                                    // TODO: custom size ? (text dependent)
+                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                    margin: UiRect::all(Val::Auto),
+                                    // margin: UiRect {
+                                    //     top: Val::Percent(125.0),
+                                    //     left: Val::Percent(24.0),
+                                    //     ..UiRect::default()
+                                    // },
+                                    justify_content: JustifyContent::SpaceAround,
+                                    position: UiRect {
+                                        top: Val::Percent(105.0),
+                                        left: Val::Percent(24.0),
+                                        ..UiRect::default()
+                                    },
+                                    ..default()
                                 },
-                                max_size: Size::new(Val::Px(450.0), Val::Percent(100.0)),
-                                ..Style::default()
-                            },
-                            ..TextBundle::default()
-                        });
+                                color: NORMAL_BUTTON.into(),
+                                ..default()
+                            })
+                            .insert(PlayerChoice)
+                            .with_children(|parent| {
+                                parent.spawn_bundle(TextBundle {
+                                    text: Text::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: dialog_box_resources.text_font.clone(),
+                                            // TODO: Find the correct value for the choice font size
+                                            font_size: 20.0,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_alignment(TextAlignment {
+                                        vertical: VerticalAlign::Top,
+                                        horizontal: HorizontalAlign::Left,
+                                    }),
+                                    style: Style {
+                                        flex_wrap: FlexWrap::Wrap,
+                                        margin: UiRect {
+                                            top: Val::Percent(100.0),
+                                            left: Val::Percent(0.0),
+                                            ..UiRect::default()
+                                        },
+                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        ..Style::default()
+                                    },
+                                    ..TextBundle::default()
+                                });
+                            });
+
+                        // Third potential choice
+                        parent
+                            .spawn_bundle(ButtonBundle {
+                                style: Style {
+                                    // TODO: custom size ? (text dependent)
+                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                    margin: UiRect::all(Val::Auto),
+                                    // margin: UiRect {
+                                    //     top: Val::Percent(145.0),
+                                    //     left: Val::Percent(24.0),
+                                    //     ..UiRect::default()
+                                    // },
+                                    justify_content: JustifyContent::SpaceAround,
+                                    position: UiRect {
+                                        top: Val::Percent(105.0),
+                                        left: Val::Percent(24.0),
+                                        ..UiRect::default()
+                                    },
+                                    ..default()
+                                },
+                                color: NORMAL_BUTTON.into(),
+                                ..default()
+                            })
+                            .insert(PlayerChoice)
+                            .with_children(|parent| {
+                                parent.spawn_bundle(TextBundle {
+                                    text: Text::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: dialog_box_resources.text_font.clone(),
+                                            // TODO: Find the correct value for the choice font size
+                                            font_size: 20.0,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_alignment(TextAlignment {
+                                        vertical: VerticalAlign::Top,
+                                        horizontal: HorizontalAlign::Left,
+                                    }),
+                                    style: Style {
+                                        flex_wrap: FlexWrap::Wrap,
+                                        margin: UiRect {
+                                            top: Val::Percent(100.0),
+                                            left: Val::Percent(0.0),
+                                            ..UiRect::default()
+                                        },
+                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        ..Style::default()
+                                    },
+                                    ..TextBundle::default()
+                                });
+                            });
                     });
 
                 // Button
 
-                parent
-                    .spawn_bundle(ButtonBundle {
-                        style: Style {
-                            size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                            // center button
-                            margin: UiRect::all(Val::Auto),
-                            // horizontally center child text
-                            justify_content: JustifyContent::Center,
-                            // vertically center child text
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
-                        color: NORMAL_BUTTON.into(),
-                        ..default()
-                    })
-                    .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle::from_section(
-                            "Button",
-                            TextStyle {
-                                font: asset_server.load("fonts/dpcomic.ttf"),
-                                font_size: 40.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                            },
-                        ));
-                    });
+                // parent
+                //     .spawn_bundle(ButtonBundle {
+                //         style: Style {
+                //             size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                //             // center button
+                //             margin: UiRect::all(Val::Auto),
+                //             // horizontally center child text
+                //             justify_content: JustifyContent::Center,
+                //             // vertically center child text
+                //             align_items: AlignItems::Center,
+                //             ..default()
+                //         },
+                //         color: NORMAL_BUTTON.into(),
+                //         ..default()
+                //     })
+                //     .with_children(|parent| {
+                //         parent.spawn_bundle(TextBundle::from_section(
+                //             "Button",
+                //             TextStyle {
+                //                 font: asset_server.load("fonts/dpcomic.ttf"),
+                //                 font_size: 40.0,
+                //                 color: Color::rgb(0.9, 0.9, 0.9),
+                //             },
+                //         ));
+                //     });
             })
             .insert(DialogPanel {
                 main_interlocutor: *interlocutor,
@@ -736,7 +886,6 @@ pub fn update_dialog_panel(
                                 let (mut player_scroll, _player_scroll_entity) =
                                     player_scroll_query.single_mut();
                                 player_scroll.choices.clear();
-                                
                             }
                             DialogType::Choice {
                                 text: _,
@@ -801,9 +950,12 @@ pub fn update_dialog_tree(
     }
 }
 
-/// Create the perfect amount of DialogBox for each Scroll
-/// Decrement the save on UpperScroll when the text is prompted
-pub fn update_scroll(
+/// Display the content of the first element contained in the Upper Scroll
+///
+/// REFACTOR: ? Handle by a event but just by query could be fine
+/// Handle by event allow us to execute animation when any update occurs;
+/// For example, the closure opening to clear and display.
+pub fn update_upper_scroll(
     mut commands: Commands,
 
     // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
@@ -815,7 +967,6 @@ pub fn update_scroll(
 
     mut text_query: Query<&mut Text>,
 
-    // player_scroll_query: Query<(&PlayerScroll, Entity), With<Scroll>>,
     mut scroll_event: EventReader<UpdateScrollEvent>,
 ) {
     // create 2 or 3 more dialogBox to display the max choice possible
@@ -823,7 +974,7 @@ pub fn update_scroll(
     // .insert(DialogBox::new(choice[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
 
     for _ev in scroll_event.iter() {
-        info!("Scroll Event !");
+        info!("- Upper - Scroll Event !");
 
         for (upper_scroll, upper_scroll_entity) in upper_scroll_query.iter() {
             // let text = upper_scroll.texts.pop();
@@ -835,9 +986,10 @@ pub fn update_scroll(
                     match dialog_box_query.get_mut(upper_scroll_entity) {
                         Err(_e) => {
                             info!("// DEBUG: no DialogBox in the UpperScroll");
-                            commands
-                                .entity(upper_scroll_entity)
-                                .insert(DialogBox::new(dialog_box_text.clone(), DIALOG_BOX_UPDATE_DELTA_S));
+                            commands.entity(upper_scroll_entity).insert(DialogBox::new(
+                                dialog_box_text.clone(),
+                                DIALOG_BOX_UPDATE_DELTA_S,
+                            ));
                         }
                         Ok((mut dialog_box, children, _)) => {
                             // FIXME: bug - Reset the text even if there is no change
@@ -847,7 +999,10 @@ pub fn update_scroll(
                                 Ok(mut text) => {
                                     text.sections[0].value.clear();
                                     // replace current DialogBox with a brand new one
-                                    *dialog_box = DialogBox::new(dialog_box_text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                                    *dialog_box = DialogBox::new(
+                                        dialog_box_text.clone(),
+                                        DIALOG_BOX_UPDATE_DELTA_S,
+                                    );
                                 }
                                 Err(e) => warn!("No Text Section: {:?}", e),
                             }
@@ -860,19 +1015,80 @@ pub fn update_scroll(
                 }
             }
         }
+    }
+}
 
-        // for (player_scroll, player_scroll_entity) in player_scroll_query.iter() {
-        //     // TODO: remove all previous Choice
-        //     // commands
-        //     //     .entity(player_scroll_entity)
-        //     //     .remove::<DialogBox>();
+/// Create a Dialogox and a button for the first choice contained in the Player Scroll
+///
+/// TODO: Create the perfect amount of DialogBox for the Player Scroll
+pub fn update_player_scroll(
+    mut commands: Commands,
 
-        //     for choice in player_scroll.choices.iter() {
-        //         commands
-        //             .entity(player_scroll_entity)
-        //             .insert(DialogBox::new(choice.clone(), DIALOG_BOX_UPDATE_DELTA_S));
-        //     }
-        // }
+    // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
+    player_scroll_query: Query<(&PlayerScroll, &Children, Entity), With<Scroll>>,
+    mut dialog_box_query: Query<
+        (&mut DialogBox, &Children, Entity),
+        (With<Scroll>, With<PlayerScroll>),
+    >,
+
+    mut text_query: Query<&mut Text>,
+    dialog_box_resources: Res<DialogBoxResources>,
+
+    mut scroll_event: EventReader<UpdateScrollEvent>,
+) {
+    // create 2 or 3 more dialogBox to display the max choice possible
+    // carefull when choice is empty
+    // .insert(DialogBox::new(choice[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
+
+    for _ev in scroll_event.iter() {
+        info!("- Player - Scroll Event !");
+
+        for (player_scroll, scroll_children, _player_scroll_entity) in player_scroll_query.iter() {
+            let mut place = 0;
+            // info!("empty player scroll");
+            // send event to close (reverse open) upper scroll ?
+
+            // REFACTOR: every 3 choices create a page and start again from the 1st child
+            for choice in &player_scroll.choices {
+                info!("player scroll gain a choice");
+                // FIXME: CRASH HERE OutOfBound if place > 3 (view the refactor above)
+                match dialog_box_query.get_mut(scroll_children[place]) {
+                    Ok((mut dialog_box, box_children, _)) => {
+                        // FIXME: bug - Reset the text even if there is no change
+                        info!("// DEBUG: DialogBox in the PScroll Detected");
+                        // Clear the DialogBox Child: the Text
+                        match text_query.get_mut(box_children[0]) {
+                            Ok(mut text) => {
+                                text.sections[0].value.clear();
+                                // replace current DialogBox with a brand new one
+                                *dialog_box =
+                                    DialogBox::new(choice.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                            }
+                            Err(e) => warn!("No Text Section: {:?}", e),
+                        }
+                    }
+                    Err(_e) => {
+                        info!(
+                            "// DEBUG: no DialogBox at the (right) {}e place in PlayerScroll",
+                            place
+                        );
+
+                        // Insert a newDialogBox;
+                        // update_dialog_box still works;
+                        // and player scroll can contain multiple choice
+                        // that will be displayed at the same time
+
+                        commands
+                            .entity(scroll_children[place])
+                            .insert(DialogBox::new(
+                                choice.clone(),
+                                DIALOG_BOX_UPDATE_DELTA_S,
+                            ));
+                    }
+                }
+                place = place + 1;
+            }
+        }
     }
 }
 
