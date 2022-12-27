@@ -3,7 +3,7 @@ use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
 
 use crate::npc::NPC;
 use crate::player::Player;
-use crate::ui::dialog_box::{PlayerScroll, UpperScroll};
+use crate::ui::dialog_box::{DialogPanel, PlayerScroll, UpperScroll};
 
 pub struct DebugPlugin;
 
@@ -16,6 +16,8 @@ impl Plugin for DebugPlugin {
 
                 // UI
 
+                .register_inspectable::<DialogPanel>()
+                // .register_inspectable::<DialogBox>()
                 .register_inspectable::<UpperScroll>()
                 .register_inspectable::<PlayerScroll>()
                 ;

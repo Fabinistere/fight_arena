@@ -27,7 +27,7 @@ use crate::{
 use super::dialog_system::Dialog;
 
 /// TODO: feature - sync author with interlocutor (to know which one is talking)
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 pub struct DialogPanel {
     // keep track of the origanal interlocutor
     // their dialog will be change/update in update_dialog_tree
@@ -38,7 +38,7 @@ pub struct DialogPanel {
 
 #[derive(Debug, Component)]
 pub struct DialogBox {
-    text: String,
+    pub text: String,
     progress: usize,
     finished: bool,
     update_timer: Timer,
@@ -93,7 +93,7 @@ pub struct PlayerScroll {
 
 /// Indicate a place where a choice can written
 #[derive(Component)]
-pub struct PlayerChoice;
+pub struct PlayerChoice(pub usize);
 
 /// save all choice we could have to display
 /// Two options :
@@ -486,6 +486,9 @@ pub fn create_dialog_box(
                         // will be changed in update_dialog_panel
                         texts: vec![],
                     })
+                    // REFACTOR: ? create a new impl for DialogBox with exactly this CST instead of calling this fn with the same param 4times..
+                    // With blank or null as init (will be update soon enoguht (by reset_dialog_box))
+                    // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                     .insert(Name::new("Upper Scroll"))
                     .insert(ScrollTimer(Timer::from_seconds(
                         SCROLL_ANIMATION_DELTA_S,
@@ -586,10 +589,10 @@ pub fn create_dialog_box(
                                     //     left: Val::Percent(24.0),
                                     //     ..UiRect::default()
                                     // },
-                                    justify_content: JustifyContent::SpaceAround,
+                                    // justify_content: JustifyContent::SpaceAround,
                                     position: UiRect {
-                                        top: Val::Percent(105.0),
-                                        left: Val::Percent(24.0),
+                                        top: Val::Px(-30.0),
+                                        left: Val::Px(10.0),
                                         ..UiRect::default()
                                     },
                                     ..default()
@@ -597,7 +600,8 @@ pub fn create_dialog_box(
                                 color: NORMAL_BUTTON.into(),
                                 ..default()
                             })
-                            .insert(PlayerChoice)
+                            .insert(PlayerChoice(0))
+                            // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                             .with_children(|parent| {
                                 parent.spawn_bundle(TextBundle {
                                     text: Text::from_section(
@@ -609,10 +613,12 @@ pub fn create_dialog_box(
                                             color: Color::BLACK,
                                         },
                                     )
-                                    .with_alignment(TextAlignment {
-                                        vertical: VerticalAlign::Top,
-                                        horizontal: HorizontalAlign::Left,
-                                    }),
+                                    .with_alignment(
+                                        TextAlignment {
+                                            vertical: VerticalAlign::Top,
+                                            horizontal: HorizontalAlign::Left,
+                                        },
+                                    ),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
@@ -639,10 +645,10 @@ pub fn create_dialog_box(
                                     //     left: Val::Percent(24.0),
                                     //     ..UiRect::default()
                                     // },
-                                    justify_content: JustifyContent::SpaceAround,
+                                    // justify_content: JustifyContent::SpaceAround,
                                     position: UiRect {
-                                        top: Val::Percent(105.0),
-                                        left: Val::Percent(24.0),
+                                        top: Val::Px(250.0),
+                                        left: Val::Px(10.0),
                                         ..UiRect::default()
                                     },
                                     ..default()
@@ -650,7 +656,8 @@ pub fn create_dialog_box(
                                 color: NORMAL_BUTTON.into(),
                                 ..default()
                             })
-                            .insert(PlayerChoice)
+                            .insert(PlayerChoice(1))
+                            // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                             .with_children(|parent| {
                                 parent.spawn_bundle(TextBundle {
                                     text: Text::from_section(
@@ -662,10 +669,12 @@ pub fn create_dialog_box(
                                             color: Color::BLACK,
                                         },
                                     )
-                                    .with_alignment(TextAlignment {
-                                        vertical: VerticalAlign::Top,
-                                        horizontal: HorizontalAlign::Left,
-                                    }),
+                                    .with_alignment(
+                                        TextAlignment {
+                                            vertical: VerticalAlign::Top,
+                                            horizontal: HorizontalAlign::Left,
+                                        },
+                                    ),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
@@ -692,10 +701,10 @@ pub fn create_dialog_box(
                                     //     left: Val::Percent(24.0),
                                     //     ..UiRect::default()
                                     // },
-                                    justify_content: JustifyContent::SpaceAround,
+                                    // justify_content: JustifyContent::SpaceAround,
                                     position: UiRect {
-                                        top: Val::Percent(105.0),
-                                        left: Val::Percent(24.0),
+                                        top: Val::Px(530.0),
+                                        left: Val::Px(10.0),
                                         ..UiRect::default()
                                     },
                                     ..default()
@@ -703,7 +712,8 @@ pub fn create_dialog_box(
                                 color: NORMAL_BUTTON.into(),
                                 ..default()
                             })
-                            .insert(PlayerChoice)
+                            .insert(PlayerChoice(2))
+                            // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                             .with_children(|parent| {
                                 parent.spawn_bundle(TextBundle {
                                     text: Text::from_section(
@@ -715,10 +725,12 @@ pub fn create_dialog_box(
                                             color: Color::BLACK,
                                         },
                                     )
-                                    .with_alignment(TextAlignment {
-                                        vertical: VerticalAlign::Top,
-                                        horizontal: HorizontalAlign::Left,
-                                    }),
+                                    .with_alignment(
+                                        TextAlignment {
+                                            vertical: VerticalAlign::Top,
+                                            horizontal: HorizontalAlign::Left,
+                                        },
+                                    ),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
@@ -809,6 +821,7 @@ pub fn update_dialog_panel(
     mut ev_combat_exit: EventWriter<CombatExitEvent>,
     mut create_scroll_content: EventWriter<UpdateScrollEvent>,
 ) {
+    // REFACTOR: Never Nester Mode requested
     // TODO: feature - find a way to execute trigger_event somewhere
 
     // the panel must be open already
@@ -821,7 +834,7 @@ pub fn update_dialog_panel(
                 // Nothing change yet
             }
             Ok((_interlocutor_entity, name, mut dialog)) => {
-                info!("// DEBUG: smth changed...");
+                info!("DEBUG: smth changed...");
                 // check what is the current dialog node
                 match &dialog.current_node {
                     None => {
@@ -870,7 +883,7 @@ pub fn update_dialog_panel(
                                     match dialog {
                                         DialogType::Text(text) => {
                                             texts.push(text.to_owned());
-                                            info!("// DEBUG: add text: {}", text);
+                                            info!("DEBUG: add text: {}", text);
                                         }
                                         _ => panic!("Err: DialogTree Incorrect; A texts' vector contains something else"),
                                     }
@@ -901,13 +914,13 @@ pub fn update_dialog_panel(
                                                     let (_player, karma) = player_query.single();
                                                     if cond.is_verified(karma.0) {
                                                         choices.push(text.to_owned());
-                                                        info!("// DEBUG: add choice: {}", text);
+                                                        info!("DEBUG: add choice: {}", text);
                                                     }
                                                 }
                                                 // no condition
                                                 None => {
                                                     choices.push(text.to_owned());
-                                                    info!("// DEBUG: add choice: {}", text);
+                                                    info!("DEBUG: add choice: {}", text);
                                                 }
                                             }
                                         }
@@ -956,23 +969,13 @@ pub fn update_dialog_tree(
 /// Handle by event allow us to execute animation when any update occurs;
 /// For example, the closure opening to clear and display.
 pub fn update_upper_scroll(
-    mut commands: Commands,
+    mut scroll_event: EventReader<UpdateScrollEvent>,
 
     // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
     upper_scroll_query: Query<(&UpperScroll, Entity), With<Scroll>>,
-    mut dialog_box_query: Query<
-        (&mut DialogBox, &Children, Entity),
-        (With<Scroll>, With<UpperScroll>),
-    >,
 
-    mut text_query: Query<&mut Text>,
-
-    mut scroll_event: EventReader<UpdateScrollEvent>,
+    mut reset_event: EventWriter<ResetDialogBoxEvent>,
 ) {
-    // create 2 or 3 more dialogBox to display the max choice possible
-    // carefull when choice is empty
-    // .insert(DialogBox::new(choice[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
-
     for _ev in scroll_event.iter() {
         info!("- Upper - Scroll Event !");
 
@@ -980,38 +983,17 @@ pub fn update_upper_scroll(
             // let text = upper_scroll.texts.pop();
             // just collect the first without removing it
             match upper_scroll.texts.first() {
-                Some(dialog_box_text) => {
-                    info!("upper scroll gain a text");
-
-                    match dialog_box_query.get_mut(upper_scroll_entity) {
-                        Err(_e) => {
-                            info!("// DEBUG: no DialogBox in the UpperScroll");
-                            commands.entity(upper_scroll_entity).insert(DialogBox::new(
-                                dialog_box_text.clone(),
-                                DIALOG_BOX_UPDATE_DELTA_S,
-                            ));
-                        }
-                        Ok((mut dialog_box, children, _)) => {
-                            // FIXME: bug - Reset the text even if there is no change
-                            info!("// DEBUG: DialogBox in the UScroll Detected");
-                            // Clear the DialogBox Child: the Text
-                            match text_query.get_mut(children[0]) {
-                                Ok(mut text) => {
-                                    text.sections[0].value.clear();
-                                    // replace current DialogBox with a brand new one
-                                    *dialog_box = DialogBox::new(
-                                        dialog_box_text.clone(),
-                                        DIALOG_BOX_UPDATE_DELTA_S,
-                                    );
-                                }
-                                Err(e) => warn!("No Text Section: {:?}", e),
-                            }
-                        }
-                    }
-                }
                 None => {
                     info!("empty upper scroll");
                     // send event to close (reverse open) upper scroll ?
+                }
+                Some(dialog_box_text) => {
+                    info!("upper scroll gain a text");
+
+                    reset_event.send(ResetDialogBoxEvent {
+                        dialog_box: upper_scroll_entity,
+                        text: dialog_box_text.to_owned(),
+                    });
                 }
             }
         }
@@ -1021,73 +1003,42 @@ pub fn update_upper_scroll(
 /// Create a Dialogox and a button for the first choice contained in the Player Scroll
 ///
 /// TODO: Create the perfect amount of DialogBox for the Player Scroll
+///
+/// and player scroll can contain multiple choice
+/// that will be displayed at the same time
+///
+/// DOC
 pub fn update_player_scroll(
-    mut commands: Commands,
+    mut scroll_event: EventReader<UpdateScrollEvent>,
 
     // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
     player_scroll_query: Query<(&PlayerScroll, &Children, Entity), With<Scroll>>,
-    mut dialog_box_query: Query<
-        (&mut DialogBox, &Children, Entity),
-        (With<Scroll>, With<PlayerScroll>),
-    >,
 
-    mut text_query: Query<&mut Text>,
-    dialog_box_resources: Res<DialogBoxResources>,
-
-    mut scroll_event: EventReader<UpdateScrollEvent>,
+    mut reset_event: EventWriter<ResetDialogBoxEvent>,
 ) {
-    // create 2 or 3 more dialogBox to display the max choice possible
-    // carefull when choice is empty
-    // .insert(DialogBox::new(choice[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
-
     for _ev in scroll_event.iter() {
         info!("- Player - Scroll Event !");
 
+        // REFACTOR: single not for all (see the fixme: prevent multiple Ui Wall)
         for (player_scroll, scroll_children, _player_scroll_entity) in player_scroll_query.iter() {
             let mut place = 0;
-            // info!("empty player scroll");
-            // send event to close (reverse open) upper scroll ?
 
             // REFACTOR: every 3 choices create a page and start again from the 1st child
             for choice in &player_scroll.choices {
-                info!("player scroll gain a choice");
                 // FIXME: CRASH HERE OutOfBound if place > 3 (view the refactor above)
-                match dialog_box_query.get_mut(scroll_children[place]) {
-                    Ok((mut dialog_box, box_children, _)) => {
-                        // FIXME: bug - Reset the text even if there is no change
-                        info!("// DEBUG: DialogBox in the PScroll Detected");
-                        // Clear the DialogBox Child: the Text
-                        match text_query.get_mut(box_children[0]) {
-                            Ok(mut text) => {
-                                text.sections[0].value.clear();
-                                // replace current DialogBox with a brand new one
-                                *dialog_box =
-                                    DialogBox::new(choice.clone(), DIALOG_BOX_UPDATE_DELTA_S);
-                            }
-                            Err(e) => warn!("No Text Section: {:?}", e),
-                        }
-                    }
-                    Err(_e) => {
-                        info!(
-                            "// DEBUG: no DialogBox at the (right) {}e place in PlayerScroll",
-                            place
-                        );
 
-                        // Insert a newDialogBox;
-                        // update_dialog_box still works;
-                        // and player scroll can contain multiple choice
-                        // that will be displayed at the same time
+                reset_event.send(ResetDialogBoxEvent {
+                    dialog_box: scroll_children[place],
+                    text: choice.to_owned(),
+                });
 
-                        commands
-                            .entity(scroll_children[place])
-                            .insert(DialogBox::new(
-                                choice.clone(),
-                                DIALOG_BOX_UPDATE_DELTA_S,
-                            ));
-                    }
-                }
                 place = place + 1;
             }
+            info!("DEBUG: player scroll gain {} choice-s", place);
+
+            // if no choice
+            // info!("empty player scroll");
+            // send event to close (reverse open) upper scroll ?
         }
     }
 }
@@ -1108,6 +1059,7 @@ pub fn update_dialog_box(
                     // FIXME: bug - if the given text contains a accent this will crash
                     match dialog_box.text.chars().nth(dialog_box.progress) {
                         // will ignore any louche symbol
+                        // FIXME: infinite call when there is a accent
                         None => warn!("Accent Typical Crash"),
                         Some(next_letter) => {
                             text.sections[0].value.push(next_letter);
@@ -1156,6 +1108,60 @@ pub fn animate_scroll(
             }
 
             image.0 = dialog_box_resources.scroll_animation[scroll.current_frame].clone();
+        }
+    }
+}
+
+/// DOC
+pub struct ResetDialogBoxEvent {
+    dialog_box: Entity,
+    /// could be
+    ///
+    /// - a Choice
+    /// - a Text
+    text: String,
+}
+
+/// DOC
+///
+/// Reset DialogBox on Event
+///
+/// # Err
+///
+/// In case of a missing DialogBox, add one...
+pub fn reset_dialog_box(
+    mut commands: Commands,
+
+    mut reset_event: EventReader<ResetDialogBoxEvent>,
+
+    mut dialog_box_query: Query<
+        (&mut DialogBox, &Children, Entity),
+        Or<(With<PlayerChoice>, With<UpperScroll>)>,
+    >,
+    mut text_query: Query<&mut Text>,
+) {
+    for event in reset_event.iter() {
+        // REFACTOR: Insert DialogBox right at the creation (remove a complete match)
+        match dialog_box_query.get_mut(event.dialog_box) {
+            Err(_e) => {
+                warn!("DEBUG: no DialogBox in the UpperScroll");
+                commands.entity(event.dialog_box).insert(DialogBox::new(
+                    event.text.clone(),
+                    DIALOG_BOX_UPDATE_DELTA_S,
+                ));
+            }
+            Ok((mut dialog_box, children, _)) => {
+                // FIXME: bug - Reset the text even if there is no change
+                // Clear the DialogBox Child: the Text
+                match text_query.get_mut(children[0]) {
+                    Err(e) => warn!("No Text Section: {:?}", e),
+                    Ok(mut text) => {
+                        text.sections[0].value.clear();
+                        // replace current DialogBox with a brand new one
+                        *dialog_box = DialogBox::new(event.text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                    }
+                }
+            }
         }
     }
 }
