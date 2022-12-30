@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
 
+use crate::collisions::{TesselatedCollider, TesselatedColliderConfig};
 use crate::npc::NPC;
 use crate::player::Player;
 use crate::ui::dialog_box::{DialogPanel, PlayerScroll, UpperScroll};
@@ -20,6 +21,11 @@ impl Plugin for DebugPlugin {
                 // .register_inspectable::<DialogBox>()
                 .register_inspectable::<UpperScroll>()
                 .register_inspectable::<PlayerScroll>()
+
+                // hitbox
+
+                .register_inspectable::<TesselatedCollider>()
+                .register_inspectable::<TesselatedColliderConfig>()
                 ;
         }
     }
