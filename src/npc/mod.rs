@@ -80,13 +80,13 @@ impl Plugin for NPCPlugin {
             // when an enemy npc catch the player or an ally attached to the group
             // initialize a Combat
             // Combat mean A lock dialogue : Talk or Fight
-            .add_event::<aggression::CombatEvent>()
-            .add_event::<aggression::CombatExitEvent>()
             .add_event::<aggression::StopChaseEvent>()
             .add_event::<aggression::DetectionModeEvent>()
             .add_event::<aggression::EngagePursuitEvent>()
+
             .add_startup_system(spawn_characters)
             .add_startup_system(spawn_aggresives_characters)
+            
             .add_system_set_to_stage(
                 CoreStage::Update,
                 SystemSet::new()

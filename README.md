@@ -52,7 +52,14 @@ Press o to see the grateful future
         ExecuteSkills-->Observation;
     ```
 
-## Assets deported - Ecological Issue
+## Contribute
+
+Release's format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+This project also follows to [A successful Git branching model](https://nvie.com/posts/a-successful-git-branching-model/).
+
+### Assets deported - Ecological Issue
 
 From now on, all my repertory using musics and images changing a lot will have a particular folder in our org's cloud.
 To avoid using the git storage for such maters.
