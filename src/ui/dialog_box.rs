@@ -14,12 +14,9 @@ use bevy_tweening::{lens::UiPositionLens, *};
 use std::time::Duration;
 
 use crate::{
-    combat::Karma,
+    combat::{CombatEvent, CombatExitEvent, Karma},
     constants::ui::dialogs::*,
-    npc::{
-        aggression::{CombatEvent, CombatExitEvent},
-        NPC,
-    },
+    npc::NPC,
     player::Player,
     ui::dialog_system::{init_tree_file, DialogType},
 };
@@ -27,18 +24,18 @@ use crate::{
 use super::dialog_system::Dialog;
 
 /// TODO: feature - sync author with interlocutor (to know which one is talking)
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 pub struct DialogPanel {
     // keep track of the origanal interlocutor
     // their dialog will be change/update in update_dialog_tree
     pub main_interlocutor: Entity,
     // XXX: will allow us to detect change especially in the opening
-    dialog_tree: String,
+    pub dialog_tree: String,
 }
 
 #[derive(Debug, Component)]
 pub struct DialogBox {
-    text: String,
+    pub text: String,
     progress: usize,
     finished: bool,
     update_timer: Timer,
@@ -91,6 +88,10 @@ pub struct PlayerScroll {
     pub choices: Vec<String>,
 }
 
+/// Indicate a place where a choice can written
+#[derive(Component)]
+pub struct PlayerChoice(pub usize);
+
 /// save all choice we could have to display
 /// Two options :
 ///
@@ -111,9 +112,13 @@ pub struct UpperScroll {
 ///   - ui::dialog_box::create_dialog_box
 ///     - UI Wall creation
 /// Read in
-///   - ui::dialog_box::update_scroll
-///     - Have to insert DialogBox into the scroll
-///     With correct amount / position
+///   - ui::dialog_box::update_upper_scroll
+///     - create a dialogBox with the text contained in the UpperScroll,
+///     or update Text in existing dialogBox.
+///   - ui::dialog_box::update_player_scroll
+///     - update choices displayed in the player scroll.
+///     Have to insert DialogBox into the scroll,
+///     With correct amount / position.
 pub struct UpdateScrollEvent;
 
 /// Happens when
@@ -179,9 +184,9 @@ pub fn load_textures(
 }
 
 /// # Note
-/// 
+///
 /// TODO: feature - exit the personal thought or any tab when being touch by aggro
-/// 
+///
 /// FIXME: PB Spamming the ui key 'o'; ?throws an error
 pub fn create_dialog_box_on_key_press(
     mut create_dialog_box_event: EventWriter<CreateDialogBoxEvent>,
@@ -222,27 +227,27 @@ pub fn create_dialog_box_on_key_press(
 }
 
 /// # Event Handler
-/// 
+///
 /// **Handle** the CombatEvent
 ///
 /// **Read** CombatEvent
 ///     open a new ui / or got to Discussion ui
-/// 
+///
 /// # Behavior
-/// 
+///
 /// Interpret the dialog carried by the entity.
-/// 
+///
 /// In Dialog Sequence,
 /// we might -want to- have the last text
 /// when the player is ask to choose a answer.
-/// 
+///
 /// For simplificity,
 /// the feature: `recreate the dialog tree to include the last text in the root`
 /// is deactivated.
-/// 
+///
 /// So, when the dialog is stopped during a choice,
 /// the root of the dialog tree is not modified and contains only the previous choice.
-/// 
+///
 /// Unlucky situation :
 /// having to answer something without the context.
 pub fn create_dialog_box_on_combat_event(
@@ -478,6 +483,9 @@ pub fn create_dialog_box(
                         // will be changed in update_dialog_panel
                         texts: vec![],
                     })
+                    // REFACTOR: ? create a new impl for DialogBox with exactly this CST instead of calling this fn with the same param 4times..
+                    // With blank or null as init (will be update soon enoguht (by reset_dialog_box))
+                    // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                     .insert(Name::new("Upper Scroll"))
                     .insert(ScrollTimer(Timer::from_seconds(
                         SCROLL_ANIMATION_DELTA_S,
@@ -513,16 +521,17 @@ pub fn create_dialog_box(
                     // .insert(DialogBox::new(dialog[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
                     ;
 
-                // parent.spawn_bundle(ImageBundle {
-                //     image: texture_atlases
-                //         .get(dialog_box_resources.scroll_animation.clone())
-                //         .unwrap()
-                //         .texture
-                //         .clone_weak()
-                //         .into(),
-                //     style: child_sprite_style.clone(),
-                //     ..ImageBundle::default()
-                // });
+                // parent
+                //     .spawn_bundle(ImageBundle {
+                //         image: texture_atlases
+                //             .get(dialog_box_resources.scroll_animation.clone())
+                //             .unwrap()
+                //             .texture
+                //             .clone_weak()
+                //             .into(),
+                //         style: child_sprite_style.clone(),
+                //         ..ImageBundle::default()
+                //     });
 
                 // Player Scroll
 
@@ -557,60 +566,210 @@ pub fn create_dialog_box(
                         false,
                     )))
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
-                            text: Text::from_section(
-                                "",
-                                TextStyle {
-                                    font: dialog_box_resources.text_font.clone(),
-                                    font_size: 30.0,
-                                    color: Color::BLACK,
+                        // TODO: feature - 3 PlayerChoice is enough, to have much reuse theses three in another page
+
+                        // TODO: feature - Activate/Deactivate Button display when no text
+                        // see https://bevy-cheatbook.github.io/features/visibility.html
+
+                        // TODO: stop center text and button
+                        // TODO: regain control on margin style (taken by button)
+
+                        // First potential choice
+                        parent
+                            .spawn_bundle(ButtonBundle {
+                                style: Style {
+                                    // TODO: custom size ? (text dependent)
+                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                    margin: UiRect::all(Val::Auto),
+                                    // margin: UiRect {
+                                    //     top: Val::Percent(105.0),
+                                    //     left: Val::Percent(24.0),
+                                    //     ..UiRect::default()
+                                    // },
+                                    // justify_content: JustifyContent::SpaceAround,
+                                    position: UiRect {
+                                        top: Val::Px(-30.0),
+                                        left: Val::Px(10.0),
+                                        ..UiRect::default()
+                                    },
+                                    ..default()
                                 },
-                            )
-                            .with_alignment(TextAlignment {
-                                vertical: VerticalAlign::Top,
-                                horizontal: HorizontalAlign::Left,
-                            }),
-                            style: Style {
-                                flex_wrap: FlexWrap::Wrap,
-                                margin: UiRect {
-                                    top: Val::Percent(74.0),
-                                    left: Val::Percent(24.0),
-                                    ..UiRect::default()
+                                color: NORMAL_BUTTON.into(),
+                                ..default()
+                            })
+                            .insert(PlayerChoice(0))
+                            // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
+                            .with_children(|parent| {
+                                parent.spawn_bundle(TextBundle {
+                                    text: Text::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: dialog_box_resources.text_font.clone(),
+                                            // TODO: Find the correct value for the choice font size
+                                            font_size: 20.0,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_alignment(
+                                        TextAlignment {
+                                            vertical: VerticalAlign::Top,
+                                            horizontal: HorizontalAlign::Left,
+                                        },
+                                    ),
+                                    style: Style {
+                                        flex_wrap: FlexWrap::Wrap,
+                                        margin: UiRect {
+                                            top: Val::Percent(100.0),
+                                            left: Val::Percent(0.0),
+                                            ..UiRect::default()
+                                        },
+                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        ..Style::default()
+                                    },
+                                    ..TextBundle::default()
+                                });
+                            });
+
+                        // Second potential choice
+                        parent
+                            .spawn_bundle(ButtonBundle {
+                                style: Style {
+                                    // TODO: custom size ? (text dependent)
+                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                    margin: UiRect::all(Val::Auto),
+                                    // margin: UiRect {
+                                    //     top: Val::Percent(125.0),
+                                    //     left: Val::Percent(24.0),
+                                    //     ..UiRect::default()
+                                    // },
+                                    // justify_content: JustifyContent::SpaceAround,
+                                    position: UiRect {
+                                        top: Val::Px(250.0),
+                                        left: Val::Px(10.0),
+                                        ..UiRect::default()
+                                    },
+                                    ..default()
                                 },
-                                max_size: Size::new(Val::Px(450.0), Val::Percent(100.0)),
-                                ..Style::default()
-                            },
-                            ..TextBundle::default()
-                        });
+                                color: NORMAL_BUTTON.into(),
+                                ..default()
+                            })
+                            .insert(PlayerChoice(1))
+                            // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
+                            .with_children(|parent| {
+                                parent.spawn_bundle(TextBundle {
+                                    text: Text::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: dialog_box_resources.text_font.clone(),
+                                            // TODO: Find the correct value for the choice font size
+                                            font_size: 20.0,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_alignment(
+                                        TextAlignment {
+                                            vertical: VerticalAlign::Top,
+                                            horizontal: HorizontalAlign::Left,
+                                        },
+                                    ),
+                                    style: Style {
+                                        flex_wrap: FlexWrap::Wrap,
+                                        margin: UiRect {
+                                            top: Val::Percent(100.0),
+                                            left: Val::Percent(0.0),
+                                            ..UiRect::default()
+                                        },
+                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        ..Style::default()
+                                    },
+                                    ..TextBundle::default()
+                                });
+                            });
+
+                        // Third potential choice
+                        parent
+                            .spawn_bundle(ButtonBundle {
+                                style: Style {
+                                    // TODO: custom size ? (text dependent)
+                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                    margin: UiRect::all(Val::Auto),
+                                    // margin: UiRect {
+                                    //     top: Val::Percent(145.0),
+                                    //     left: Val::Percent(24.0),
+                                    //     ..UiRect::default()
+                                    // },
+                                    // justify_content: JustifyContent::SpaceAround,
+                                    position: UiRect {
+                                        top: Val::Px(530.0),
+                                        left: Val::Px(10.0),
+                                        ..UiRect::default()
+                                    },
+                                    ..default()
+                                },
+                                color: NORMAL_BUTTON.into(),
+                                ..default()
+                            })
+                            .insert(PlayerChoice(2))
+                            // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
+                            .with_children(|parent| {
+                                parent.spawn_bundle(TextBundle {
+                                    text: Text::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: dialog_box_resources.text_font.clone(),
+                                            // TODO: Find the correct value for the choice font size
+                                            font_size: 20.0,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_alignment(
+                                        TextAlignment {
+                                            vertical: VerticalAlign::Top,
+                                            horizontal: HorizontalAlign::Left,
+                                        },
+                                    ),
+                                    style: Style {
+                                        flex_wrap: FlexWrap::Wrap,
+                                        margin: UiRect {
+                                            top: Val::Percent(100.0),
+                                            left: Val::Percent(0.0),
+                                            ..UiRect::default()
+                                        },
+                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        ..Style::default()
+                                    },
+                                    ..TextBundle::default()
+                                });
+                            });
                     });
 
                 // Button
 
-                parent
-                    .spawn_bundle(ButtonBundle {
-                        style: Style {
-                            size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                            // center button
-                            margin: UiRect::all(Val::Auto),
-                            // horizontally center child text
-                            justify_content: JustifyContent::Center,
-                            // vertically center child text
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
-                        color: NORMAL_BUTTON.into(),
-                        ..default()
-                    })
-                    .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle::from_section(
-                            "Button",
-                            TextStyle {
-                                font: asset_server.load("fonts/dpcomic.ttf"),
-                                font_size: 40.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                            },
-                        ));
-                    });
+                // parent
+                //     .spawn_bundle(ButtonBundle {
+                //         style: Style {
+                //             size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                //             // center button
+                //             margin: UiRect::all(Val::Auto),
+                //             // horizontally center child text
+                //             justify_content: JustifyContent::Center,
+                //             // vertically center child text
+                //             align_items: AlignItems::Center,
+                //             ..default()
+                //         },
+                //         color: NORMAL_BUTTON.into(),
+                //         ..default()
+                //     })
+                //     .with_children(|parent| {
+                //         parent.spawn_bundle(TextBundle::from_section(
+                //             "Button",
+                //             TextStyle {
+                //                 font: asset_server.load("fonts/dpcomic.ttf"),
+                //                 font_size: 40.0,
+                //                 color: Color::rgb(0.9, 0.9, 0.9),
+                //             },
+                //         ));
+                //     });
             })
             .insert(DialogPanel {
                 main_interlocutor: *interlocutor,
@@ -645,146 +804,120 @@ pub fn create_dialog_box(
 ///   - NPC Choice
 ///     TODO: feature - NPC Choice
 pub fn update_dialog_panel(
+    panel_query: Query<
+        (Entity, &DialogPanel),
+        // REFACTOR: Handle the interlocutor change in the UIPanel
+        // even detect interlocutor change
+        (Changed<DialogPanel>, With<Animator<Style>>),
+    >,
+
     mut upper_scroll_query: Query<(&mut UpperScroll, Entity), With<Scroll>>,
     mut player_scroll_query: Query<(&mut PlayerScroll, Entity), With<Scroll>>,
-    query: Query<(Entity, &Animator<Style>, &DialogPanel)>,
 
-    mut interlocutor_query: Query<
-        (Entity, &Name, &mut Dialog),
-        // NPC or Player
-        (Or<(With<Player>, With<NPC>)>, Changed<Dialog>),
-    >,
     player_query: Query<(Entity, &Karma), With<Player>>,
 
-    mut ev_combat_exit: EventWriter<CombatExitEvent>,
-    mut create_scroll_content: EventWriter<UpdateScrollEvent>,
+    mut end_node_dialog_event: EventWriter<EndNodeDialog>,
+    mut update_scroll_content: EventWriter<UpdateScrollEvent>,
 ) {
+    // REFACTOR: Never Nester Mode requested
+    // DOC: Noisy Comments
     // TODO: feature - find a way to execute trigger_event somewhere
 
-    // the panel must be open already
-    if let Ok((_ui_wall, _animator, panel)) = query.get_single() {
-        let interlocutor = panel.main_interlocutor;
+    // the panel must be open already and their dialog_tree modified
+    // else:
+    //   just wait for the DialogTree to change;
+    //   Nothing change yet
+    if let Ok((_ui_wall, panel)) = panel_query.get_single() {
+        info!("DEBUG: smth changed...");
 
-        match interlocutor_query.get_mut(interlocutor) {
-            Err(_e) => {
-                // just wait for the DialogTree to change
-                // Nothing change yet
+        let dialog_panel = &panel.dialog_tree;
+        // DEBUG: print DialogTree
+        println!("{:?}", dialog_panel);
+
+        // check what is the current dialog node
+        if dialog_panel.is_empty() {
+            // info!("DEBUG Empty Dialog Tree");
+            end_node_dialog_event.send(EndNodeDialog);
+        } else {
+            let dialog_tree = init_tree_file(dialog_panel.to_owned());
+
+            let current = &dialog_tree.borrow();
+
+            let dialogs = &current.dialog_type;
+
+            // throw Err(outOfBound) when dialog_type is empty (not intended)
+            if dialogs.len() < 1 {
+                // FIXME: handle this err
+                panic!("Err: dialog_type is empty");
             }
-            Ok((_interlocutor_entity, name, mut dialog)) => {
-                info!("// DEBUG: smth changed...");
-                // check what is the current dialog node
-                match &dialog.current_node {
-                    None => {
-                        // TODO: feature - manage a cast of NPC choice for each dialog
-                        // with a priority system to choose
-                        // engaging a dialog will then choose a certain dialog from the cast
-                        // leaving mid course will save the current dialog
-                        // UNLESS there is a overide
-                        // in case of big event, cancel previous dialog to stick to the main line
 
-                        // reset the dialog to the first node: NPC's Choice cast
+            let (mut player_scroll, _player_scroll_entity) = player_scroll_query.single_mut();
 
-                        info!("exit dialog");
-
-                        // replace the current tree by a simple text: `...`
-                        let display_name = name.replace("NPC ", "");
-
-                        let dialog_tree = "# name\n\n- ...\n"
-                            .replace("name", &display_name)
-                            .to_owned();
-
-                        dialog.current_node = Some(dialog_tree);
-
-                        ev_combat_exit.send(CombatExitEvent);
-
-                        // at the next enconter there will be ... as dialog
-                        // prevent closing the dialog_panel instant after engaging dialog
-                    }
-                    Some(text) => {
-                        let dialog_tree = init_tree_file(text.to_string());
-
-                        let current = &dialog_tree.borrow();
-
-                        let dialogs = &current.dialog_type;
-
-                        // throw Err(outOfBound) when dialog_type is empty (not intended)
-                        if dialogs.len() < 1 {
-                            panic!("Err: dialog_type is empty");
-                        }
-
-                        // check the first elem of the DialogType's Vector
-                        match &dialogs[0] {
-                            DialogType::Text(_) => {
-                                let mut texts = Vec::<String>::new();
-                                for dialog in dialogs.iter() {
-                                    match dialog {
-                                        DialogType::Text(text) => {
-                                            texts.push(text.to_owned());
-                                            info!("// DEBUG: add text: {}", text);
-                                        }
-                                        _ => panic!("Err: DialogTree Incorrect; A texts' vector contains something else"),
-                                    }
-                                }
-                                // replace the entire upper scroll's content
-                                // FIXME: single - if let - first opening or already open
-                                let (mut upper_scroll, _upper_scroll_entity) =
-                                    upper_scroll_query.single_mut();
-                                upper_scroll.texts = texts;
-
-                                // Clear the previous choice if there is any
-                                // OPTIMIZE: same query call in the next section of the match - merge code -
-                                let (mut player_scroll, _player_scroll_entity) =
-                                    player_scroll_query.single_mut();
-                                player_scroll.choices.clear();
-                                
+            // check the first elem of the DialogType's Vector
+            match &dialogs[0] {
+                DialogType::Text(_) => {
+                    let mut texts = Vec::<String>::new();
+                    for dialog in dialogs.iter() {
+                        match dialog {
+                            DialogType::Text(text) => {
+                                texts.push(text.to_owned());
+                                info!("DEBUG: add text: {}", text);
                             }
-                            DialogType::Choice {
-                                text: _,
-                                condition: _,
-                            } => {
-                                // replace current by the new set of choices
-                                let mut choices = Vec::<String>::new();
-                                for dialog in dialogs.iter() {
-                                    match dialog {
-                                        DialogType::Choice { text, condition } => {
-                                            match condition {
-                                                Some(cond) => {
-                                                    let (_player, karma) = player_query.single();
-                                                    if cond.is_verified(karma.0) {
-                                                        choices.push(text.to_owned());
-                                                        info!("// DEBUG: add choice: {}", text);
-                                                    }
-                                                }
-                                                // no condition
-                                                None => {
-                                                    choices.push(text.to_owned());
-                                                    info!("// DEBUG: add choice: {}", text);
-                                                }
-                                            }
-                                        }
-                                        _ => panic!("Err: DialogTree Incorrect; A choices' vector contains something else"),
-                                    }
-                                }
-                                // update the player_scroll
-                                let (mut player_scroll, _player_scroll_entity) =
-                                    player_scroll_query.single_mut();
-
-                                player_scroll.choices = choices;
-                            }
+                            _ => panic!("Err: DialogTree Incorrect; A texts' vector contains something else"),
                         }
                     }
+                    // replace the entire upper scroll's content
+                    // FIXME: ¿solved? single - if let - first opening or already open
+                    let (mut upper_scroll, _upper_scroll_entity) = upper_scroll_query.single_mut();
+                    upper_scroll.texts = texts;
+
+                    // Clear the previous choice if there is any
+                    player_scroll.choices.clear();
                 }
-                // ask to update the content of scroll
-                create_scroll_content.send(UpdateScrollEvent);
+                DialogType::Choice {
+                    text: _,
+                    condition: _,
+                } => {
+                    // replace current by the new set of choices
+                    let mut choices = Vec::<String>::new();
+                    for dialog in dialogs.iter() {
+                        match dialog {
+                            DialogType::Choice { text, condition } => {
+                                match condition {
+                                    Some(cond) => {
+                                        let (_player, karma) = player_query.single();
+                                        if cond.is_verified(karma.0) {
+                                            choices.push(text.to_owned());
+                                            info!("DEBUG: add choice: {}", text);
+                                        }
+                                    }
+                                    // no condition
+                                    None => {
+                                        choices.push(text.to_owned());
+                                        info!("DEBUG: add choice: {}", text);
+                                    }
+                                }
+                            }
+                            _ => panic!("Err: DialogTree Incorrect; A choices' vector contains something else"),
+                        }
+                    }
+                    // update the player_scroll
+                    player_scroll.choices = choices;
+                }
             }
+            // ask to update the content of scroll
+            update_scroll_content.send(UpdateScrollEvent);
         }
     }
 }
 
+/// # Save principe
+///
 /// Update the String within the entity interlocutor.
-/// It just update the Dialog contained in the interlocutor to be retrieve the next time we talk with it
-/// We want to save the dialog progress at each state.
+/// This just updates the Dialog contained in the interlocutor to be retrieve the next time we talk with it.
+/// We want to save the dialog progress at each state;
 /// Each time the dialog_tree of the panel is changed (?OR can be delay to the end of fight)
+///
 /// XXX: little trick to detect change especially in the creation phase
 pub fn update_dialog_tree(
     // XXX: issue? - will detect change if the interlocutor is switch
@@ -796,83 +929,91 @@ pub fn update_dialog_tree(
         let new_dialog_tree = panel.dialog_tree.clone();
         match interlocutor_query.get_mut(interlocutor) {
             Ok((_entity, mut dialog)) => dialog.current_node = Some(new_dialog_tree),
-            Err(_e) => warn!("The entity linked with the Ui Wall his Dialog Component"),
+            Err(e) => warn!(
+                "The entity linked with the Ui Wall doesn't have any Dialog Component: {:?}",
+                e
+            ),
         }
     }
 }
 
-/// Create the perfect amount of DialogBox for each Scroll
-/// Decrement the save on UpperScroll when the text is prompted
-pub fn update_scroll(
-    mut commands: Commands,
+/// Display the content of the first element contained in the Upper Scroll
+///
+/// REFACTOR: ? Handle by a event but just by query could be fine
+/// Handle by event allow us to execute animation when any update occurs;
+/// For example, the closure opening to clear and display.
+pub fn update_upper_scroll(
+    mut scroll_event: EventReader<UpdateScrollEvent>,
 
     // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
     upper_scroll_query: Query<(&UpperScroll, Entity), With<Scroll>>,
-    mut dialog_box_query: Query<
-        (&mut DialogBox, &Children, Entity),
-        (With<Scroll>, With<UpperScroll>),
-    >,
 
-    mut text_query: Query<&mut Text>,
-
-    // player_scroll_query: Query<(&PlayerScroll, Entity), With<Scroll>>,
-    mut scroll_event: EventReader<UpdateScrollEvent>,
+    mut reset_event: EventWriter<ResetDialogBoxEvent>,
 ) {
-    // create 2 or 3 more dialogBox to display the max choice possible
-    // carefull when choice is empty
-    // .insert(DialogBox::new(choice[0].clone(), DIALOG_BOX_UPDATE_DELTA_S))
-
     for _ev in scroll_event.iter() {
-        info!("Scroll Event !");
+        info!("- Upper - Scroll Event !");
 
         for (upper_scroll, upper_scroll_entity) in upper_scroll_query.iter() {
             // let text = upper_scroll.texts.pop();
             // just collect the first without removing it
             match upper_scroll.texts.first() {
+                None => {
+                    info!("empty upper scroll");
+                    // TODO: feature - send event to close (reverse open) upper scroll ?
+                }
                 Some(dialog_box_text) => {
                     info!("upper scroll gain a text");
 
-                    match dialog_box_query.get_mut(upper_scroll_entity) {
-                        Err(_e) => {
-                            info!("// DEBUG: no DialogBox in the UpperScroll");
-                            commands
-                                .entity(upper_scroll_entity)
-                                .insert(DialogBox::new(dialog_box_text.clone(), DIALOG_BOX_UPDATE_DELTA_S));
-                        }
-                        Ok((mut dialog_box, children, _)) => {
-                            // FIXME: bug - Reset the text even if there is no change
-                            info!("// DEBUG: DialogBox in the UScroll Detected");
-                            // Clear the DialogBox Child: the Text
-                            match text_query.get_mut(children[0]) {
-                                Ok(mut text) => {
-                                    text.sections[0].value.clear();
-                                    // replace current DialogBox with a brand new one
-                                    *dialog_box = DialogBox::new(dialog_box_text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
-                                }
-                                Err(e) => warn!("No Text Section: {:?}", e),
-                            }
-                        }
-                    }
-                }
-                None => {
-                    info!("empty upper scroll");
-                    // send event to close (reverse open) upper scroll ?
+                    reset_event.send(ResetDialogBoxEvent {
+                        dialog_box: upper_scroll_entity,
+                        text: dialog_box_text.to_owned(),
+                    });
                 }
             }
         }
+    }
+}
 
-        // for (player_scroll, player_scroll_entity) in player_scroll_query.iter() {
-        //     // TODO: remove all previous Choice
-        //     // commands
-        //     //     .entity(player_scroll_entity)
-        //     //     .remove::<DialogBox>();
+/// Create a Dialogox and a button for the first choice contained in the Player Scroll
+///
+/// TODO: Create the perfect amount of DialogBox for the Player Scroll
+///
+/// and player scroll can contain multiple choice
+/// that will be displayed at the same time
+///
+/// DOC
+pub fn update_player_scroll(
+    mut scroll_event: EventReader<UpdateScrollEvent>,
 
-        //     for choice in player_scroll.choices.iter() {
-        //         commands
-        //             .entity(player_scroll_entity)
-        //             .insert(DialogBox::new(choice.clone(), DIALOG_BOX_UPDATE_DELTA_S));
-        //     }
-        // }
+    // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
+    player_scroll_query: Query<(&PlayerScroll, &Children, Entity), With<Scroll>>,
+
+    mut reset_event: EventWriter<ResetDialogBoxEvent>,
+) {
+    for _ev in scroll_event.iter() {
+        info!("- Player - Scroll Event !");
+
+        // REFACTOR: single not for all (see the fixme: prevent multiple Ui Wall)
+        for (player_scroll, scroll_children, _player_scroll_entity) in player_scroll_query.iter() {
+            let mut place = 0;
+
+            // REFACTOR: every 3 choices create a page and start again from the 1st child
+            for choice in &player_scroll.choices {
+                // FIXME: CRASH HERE OutOfBound if place > 3 (view the refactor above)
+
+                reset_event.send(ResetDialogBoxEvent {
+                    dialog_box: scroll_children[place],
+                    text: choice.to_owned(),
+                });
+
+                place = place + 1;
+            }
+            info!("DEBUG: player scroll gain {} choice-s", place);
+
+            // if no choice
+            // info!("empty player scroll");
+            // send event to close (reverse open) upper scroll ?
+        }
     }
 }
 
@@ -892,6 +1033,7 @@ pub fn update_dialog_box(
                     // FIXME: bug - if the given text contains a accent this will crash
                     match dialog_box.text.chars().nth(dialog_box.progress) {
                         // will ignore any louche symbol
+                        // FIXME: infinite call when there is a accent
                         None => warn!("Accent Typical Crash"),
                         Some(next_letter) => {
                             text.sections[0].value.push(next_letter);
@@ -941,5 +1083,121 @@ pub fn animate_scroll(
 
             image.0 = dialog_box_resources.scroll_animation[scroll.current_frame].clone();
         }
+    }
+}
+
+/// DOC
+pub struct ResetDialogBoxEvent {
+    dialog_box: Entity,
+    /// could be
+    ///
+    /// - a Choice
+    /// - a Text
+    text: String,
+}
+
+/// DOC
+///
+/// Reset DialogBox on Event
+///
+/// # Err
+///
+/// In case of a missing DialogBox, add one...
+pub fn reset_dialog_box(
+    mut commands: Commands,
+
+    mut reset_event: EventReader<ResetDialogBoxEvent>,
+
+    mut dialog_box_query: Query<
+        (&mut DialogBox, &Children, Entity),
+        Or<(With<PlayerChoice>, With<UpperScroll>)>,
+    >,
+    mut text_query: Query<&mut Text>,
+) {
+    for event in reset_event.iter() {
+        match dialog_box_query.get_mut(event.dialog_box) {
+            Err(_e) => {
+                warn!("DEBUG: no DialogBox in the UpperScroll");
+                commands.entity(event.dialog_box).insert(DialogBox::new(
+                    event.text.clone(),
+                    DIALOG_BOX_UPDATE_DELTA_S,
+                ));
+            }
+            Ok((mut dialog_box, children, _)) => {
+                // FIXME: bug - Reset the text even if there is no change
+                // Clear the DialogBox Child: the Text
+                match text_query.get_mut(children[0]) {
+                    Err(e) => warn!("No Text Section: {:?}", e),
+                    Ok(mut text) => {
+                        if dialog_box.text != event.text.clone() {
+                            text.sections[0].value.clear();
+                            // replace current DialogBox with a brand new one
+                            *dialog_box =
+                                DialogBox::new(event.text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// DOC: Event
+pub struct EndNodeDialog;
+
+/// DOC
+pub fn end_node_dialog(
+    mut end_node_dialog_event: EventReader<EndNodeDialog>,
+
+    panel_query: Query<(Entity, &DialogPanel), With<Animator<Style>>>,
+    mut interlocutor_query: Query<
+        (Entity, &Name, &mut Dialog),
+        // Player or NPC
+        // TODO: feature - include Object (rm these withs)
+        Or<(With<Player>, With<NPC>)>,
+    >,
+
+    mut ev_combat_exit: EventWriter<CombatExitEvent>,
+) {
+    for _ in end_node_dialog_event.iter() {
+        info!("DEBUG: EndNodeEvent...");
+
+        let (_ui_wall, panel) = panel_query.single();
+
+        // TODO: feature - manage a cast of NPC choice for each dialog
+        // with a priority system to choose
+        // engaging a dialog will then choose a certain dialog from the cast
+        // leaving mid course will save the current dialog
+        // UNLESS there is a overide
+        // in case of big event, cancel previous dialog to stick to the main line
+
+        // reset the dialog to the first node: NPC's Choice cast
+
+        info!("exit dialog");
+
+        let interlocutor = panel.main_interlocutor;
+        let (_interlocutor_entity, name, mut dialog) =
+            interlocutor_query.get_mut(interlocutor).unwrap();
+
+        // replace the current tree by a simple text: `...`
+        let display_name = name.replace("NPC ", "");
+
+        let blank_dialog_tree = "# name\n\n- ...\n"
+            .replace("name", &display_name)
+            .to_owned();
+
+        // don't change panel.dialog_tree here
+        // it will be detect by update_dialog_panel
+        // i'm living in the fear
+        // i'm in danger
+        // my own program wants me dead
+
+        // let's overide update_dialog_tree, here and now.
+        dialog.current_node = Some(blank_dialog_tree);
+
+        ev_combat_exit.send(CombatExitEvent);
+
+        // at the next enconter there will be ... as dialog
+        // prevent closing the dialog_panel instant after engaging dialog
     }
 }

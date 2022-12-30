@@ -104,7 +104,7 @@ pub mod character {
 
 ### Olf
 
-- Il me faut donc obtenir le trône
+- Il me faut donc obtenir le trone
 
 #### Morgan
 
@@ -125,7 +125,7 @@ pub mod character {
 
 ## Fabien
 
-- /<3 (This is a new text in a new node)
+- /<3
 
 ### Morgan
 

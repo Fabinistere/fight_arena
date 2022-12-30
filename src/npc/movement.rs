@@ -2,29 +2,20 @@
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
-use log::{
-    info,
-    // warn
-};
-use std::time::Duration;
+use log::info;
 use rand::Rng;
+use std::time::Duration;
 
 use crate::{
-    combat::{Leader, Team, InCombat},
+    combat::{CombatEvent, InCombat, Leader, Team},
     constants::character::npc::movement::*,
     // GameState,
     movement::Speed,
     npc::{
-        aggression::{
-            CombatEvent,
-            StopChaseEvent
-        },
-        idle::{
-            IdleBehavior,
-            RestTime
-        },
+        aggression::StopChaseEvent,
+        idle::{IdleBehavior, RestTime},
         NPC,
-    }, 
+    },
     // player::Player,
     TILE_SIZE,
 };
@@ -59,36 +50,39 @@ impl Default for Target {
 /// For a certain destination contained in [RunToDestinationbehavior], make the npc run towards it
 pub fn just_walk(
     mut commands: Commands,
-    mut npc_query: Query<(
-        Entity,
-        &mut JustWalkBehavior,
-        &Transform,
-        &Speed,
-        &mut Velocity,
-        &Name
-    ), (With<JustWalkBehavior>, Without<IdleBehavior>, Without<PursuitBehavior>, Without<InCombat>)>
+    mut npc_query: Query<
+        (
+            Entity,
+            &mut JustWalkBehavior,
+            &Transform,
+            &Speed,
+            &mut Velocity,
+            &Name,
+        ),
+        (
+            With<JustWalkBehavior>,
+            Without<IdleBehavior>,
+            Without<PursuitBehavior>,
+            Without<InCombat>,
+        ),
+    >,
 ) {
     for (npc, mut behavior, transform, speed, mut rb_vel, name) in npc_query.iter_mut() {
         let direction: Vec3 = behavior.destination;
 
         // XXX: Approximation Louche
-        if !close(transform.translation, direction, TILE_SIZE/2.0)
-        {
-
+        if !close(transform.translation, direction, TILE_SIZE / 2.0) {
             // println!(
             //     "{} direction: ({},{}) \nposition: ({},{})",
             //     name, direction.x, direction.y,
             //     transform.translation.x, transform.translation.y
             // );
 
-            let (vel_x, vel_y) =
-                move_to_dest(direction, transform, speed);
+            let (vel_x, vel_y) = move_to_dest(direction, transform, speed);
 
             rb_vel.linvel.x = vel_x;
             rb_vel.linvel.y = vel_y;
-
         } else {
-            
             info!(target: "Start Rest", "{:?}, {}", npc, name);
 
             // Stop the npc after reaching the destination
@@ -99,58 +93,55 @@ pub fn just_walk(
             // REFACTOR: handle the direction change with event like in do_flexing
             behavior.destination = give_a_direction();
 
-            commands.entity(npc)
-                    .insert(IdleBehavior);
+            commands.entity(npc).insert(IdleBehavior);
             // println!("postChange: npc's state: {:#?}", npc.state);
-            
+
             // REFACTOR: change this part by sending a event : FREEZE
-            commands.entity(npc)
-                    .insert(RestTime {
-                        // create the non-repeating rest timer
-                        timer: Timer::new(Duration::from_secs(REST_TIMER), false),
-                    });
+            commands.entity(npc).insert(RestTime {
+                // create the non-repeating rest timer
+                timer: Timer::new(Duration::from_secs(REST_TIMER), false),
+            });
         }
     }
 }
 
 /// Entity gently follows their target.
 /// depending the team
-/// 
+///
 /// TODO: feature - Follow an ally by the component Target instead of Leader
 pub fn follow(
     // mut commands: Commands,
-    mut npc_query: Query<(
-        Entity, 
-        &Transform,
-        &Speed,
-        &mut Velocity,
-        &Team,
-    ), (With<NPC>, With<FollowupBehavior>, Without<PursuitBehavior>, Without<InCombat>) // only npc can follow 
+    mut npc_query: Query<
+        (Entity, &Transform, &Speed, &mut Velocity, &Team),
+        (
+            With<NPC>,
+            With<FollowupBehavior>,
+            Without<PursuitBehavior>,
+            Without<InCombat>,
+        ), // only npc can follow
     >,
     targets_query: Query<(&GlobalTransform, &Team, &Name), With<Leader>>,
     // pos_query: Query<&GlobalTransform>,
 ) {
     for (_npc, transform, speed, mut rb_vel, team) in npc_query.iter_mut() {
-
         for (target_transform, target_team, _name) in targets_query.iter() {
-
             // println!("target: {}, Leader of team {}", name, target_team.0);
             if team.0 == target_team.0 {
                 // carefull with more than one leader per team
                 // it will be not nice
 
                 // XXX: Approximation Louche
-                if !close(transform.translation, target_transform.translation(), 20.*TILE_SIZE)
-                {
-                    
+                if !close(
+                    transform.translation,
+                    target_transform.translation(),
+                    20. * TILE_SIZE,
+                ) {
                     // println!("moving towards target: {}", name);
 
-                    let (vel_x, vel_y) =
-                            move_to(target_transform, transform, speed);
+                    let (vel_x, vel_y) = move_to(target_transform, transform, speed);
 
                     rb_vel.linvel.x = vel_x;
                     rb_vel.linvel.y = vel_y;
-        
                 }
                 // if reached the target
                 else {
@@ -159,12 +150,9 @@ pub fn follow(
                     rb_vel.linvel.y = 0.;
                 }
             }
-           
         }
     }
-        
 
-        
     // target does not have position. Go to idle state
     // commands.entity(npc).remove::<FollowupBehavior>();
     // commands.entity(npc).remove::<RunToDestinationBehavior>();
@@ -177,24 +165,25 @@ pub fn follow(
 /// This target has entered in the detection range of the npc
 pub fn pursue(
     // mut game_state: ResMut<State<GameState>>,
-    mut npc_query: Query<(
-            Entity, 
+    mut npc_query: Query<
+        (
+            Entity,
             &Transform,
             &Speed,
             &mut Velocity,
             &Team,
             &Target,
             &Children,
-            &Name
+            &Name,
         ),
-        (With<NPC>, With<PursuitBehavior>, Without<InCombat>)>,
+        (With<NPC>, With<PursuitBehavior>, Without<InCombat>),
+    >,
     pos_query: Query<&GlobalTransform>,
     mut ev_combat: EventWriter<CombatEvent>,
     mut ev_stop_chase: EventWriter<StopChaseEvent>,
 ) {
-
-    for (npc, transform, speed, mut rb_vel, _team, target, _colliders, name) in npc_query.iter_mut() {
-
+    for (npc, transform, speed, mut rb_vel, _team, target, _colliders, name) in npc_query.iter_mut()
+    {
         if target.0.is_none() {
             info!(target: "target is none", "{}", name);
             continue;
@@ -204,38 +193,29 @@ pub fn pursue(
         match result {
             Err(_) => {
                 // target does not have position. Disengage.
-                ev_stop_chase
-                    .send(StopChaseEvent {
-                        npc_entity: npc
-                    });
+                ev_stop_chase.send(StopChaseEvent { npc_entity: npc });
                 continue;
             }
             Ok(target_transform) => {
                 // If the target is too far away
                 // adjust npc's velocity to reach it
-                if !close(transform.translation, target_transform.translation(), 10.*TILE_SIZE)
-                {
-                    
+                if !close(
+                    transform.translation,
+                    target_transform.translation(),
+                    10. * TILE_SIZE,
+                ) {
                     // println!("moving towards target: {}", name);
-                    let (vel_x, vel_y) =
-                        move_to(target_transform, transform, speed);
+                    let (vel_x, vel_y) = move_to(target_transform, transform, speed);
 
                     rb_vel.linvel.x = vel_x;
                     rb_vel.linvel.y = vel_y;
-                    
-
                 } else {
                     info!("Target Caught in 4K by {:?} {}", npc, name);
 
                     // open HUD to combat talk after chase
-                    ev_combat.send(CombatEvent {
-                        npc_entity: npc
-                    });
+                    ev_combat.send(CombatEvent { npc_entity: npc });
 
-                    ev_stop_chase
-                        .send(StopChaseEvent {
-                            npc_entity: npc
-                        });                    
+                    ev_stop_chase.send(StopChaseEvent { npc_entity: npc });
 
                     // handle flee when pressing o or moving ?
                     // (timer on npc before rechase)
@@ -244,18 +224,11 @@ pub fn pursue(
                 }
             }
         }
-
-        
     }
 }
 
 /// Give velocity x and y value to move forward a certain target
-fn move_to(
-    target_transform: &GlobalTransform,
-    transform: &Transform,
-    speed: &Speed,
-) -> (f32, f32)
-{
+fn move_to(target_transform: &GlobalTransform, transform: &Transform, speed: &Speed) -> (f32, f32) {
     let up = target_transform.translation().y > transform.translation.y;
     let down = target_transform.translation().y < transform.translation.y;
     let left = target_transform.translation().x < transform.translation.x;
@@ -278,12 +251,7 @@ fn move_to(
 }
 
 /// Give velocity x and y value to move forward a certain vec3
-fn move_to_dest(
-    target_vec3: Vec3,
-    transform: &Transform,
-    speed: &Speed,
-) -> (f32, f32)
-{
+fn move_to_dest(target_vec3: Vec3, transform: &Transform, speed: &Speed) -> (f32, f32) {
     let up = target_vec3.y > transform.translation.y;
     let down = target_vec3.y < transform.translation.y;
     let left = target_vec3.x < transform.translation.x;
@@ -305,45 +273,27 @@ fn move_to_dest(
     return (vel_x, vel_y);
 }
 
-
 /// # Parameters
-/// 
+///
 /// position: of a entity
-/// direction: the middle of the future zone, 
+/// direction: the middle of the future zone,
 ///            is on the middle of the segment [a,c]
-/// 
-/// # Return 
+///
+/// # Return
 /// returns true if the entity is on the square around the direction point
-/// 
+///
 /// # Note
-/// 
+///
 /// XXX: Rework this Approximation Louche
-fn close(
-    position: Vec3,
-    direction: Vec3,
-    range: f32
-) -> bool
-{
+fn close(position: Vec3, direction: Vec3, range: f32) -> bool {
     // direction.x == position.x &&
     // direction.y == position.y
-    
-    let a = 
-        Vec3::new(
-            direction.x-range,
-            direction.y+range,
-            direction.z
-        );
 
-    let c = 
-        Vec3::new(
-            direction.x+range,
-            direction.y-range,
-            direction.z
-        );
-    
-    position.x >= a.x && position.x <= c.x &&
-    position.y <= a.y && position.y >= c.y 
-    
+    let a = Vec3::new(direction.x - range, direction.y + range, direction.z);
+
+    let c = Vec3::new(direction.x + range, direction.y - range, direction.z);
+
+    position.x >= a.x && position.x <= c.x && position.y <= a.y && position.y >= c.y
 }
 
 /**
@@ -353,12 +303,11 @@ fn close(
  * return:
  *  Vec3
  */
-pub fn give_a_direction() -> Vec3
-{
-    let x = rand::thread_rng()
-        .gen_range(-100*(TILE_SIZE as i32)..100*(TILE_SIZE as i32)) as f32;
-   let y = rand::thread_rng()
-        .gen_range(-100*(TILE_SIZE as i32)..100*(TILE_SIZE as i32)) as f32;
+pub fn give_a_direction() -> Vec3 {
+    let x =
+        rand::thread_rng().gen_range(-100 * (TILE_SIZE as i32)..100 * (TILE_SIZE as i32)) as f32;
+    let y =
+        rand::thread_rng().gen_range(-100 * (TILE_SIZE as i32)..100 * (TILE_SIZE as i32)) as f32;
     // let z = rand::thread_rng().gen_range(1..101);
 
     /* shape ideas

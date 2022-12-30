@@ -29,31 +29,6 @@ pub struct PursuitSensor;
 
 /// Happens when:
 ///   - npc::movement::pursue
-///     - target is reach
-/// Read in
-///   - ui::dialog_box::create_dialog_box_on_combat_event
-///     - open combat ui
-///   - combat::mod::freeze_in_combat
-///     - freeze all entities involved in the starting combat
-pub struct CombatEvent {
-    pub npc_entity: Entity,
-}
-
-/// Happens when:
-///   - ???
-///     - combat was stoped by the player
-///   - ui::dialog_box::update_dialog_panel
-///     - End of the dialog
-/// Read in
-///   - combat::exit_combat
-///     - Add a FairPlayTimer to all enemies involved in the fight
-///     - Remove to all entities InCombat Component
-///   - ui::dialog_box::create_dialog_box_on_combat_event
-///     - close the ui
-pub struct CombatExitEvent;
-
-/// Happens when:
-///   - npc::movement::pursue
 ///     - target is not found/exist
 ///     - target is reach
 /// Read in npc::aggression::remove_pursuit_urge

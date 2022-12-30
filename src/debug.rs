@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
 
+use crate::collisions::{TesselatedCollider, TesselatedColliderConfig};
 use crate::npc::NPC;
 use crate::player::Player;
-use crate::ui::dialog_box::{PlayerScroll, UpperScroll};
+use crate::ui::dialog_box::{DialogPanel, PlayerScroll, UpperScroll};
 
 pub struct DebugPlugin;
 
@@ -16,9 +17,27 @@ impl Plugin for DebugPlugin {
 
                 // UI
 
+                .register_inspectable::<DialogPanel>()
+                // .register_inspectable::<DialogBox>()
                 .register_inspectable::<UpperScroll>()
                 .register_inspectable::<PlayerScroll>()
+
+                // hitbox
+
+                .register_inspectable::<TesselatedCollider>()
+                .register_inspectable::<TesselatedColliderConfig>()
                 ;
         }
     }
 }
+
+// TODO: Create debug log kind
+// Combat Debug
+// Movement Debug
+// Dialog Debug
+// ...
+
+// make it clear in the global log (different files ?)
+//   - global log file
+//   - specific (Combat/Movement/Dialog) log file
+// ask for sending logs and data to *me* when game crash
