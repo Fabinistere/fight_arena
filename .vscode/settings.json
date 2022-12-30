@@ -78,5 +78,5 @@
         "opacity": 0,
         "type": "text-and-comment"
     },
-    "todo-tree.regex.regex": "((//|#|%|<!--|;|/\\*|^|\"\"\"|'|-\\s\\[(\\s|x)\\])\\s*($TAGS))"
+    "todo-tree.regex.regex": "((//|#|%|<!--|;|/\\*|^|warn\\!\\(\"|info\\!\\(\"|\"\"\"|'|-\\s\\[(\\s|x)\\])\\s*($TAGS))"
 }

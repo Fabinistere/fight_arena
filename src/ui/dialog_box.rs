@@ -14,12 +14,9 @@ use bevy_tweening::{lens::UiPositionLens, *};
 use std::time::Duration;
 
 use crate::{
-    combat::Karma,
+    combat::{CombatEvent, CombatExitEvent, Karma},
     constants::ui::dialogs::*,
-    npc::{
-        aggression::{CombatEvent, CombatExitEvent},
-        NPC,
-    },
+    npc::NPC,
     player::Player,
     ui::dialog_system::{init_tree_file, DialogType},
 };
@@ -33,7 +30,7 @@ pub struct DialogPanel {
     // their dialog will be change/update in update_dialog_tree
     pub main_interlocutor: Entity,
     // XXX: will allow us to detect change especially in the opening
-    dialog_tree: String,
+    pub dialog_tree: String,
 }
 
 #[derive(Debug, Component)]
@@ -807,146 +804,120 @@ pub fn create_dialog_box(
 ///   - NPC Choice
 ///     TODO: feature - NPC Choice
 pub fn update_dialog_panel(
+    panel_query: Query<
+        (Entity, &DialogPanel),
+        // REFACTOR: Handle the interlocutor change in the UIPanel
+        // even detect interlocutor change
+        (Changed<DialogPanel>, With<Animator<Style>>),
+    >,
+
     mut upper_scroll_query: Query<(&mut UpperScroll, Entity), With<Scroll>>,
     mut player_scroll_query: Query<(&mut PlayerScroll, Entity), With<Scroll>>,
-    query: Query<(Entity, &Animator<Style>, &DialogPanel)>,
 
-    mut interlocutor_query: Query<
-        (Entity, &Name, &mut Dialog),
-        // NPC or Player
-        (Or<(With<Player>, With<NPC>)>, Changed<Dialog>),
-    >,
     player_query: Query<(Entity, &Karma), With<Player>>,
 
-    mut ev_combat_exit: EventWriter<CombatExitEvent>,
-    mut create_scroll_content: EventWriter<UpdateScrollEvent>,
+    mut end_node_dialog_event: EventWriter<EndNodeDialog>,
+    mut update_scroll_content: EventWriter<UpdateScrollEvent>,
 ) {
     // REFACTOR: Never Nester Mode requested
+    // DOC: Noisy Comments
     // TODO: feature - find a way to execute trigger_event somewhere
 
-    // the panel must be open already
-    if let Ok((_ui_wall, _animator, panel)) = query.get_single() {
-        let interlocutor = panel.main_interlocutor;
+    // the panel must be open already and their dialog_tree modified
+    // else:
+    //   just wait for the DialogTree to change;
+    //   Nothing change yet
+    if let Ok((_ui_wall, panel)) = panel_query.get_single() {
+        info!("DEBUG: smth changed...");
 
-        match interlocutor_query.get_mut(interlocutor) {
-            Err(_e) => {
-                // just wait for the DialogTree to change
-                // Nothing change yet
+        let dialog_panel = &panel.dialog_tree;
+        // DEBUG: print DialogTree
+        println!("{:?}", dialog_panel);
+
+        // check what is the current dialog node
+        if dialog_panel.is_empty() {
+            // info!("DEBUG Empty Dialog Tree");
+            end_node_dialog_event.send(EndNodeDialog);
+        } else {
+            let dialog_tree = init_tree_file(dialog_panel.to_owned());
+
+            let current = &dialog_tree.borrow();
+
+            let dialogs = &current.dialog_type;
+
+            // throw Err(outOfBound) when dialog_type is empty (not intended)
+            if dialogs.len() < 1 {
+                // FIXME: handle this err
+                panic!("Err: dialog_type is empty");
             }
-            Ok((_interlocutor_entity, name, mut dialog)) => {
-                info!("DEBUG: smth changed...");
-                // check what is the current dialog node
-                match &dialog.current_node {
-                    None => {
-                        // TODO: feature - manage a cast of NPC choice for each dialog
-                        // with a priority system to choose
-                        // engaging a dialog will then choose a certain dialog from the cast
-                        // leaving mid course will save the current dialog
-                        // UNLESS there is a overide
-                        // in case of big event, cancel previous dialog to stick to the main line
 
-                        // reset the dialog to the first node: NPC's Choice cast
+            let (mut player_scroll, _player_scroll_entity) = player_scroll_query.single_mut();
 
-                        info!("exit dialog");
-
-                        // replace the current tree by a simple text: `...`
-                        let display_name = name.replace("NPC ", "");
-
-                        let dialog_tree = "# name\n\n- ...\n"
-                            .replace("name", &display_name)
-                            .to_owned();
-
-                        dialog.current_node = Some(dialog_tree);
-
-                        ev_combat_exit.send(CombatExitEvent);
-
-                        // at the next enconter there will be ... as dialog
-                        // prevent closing the dialog_panel instant after engaging dialog
-                    }
-                    Some(text) => {
-                        let dialog_tree = init_tree_file(text.to_string());
-
-                        let current = &dialog_tree.borrow();
-
-                        let dialogs = &current.dialog_type;
-
-                        // throw Err(outOfBound) when dialog_type is empty (not intended)
-                        if dialogs.len() < 1 {
-                            panic!("Err: dialog_type is empty");
-                        }
-
-                        // check the first elem of the DialogType's Vector
-                        match &dialogs[0] {
-                            DialogType::Text(_) => {
-                                let mut texts = Vec::<String>::new();
-                                for dialog in dialogs.iter() {
-                                    match dialog {
-                                        DialogType::Text(text) => {
-                                            texts.push(text.to_owned());
-                                            info!("DEBUG: add text: {}", text);
-                                        }
-                                        _ => panic!("Err: DialogTree Incorrect; A texts' vector contains something else"),
-                                    }
-                                }
-                                // replace the entire upper scroll's content
-                                // FIXME: single - if let - first opening or already open
-                                let (mut upper_scroll, _upper_scroll_entity) =
-                                    upper_scroll_query.single_mut();
-                                upper_scroll.texts = texts;
-
-                                // Clear the previous choice if there is any
-                                // OPTIMIZE: same query call in the next section of the match - merge code -
-                                let (mut player_scroll, _player_scroll_entity) =
-                                    player_scroll_query.single_mut();
-                                player_scroll.choices.clear();
+            // check the first elem of the DialogType's Vector
+            match &dialogs[0] {
+                DialogType::Text(_) => {
+                    let mut texts = Vec::<String>::new();
+                    for dialog in dialogs.iter() {
+                        match dialog {
+                            DialogType::Text(text) => {
+                                texts.push(text.to_owned());
+                                info!("DEBUG: add text: {}", text);
                             }
-                            DialogType::Choice {
-                                text: _,
-                                condition: _,
-                            } => {
-                                // replace current by the new set of choices
-                                let mut choices = Vec::<String>::new();
-                                for dialog in dialogs.iter() {
-                                    match dialog {
-                                        DialogType::Choice { text, condition } => {
-                                            match condition {
-                                                Some(cond) => {
-                                                    let (_player, karma) = player_query.single();
-                                                    if cond.is_verified(karma.0) {
-                                                        choices.push(text.to_owned());
-                                                        info!("DEBUG: add choice: {}", text);
-                                                    }
-                                                }
-                                                // no condition
-                                                None => {
-                                                    choices.push(text.to_owned());
-                                                    info!("DEBUG: add choice: {}", text);
-                                                }
-                                            }
-                                        }
-                                        _ => panic!("Err: DialogTree Incorrect; A choices' vector contains something else"),
-                                    }
-                                }
-                                // update the player_scroll
-                                let (mut player_scroll, _player_scroll_entity) =
-                                    player_scroll_query.single_mut();
-
-                                player_scroll.choices = choices;
-                            }
+                            _ => panic!("Err: DialogTree Incorrect; A texts' vector contains something else"),
                         }
                     }
+                    // replace the entire upper scroll's content
+                    // FIXME: ¿solved? single - if let - first opening or already open
+                    let (mut upper_scroll, _upper_scroll_entity) = upper_scroll_query.single_mut();
+                    upper_scroll.texts = texts;
+
+                    // Clear the previous choice if there is any
+                    player_scroll.choices.clear();
                 }
-                // ask to update the content of scroll
-                create_scroll_content.send(UpdateScrollEvent);
+                DialogType::Choice {
+                    text: _,
+                    condition: _,
+                } => {
+                    // replace current by the new set of choices
+                    let mut choices = Vec::<String>::new();
+                    for dialog in dialogs.iter() {
+                        match dialog {
+                            DialogType::Choice { text, condition } => {
+                                match condition {
+                                    Some(cond) => {
+                                        let (_player, karma) = player_query.single();
+                                        if cond.is_verified(karma.0) {
+                                            choices.push(text.to_owned());
+                                            info!("DEBUG: add choice: {}", text);
+                                        }
+                                    }
+                                    // no condition
+                                    None => {
+                                        choices.push(text.to_owned());
+                                        info!("DEBUG: add choice: {}", text);
+                                    }
+                                }
+                            }
+                            _ => panic!("Err: DialogTree Incorrect; A choices' vector contains something else"),
+                        }
+                    }
+                    // update the player_scroll
+                    player_scroll.choices = choices;
+                }
             }
+            // ask to update the content of scroll
+            update_scroll_content.send(UpdateScrollEvent);
         }
     }
 }
 
+/// # Save principe
+///
 /// Update the String within the entity interlocutor.
-/// It just update the Dialog contained in the interlocutor to be retrieve the next time we talk with it
-/// We want to save the dialog progress at each state.
+/// This just updates the Dialog contained in the interlocutor to be retrieve the next time we talk with it.
+/// We want to save the dialog progress at each state;
 /// Each time the dialog_tree of the panel is changed (?OR can be delay to the end of fight)
+///
 /// XXX: little trick to detect change especially in the creation phase
 pub fn update_dialog_tree(
     // XXX: issue? - will detect change if the interlocutor is switch
@@ -958,7 +929,10 @@ pub fn update_dialog_tree(
         let new_dialog_tree = panel.dialog_tree.clone();
         match interlocutor_query.get_mut(interlocutor) {
             Ok((_entity, mut dialog)) => dialog.current_node = Some(new_dialog_tree),
-            Err(_e) => warn!("The entity linked with the Ui Wall his Dialog Component"),
+            Err(e) => warn!(
+                "The entity linked with the Ui Wall doesn't have any Dialog Component: {:?}",
+                e
+            ),
         }
     }
 }
@@ -985,7 +959,7 @@ pub fn update_upper_scroll(
             match upper_scroll.texts.first() {
                 None => {
                     info!("empty upper scroll");
-                    // send event to close (reverse open) upper scroll ?
+                    // TODO: feature - send event to close (reverse open) upper scroll ?
                 }
                 Some(dialog_box_text) => {
                     info!("upper scroll gain a text");
@@ -1141,7 +1115,6 @@ pub fn reset_dialog_box(
     mut text_query: Query<&mut Text>,
 ) {
     for event in reset_event.iter() {
-        // REFACTOR: Insert DialogBox right at the creation (remove a complete match)
         match dialog_box_query.get_mut(event.dialog_box) {
             Err(_e) => {
                 warn!("DEBUG: no DialogBox in the UpperScroll");
@@ -1156,12 +1129,75 @@ pub fn reset_dialog_box(
                 match text_query.get_mut(children[0]) {
                     Err(e) => warn!("No Text Section: {:?}", e),
                     Ok(mut text) => {
-                        text.sections[0].value.clear();
-                        // replace current DialogBox with a brand new one
-                        *dialog_box = DialogBox::new(event.text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                        if dialog_box.text != event.text.clone() {
+                            text.sections[0].value.clear();
+                            // replace current DialogBox with a brand new one
+                            *dialog_box =
+                                DialogBox::new(event.text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+/// DOC: Event
+pub struct EndNodeDialog;
+
+/// DOC
+pub fn end_node_dialog(
+    mut end_node_dialog_event: EventReader<EndNodeDialog>,
+
+    panel_query: Query<(Entity, &DialogPanel), With<Animator<Style>>>,
+    mut interlocutor_query: Query<
+        (Entity, &Name, &mut Dialog),
+        // Player or NPC
+        // TODO: feature - include Object (rm these withs)
+        Or<(With<Player>, With<NPC>)>,
+    >,
+
+    mut ev_combat_exit: EventWriter<CombatExitEvent>,
+) {
+    for _ in end_node_dialog_event.iter() {
+        info!("DEBUG: EndNodeEvent...");
+
+        let (_ui_wall, panel) = panel_query.single();
+
+        // TODO: feature - manage a cast of NPC choice for each dialog
+        // with a priority system to choose
+        // engaging a dialog will then choose a certain dialog from the cast
+        // leaving mid course will save the current dialog
+        // UNLESS there is a overide
+        // in case of big event, cancel previous dialog to stick to the main line
+
+        // reset the dialog to the first node: NPC's Choice cast
+
+        info!("exit dialog");
+
+        let interlocutor = panel.main_interlocutor;
+        let (_interlocutor_entity, name, mut dialog) =
+            interlocutor_query.get_mut(interlocutor).unwrap();
+
+        // replace the current tree by a simple text: `...`
+        let display_name = name.replace("NPC ", "");
+
+        let blank_dialog_tree = "# name\n\n- ...\n"
+            .replace("name", &display_name)
+            .to_owned();
+
+        // don't change panel.dialog_tree here
+        // it will be detect by update_dialog_panel
+        // i'm living in the fear
+        // i'm in danger
+        // my own program wants me dead
+
+        // let's overide update_dialog_tree, here and now.
+        dialog.current_node = Some(blank_dialog_tree);
+
+        ev_combat_exit.send(CombatExitEvent);
+
+        // at the next enconter there will be ... as dialog
+        // prevent closing the dialog_panel instant after engaging dialog
     }
 }

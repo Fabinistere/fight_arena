@@ -24,3 +24,14 @@ impl Plugin for DebugPlugin {
         }
     }
 }
+
+// TODO: Create debug log kind
+// Combat Debug
+// Movement Debug
+// Dialog Debug
+// ...
+
+// make it clear in the global log (different files ?)
+//   - global log file
+//   - specific (Combat/Movement/Dialog) log file
+// ask for sending logs and data to *me* when game crash

@@ -6,10 +6,11 @@ use bevy_tweening::Animator;
 use crate::constants::ui::dialogs::*;
 
 use super::{
-    dialog_box::{DialogPanel, PlayerChoice, Scroll, UpperScroll, DialogBox},
-    dialog_system::{init_tree_file, Dialog},
+    dialog_box::{DialogPanel, PlayerChoice, PlayerScroll, Scroll, UpperScroll, UpdateScrollEvent},
+    dialog_system::init_tree_file,
 };
 
+/// DOC: Event
 pub struct DialogDiveEvent {
     pub child_index: usize,
     pub skip: bool,
@@ -21,10 +22,8 @@ pub struct DropFirstTextUpperScroll;
 //     pub upper_scroll: UpperScroll,
 // }
 
-// TODO: Button shoudl have a activate bool ?
-
 /// DOC
-/// 
+///
 /// FIXME: Crash when clicking a ghost button
 pub fn button_system(
     mut interaction_query: Query<
@@ -61,11 +60,8 @@ pub fn button_system(
     }
 }
 
-// FIXME: URGE The DialogTree does not seem to be respected
-// It seems it just a question of referesh
-
 /// check the upper scroll content
-/// 
+///
 /// Only skip text
 ///
 /// - if len > 1
@@ -78,6 +74,9 @@ pub fn skip_forward_dialog(
 
     mut dialog_dive_event: EventWriter<DialogDiveEvent>,
 ) {
+    // TODO: feature - if the text is not entirely prompted, skip the animation (update_dialog_box)
+    // instead of skiping the text
+
     // REFACTOR: ? If Ui is open ? instead of testing this query ?
     // or just with ui_wall.finished: bool
     if let Ok((_ui_wall, animator)) = query.get_single() {
@@ -93,22 +92,24 @@ pub fn skip_forward_dialog(
         else if keyboard_input.just_pressed(KeyCode::P) {
             info!("DEBUG: P pressed");
 
-            dialog_dive_event.send(DialogDiveEvent { child_index: 0, skip: true});
+            dialog_dive_event.send(DialogDiveEvent {
+                child_index: 0,
+                skip: true,
+            });
         }
     }
     // FIXME: prevent more than one Ui Wall open at the same time
 }
 
 /// DOC
-/// 
+///
 /// Go Down
-/// 
+///
 /// Every modification of the DialogPanel's content will modify the dialog contained the concerned interlocutor
 pub fn dialog_dive(
     mut dialog_dive_event: EventReader<DialogDiveEvent>,
 
-    query: Query<&DialogPanel, With<Animator<Style>>>,
-    mut interlocutor_query: Query<(Entity, &mut Dialog)>,
+    mut panel_query: Query<&mut DialogPanel, With<Animator<Style>>>,
 
     upper_scroll_query: Query<&mut UpperScroll, With<Scroll>>,
     mut drop_first_text_upper_scroll_event: EventWriter<DropFirstTextUpperScroll>,
@@ -116,61 +117,103 @@ pub fn dialog_dive(
     // DOC: Noisy comments
 
     for event in dialog_dive_event.iter() {
-        let panel = query.single();
-        let interlocutor = panel.main_interlocutor;
-    
-        match interlocutor_query.get_mut(interlocutor) {
-            Err(e) => {
-                warn!("no interloctor with NPC and Dialog: {:?}", e);
-            }
-            Ok((_interlocutor, mut dialog)) => {
-                // check what is the current dialog node
-                match &dialog.current_node {
-                    None => warn!(
-                        "Empty DialogTree; The Interlocutor is still in dialog but has nothing to say."
-                    ),
-                    Some(texts) => {
-                        let upper_scroll = upper_scroll_query.single();
-    
-                        // if there is at least 2 elem in the upper scroll
-                        // XXX: after selecting a choice, this test will **normally** always be ignored
-                        // cause can't be in a choice phase while having text left in the UpperScroll
-                        // if not, the player could choose smth for 'nothing'
-                        if upper_scroll.texts.len() > 1 {
-                            drop_first_text_upper_scroll_event.send(DropFirstTextUpperScroll);
-                        } else {
-                            // REFACTOR: seek help for this if (condition)
-                            // if !(event.skip && dialog_tree.borrow().is_choice()) {}
-                            let dialog_tree = init_tree_file(texts.to_owned());
+        info!("DEBUG: DialogDive Event");
+        let mut panel = panel_query.single_mut();
+        // let interlocutor = panel.main_interlocutor;
 
-                            // must cancel the skip possibility while still in choice phase
-                            if dialog_tree.borrow().is_end_node() && !(dialog_tree.borrow().is_choice() && event.skip) {
-                                // will be handle by the update_dialog_panel system
-                                // as Exit the Combat
-                                dialog.current_node = None;
-                            } else if !(dialog_tree.borrow().is_choice() && event.skip){
-                                // go down on the first child
-                                // DOC: Specifics Rules link
-                                // ignore the other child if there is one
-                                // **the rule implied not**
-                                // cause a text must have one child or none
-    
-                                let child = dialog_tree.borrow().children[event.child_index].borrow().print_file();
-    
-                                dialog.current_node = Some(child);
-                            }
-                        }
-                    }
+        let dialog_panel = panel.dialog_tree.clone();
+
+        if dialog_panel.is_empty() {
+            warn!("Empty DialogTree; The Interlocutor is still in dialog but has nothing to say.");
+            
+            // force the chnage detection
+            panel.dialog_tree.clear();
+            warn!("DEBUG:force clear dialog panel");
+        } else {
+            let dialog_tree = init_tree_file(dialog_panel.to_owned());
+            let upper_scroll = upper_scroll_query.single();
+
+            // option 1: if it is the very last text of the dialog
+            // or
+            // option 2: if the monologue is not finished (except the last text `> 1`)
+            // then drop it
+
+            // option 2: (precision)
+            // if there is at least 2 elem in the upper scroll
+            // XXX: after selecting a choice, this test will **normally** always be ignored
+            // cause can't be in a choice phase while having text left in the UpperScroll
+            // if not, the player could choose smth for 'nothing'
+
+            if upper_scroll.texts.len() > 1 {
+                drop_first_text_upper_scroll_event.send(DropFirstTextUpperScroll);
+            } else if !(dialog_tree.borrow().is_choice() && event.skip) {
+                // shouldn't exist : end choice (which hasn't child)
+                // so, we don't test it here
+                if dialog_tree.borrow().is_end_node() {
+                    // will be handle by the update_dialog_panel system
+                    // as Exit the Combat
+                    panel.dialog_tree.clear();
+                    info!("clear dialog panel");
+                } else {
+                    // go down on the first child
+                    // DOC: Specifics Rules link
+                    // ignore the other child if there is one
+                    // **the rule implied not**
+                    // cause a text must have one child or none
+
+                    let child = dialog_tree.borrow().children[event.child_index]
+                        .borrow()
+                        .print_file();
+
+                    panel.dialog_tree = child;
                 }
             }
         }
-    }   
+    }
+}
+
+/// DOC
+///
+/// Disable empty button (invisible == disable)
+///
+/// Prevent checking a index in the choices list and throwing a OutOfBoundErr
+pub fn hide_empty_button(
+    mut button_query: Query<(Entity, &mut Visibility, &PlayerChoice), With<Button>>,
+
+    player_scroll_query: Query<
+        (Entity, &PlayerScroll, &Children),
+        // if the choices field is modified
+        (Changed<PlayerScroll>, With<Scroll>),
+    >,
+) {
+    for (_, player_scroll, children) in player_scroll_query.iter() {
+        for button in children.iter() {
+            match button_query.get_mut(*button) {
+                // FIXME: handle this error
+                Err(e) => warn!("Err: A Player Scroll's child is not a button: {:?}", e),
+                Ok((_, mut visibility, player_choice)) => {
+                    let choice_index = player_choice.0;
+                    let choices = player_scroll.choices.clone();
+
+                    visibility.is_visible = choice_index < choices.len();
+                    info!(
+                        "button °{:?} visibility switch: {:?}",
+                        choice_index, visibility.is_visible
+                    );
+                }
+            }
+        }
+    }
 }
 
 /// DOC
 pub fn drop_first_text_upper_scroll(
     mut drop_event: EventReader<DropFirstTextUpperScroll>,
+
     mut upper_scroll_query: Query<(&mut UpperScroll, Entity), With<Scroll>>,
+
+    // update the DialogBox according to the Scroll
+    mut scroll_event: EventWriter<UpdateScrollEvent>,
 ) {
     for _event in drop_event.iter() {
         // TOTEST: calling this event mean the scroll do exist but maybe not ?
@@ -179,25 +222,12 @@ pub fn drop_first_text_upper_scroll(
         if let Some((_first, rem)) = upper_scroll.texts.split_first() {
             // pop first only
             upper_scroll.texts = rem.to_vec();
+
+            // ask to update the content of scroll (which will update the DialogBox)
+            scroll_event.send(UpdateScrollEvent);
         } else {
             // shouldn't be the case
             warn!("The UpperScroll does not contain text")
         }
     }
-}
-
-/// DOC
-///
-/// Disable empty button (invisible == disable)
-pub fn hide_empty_button(
-    mut button_query: Query<
-        (Entity, &mut Visibility, &DialogBox),
-        //FIXME: infinite chnage occurs to the DialogBox (choice)
-        (Or<(Added<DialogBox>, Changed<DialogBox>)>, With<Button>, With<PlayerChoice>),
-    >,
-){
-    // for (_button, mut visibility, dialog_box) in button_query.iter_mut() {
-    //     info!("visibility switch");
-    //     visibility.is_visible = !dialog_box.text.is_empty();
-    // }
 }

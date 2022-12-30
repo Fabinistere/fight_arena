@@ -86,7 +86,7 @@ impl DialogType {
 
     /// Only compare the type,
     /// it don't compare content
-    fn eq(&self, comp: DialogType) -> bool {
+    fn _eq(&self, comp: DialogType) -> bool {
         match (self.clone(), comp) {
             (DialogType::Text(_), DialogType::Text(_)) => return true,
             (
@@ -280,6 +280,16 @@ impl DialogNode {
         return false;
     }
 
+    /// # Return
+    ///
+    /// true if the type of the first element (of dialog_type) is choice
+    pub fn is_text(&self) -> bool {
+        if !self.dialog_type.is_empty() {
+            return self.dialog_type[0].is_text();
+        }
+        return false;
+    }
+
     pub fn add_child(&mut self, new_node: Rc<RefCell<DialogNode>>) {
         self.children.push(new_node);
     }
@@ -425,10 +435,11 @@ impl DialogNode {
                     }
 
                     None => {
-                        res.push_str("None\n");
+                        res.push_str("None");
                     }
                 }
             }
+            res.push('\n');
         }
         res.push_str("\n\nEND");
 
@@ -825,8 +836,8 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
     // let mut new_line = false;
 
     let chars = s.chars().collect::<Vec<char>>();
-    println!("{}", chars.len());
-    println!("{}", s);
+    // println!("{}", chars.len());
+    // println!("{}", s);
 
     for (_, c) in chars
         .iter()
@@ -1524,6 +1535,17 @@ mod tests {
 
 - Sure\n"
                     .to_string()
+            );
+        }
+
+        #[test]
+        fn test_print_from_file_monologue() {
+
+            let root = init_tree_file(String::from("# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n"));
+
+            assert_eq!(
+                root.borrow().print_file(),
+                "# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n".to_string()
             );
         }
 
