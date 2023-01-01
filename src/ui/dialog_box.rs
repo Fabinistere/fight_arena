@@ -520,9 +520,6 @@ pub fn create_dialog_box(
                         // will be changed in update_dialog_panel
                         texts: vec![],
                     })
-                    // REFACTOR: ? create a new impl for DialogBox with exactly this CST instead of calling this fn with the same param 4times..
-                    // With blank or null as init (will be update soon enoguht (by reset_dialog_box))
-                    // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                     .insert(Name::new("Upper Scroll"))
                     .insert(ScrollTimer(Timer::from_seconds(
                         SCROLL_ANIMATION_DELTA_S,
@@ -604,12 +601,6 @@ pub fn create_dialog_box(
                     )))
                     .with_children(|parent| {
                         // TODO: feature - 3 PlayerChoice is enough, to have much reuse theses three in another page
-
-                        // TODO: feature - Activate/Deactivate Button display when no text
-                        // see https://bevy-cheatbook.github.io/features/visibility.html
-
-                        // TODO: stop center text and button
-                        // TODO: regain control on margin style (taken by button)
 
                         // First potential choice
                         parent
@@ -978,8 +969,7 @@ pub fn update_dialog_tree(
 ///
 /// # Note
 ///
-/// REFACTOR: ? Handle by a event but just by query could be fine
-/// Handle by event allow us to execute animation when any update occurs;
+/// TODO: feature - execute animation when any update occurs; (Handle by event allow it)
 /// For example, the closure opening to clear and display.
 pub fn update_upper_scroll(
     mut scroll_event: EventReader<UpdateScrollEvent>,
