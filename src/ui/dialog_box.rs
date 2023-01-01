@@ -4,6 +4,8 @@
 //!     - Enter in Combat
 //!     - Exit in Combat
 //!     - Open HUD manually (pressing 'o')
+//!
+//! // DOC
 
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
@@ -23,6 +25,15 @@ use crate::{
 
 use super::dialog_system::Dialog;
 
+/// Represents The UI Wall.
+/// Every UI Wall is associated with an entity (can be the player or the interlocutor like an object).
+///
+/// If the dialog_tree changes, it will update the scrolls.
+///
+/// To modify the dialog, just modify the DialogPanel.
+///
+/// # Note
+///
 /// TODO: feature - sync author with interlocutor (to know which one is talking)
 #[derive(Component, Inspectable)]
 pub struct DialogPanel {
@@ -33,6 +44,9 @@ pub struct DialogPanel {
     pub dialog_tree: String,
 }
 
+/// Represents the entity containing the displayed text as first children.
+///
+/// Used to animate the Text, letter by letter.
 #[derive(Debug, Component)]
 pub struct DialogBox {
     pub text: String,
@@ -60,9 +74,19 @@ impl DialogBox {
     // }
 }
 
-#[derive(Component)]
-pub struct DialogBoxText;
-
+/// Any scroll should have this component.
+///
+/// Used to animate scroll.
+///
+/// # Note
+///
+/// Can't merge the PlayerScroll and UpperSrcoll int othe Scroll Component,
+/// due to quering manners, and update scrolls function being to different
+/// from one scroll to another.
+///
+/// Cause a serie of text is just a monologue and we don't care
+/// about the previous text displayed.
+/// All choice need to be prompted (not especially on the same page).
 #[derive(Component)]
 pub struct Scroll {
     current_frame: usize,
@@ -71,38 +95,17 @@ pub struct Scroll {
 #[derive(Component, Deref, DerefMut)]
 pub struct ScrollTimer(Timer);
 
-/// save all choice we could have to display
-///
-/// Two options :
-///
-/// - Merge Scroll's attribute with PlayerScroll to only have one
-/// (same for UpperScroll)
-/// - Find a new solution to store all text to display (but not now)
-/// and with a difference with choice and text;
-/// Cause a serie of text is just a monologue and we don't care
-/// about the previous text displayed.
-/// All choice need to be prompted (not especially on the same page)
-/// so we need this kind of save
+/// Saves all choice we could have to display
 #[derive(Component, Inspectable)]
 pub struct PlayerScroll {
     pub choices: Vec<String>,
 }
 
-/// Indicate a place where a choice can written
+/// Represents all button which may contain choice for the player to made
 #[derive(Component)]
 pub struct PlayerChoice(pub usize);
 
-/// save all choice we could have to display
-/// Two options :
-///
-/// - Merge Scroll's attribute with UpperScroll to only have one
-/// (same for PlayerScroll)
-/// - Find a new solution to store all text to display (but not now)
-/// and with a difference with choice and text;
-/// Cause a serie of text is just a monologue and we don't care
-/// about the previous text displayed.
-/// All choice need to be prompted (not especially on the same page)
-/// so we need this kind of save
+/// Saves every text, in order, contained in the current dialog node.
 #[derive(Component, Inspectable)]
 pub struct UpperScroll {
     pub texts: Vec<String>,
@@ -111,34 +114,70 @@ pub struct UpperScroll {
 /// Happens when
 ///   - ui::dialog_box::create_dialog_box
 ///     - UI Wall creation
+///   - ui::dialog_box::update_dialog_panel
+///     - After any change in the dialog tree
+///     ( except when the d. tree is empty )
+///   - ui::dialog_player::drop_first_text_upper_scroll
+///     - ask to update the upper scroll after droping one text
 /// Read in
 ///   - ui::dialog_box::update_upper_scroll
 ///     - create a dialogBox with the text contained in the UpperScroll,
 ///     or update Text in existing dialogBox.
 ///   - ui::dialog_box::update_player_scroll
 ///     - update choices displayed in the player scroll.
-///     Have to insert DialogBox into the scroll,
-///     With correct amount / position.
+///     
 pub struct UpdateScrollEvent;
+
+/// Happens when
+///   - ui::dialog_box::update_upper_scroll
+///     - updates UpperScroll Text with the UpperScroll infos
+///   - ui::dialog_box::update_player_scroll
+///     - updates PlayerScroll Text with the UpperScroll infos
+///     happens for every choice there is in the PlayerScroll
+/// Read in
+///   - ui::dialog_box::reset_dialog_box
+///     - creates a DialogBox to transfer info to the child Text
+///     if there is none
+///     or resets the text and dialogBox
+pub struct ResetDialogBoxEvent {
+    dialog_box: Entity,
+    /// could be
+    ///
+    /// - a Choice
+    /// - a Text
+    text: String,
+}
 
 /// Happens when
 ///   - ui::dialog_box::create_dialog_box_on_key_press
 ///     - press 'o' to open the UI
 ///   - ui::dialog_box::create_dialog_box_on_combat_event
-///     - for each CombatEvent read: open a UI
+///     - when CombatEvent is triggered ( and ui not open )
+///     open the ui with the interlocutor gived by the CombatEvent
 /// Read in
 ///   - ui::dialog_box::create_dialog_box
-///     - for a given String, creates a ui + fx
+///     - for a given String, creates basic ui entities ( ui + fx )
 pub struct CreateDialogBoxEvent {
     interlocutor: Entity,
     dialog_tree: String,
 }
 
 /// Happens when
+///   - ui::dialog_box::update_dialog_panel
+///     - the dialog tree contained within the DialogPanel is empty
+/// Read in
+///   - ui::dialog_box::end_node_dialog
+///     - fills the given interlocutor with a blank "..." dialog
+///     and exit the Combat ( send CombatExitEvent )
+pub struct EndNodeDialogEvent;
+
+/// Happens when
 ///   - ui::dialog_box::create_dialog_box_on_key_press
 ///     - ui already open
 ///   - ui::dialog_box::create_dialog_box_on_combat_event
 ///     - ui already open
+///   - combat::mod::exit_combat
+///     - Close the Ui when CombatExitevent triggered
 /// Read in
 ///   - ui::dialog_box::close_dialog_box
 ///     - close ui
@@ -229,9 +268,7 @@ pub fn create_dialog_box_on_key_press(
 /// # Event Handler
 ///
 /// **Handle** the CombatEvent
-///
-/// **Read** CombatEvent
-///     open a new ui / or got to Discussion ui
+///     open a new ui or // TODO: go to Discussion ui
 ///
 /// # Behavior
 ///
@@ -782,14 +819,10 @@ pub fn create_dialog_box(
     }
 }
 
-/// # Argument
-///
-/// Bedge
-///
 /// # Purpose
 ///
 /// When the dialog file implied in the talk is changed,
-/// update scrolls' content
+/// updates the scrolls' content.
 ///
 /// # Process
 ///
@@ -803,6 +836,7 @@ pub fn create_dialog_box(
 ///     - update the player_scroll (implied: let the upper_scroll)
 ///   - NPC Choice
 ///     TODO: feature - NPC Choice
+///     for now, the player has to choose what the npc should say..
 pub fn update_dialog_panel(
     panel_query: Query<
         (Entity, &DialogPanel),
@@ -816,7 +850,7 @@ pub fn update_dialog_panel(
 
     player_query: Query<(Entity, &Karma), With<Player>>,
 
-    mut end_node_dialog_event: EventWriter<EndNodeDialog>,
+    mut end_node_dialog_event: EventWriter<EndNodeDialogEvent>,
     mut update_scroll_content: EventWriter<UpdateScrollEvent>,
 ) {
     // REFACTOR: Never Nester Mode requested
@@ -837,7 +871,7 @@ pub fn update_dialog_panel(
         // check what is the current dialog node
         if dialog_panel.is_empty() {
             // info!("DEBUG Empty Dialog Tree");
-            end_node_dialog_event.send(EndNodeDialog);
+            end_node_dialog_event.send(EndNodeDialogEvent);
         } else {
             let dialog_tree = init_tree_file(dialog_panel.to_owned());
 
@@ -913,14 +947,17 @@ pub fn update_dialog_panel(
 
 /// # Save principe
 ///
-/// Update the String within the entity interlocutor.
+/// Updates the String within the entity interlocutor.
 /// This just updates the Dialog contained in the interlocutor to be retrieve the next time we talk with it.
 /// We want to save the dialog progress at each state;
-/// Each time the dialog_tree of the panel is changed (?OR can be delay to the end of fight)
+/// Each time the dialog_tree of the panel is changed
+/// (?OR can be delay to the end of fight)
+///
+/// # Note
 ///
 /// XXX: little trick to detect change especially in the creation phase
 pub fn update_dialog_tree(
-    // XXX: issue? - will detect change if the interlocutor is switch
+    // XXX: (not an issue.) will detect change if the interlocutor is switch
     dialog_panel_query: Query<&DialogPanel, Changed<DialogPanel>>,
     mut interlocutor_query: Query<(Entity, &mut Dialog)>,
 ) {
@@ -937,7 +974,9 @@ pub fn update_dialog_tree(
     }
 }
 
-/// Display the content of the first element contained in the Upper Scroll
+/// Displays the content of the first element contained in the Upper Scroll
+///
+/// # Note
 ///
 /// REFACTOR: ? Handle by a event but just by query could be fine
 /// Handle by event allow us to execute animation when any update occurs;
@@ -974,18 +1013,13 @@ pub fn update_upper_scroll(
     }
 }
 
-/// Create a Dialogox and a button for the first choice contained in the Player Scroll
-///
-/// TODO: Create the perfect amount of DialogBox for the Player Scroll
-///
-/// and player scroll can contain multiple choice
-/// that will be displayed at the same time
-///
-/// DOC
+/// Player scroll can contain multiple choice
+/// that will be displayed at the same time.
+/// 
+/// For each choice, resets the DialogBox associated with its index
 pub fn update_player_scroll(
     mut scroll_event: EventReader<UpdateScrollEvent>,
 
-    // mut scroll_query: Query<(Or<&PlayerScroll, &mut UpperScroll>, Entity), With<Scroll>>,
     player_scroll_query: Query<(&PlayerScroll, &Children, Entity), With<Scroll>>,
 
     mut reset_event: EventWriter<ResetDialogBoxEvent>,
@@ -1000,7 +1034,13 @@ pub fn update_player_scroll(
             // REFACTOR: every 3 choices create a page and start again from the 1st child
             for choice in &player_scroll.choices {
                 // FIXME: CRASH HERE OutOfBound if place > 3 (view the refactor above)
+                if place > 3 {
+                    continue;
+                    // place = place + 1;
+                }
 
+                // TOTEST: if there is 3 choice into 2, the third one will be cleared?
+                
                 reset_event.send(ResetDialogBoxEvent {
                     dialog_box: scroll_children[place],
                     text: choice.to_owned(),
@@ -1017,6 +1057,8 @@ pub fn update_player_scroll(
     }
 }
 
+/// Animates, letter by letter, each Text.
+/// ( being the DialogBox's 1rt child )
 pub fn update_dialog_box(
     time: Res<Time>,
     mut dialog_box_query: Query<(&mut DialogBox, &Children)>,
@@ -1053,6 +1095,10 @@ pub fn update_dialog_box(
     }
 }
 
+/// # Note
+/// 
+/// Waiting for the use of spritesheet in bevy ui.
+/// To stop using frame by frame update.
 pub fn animate_scroll(
     time: Res<Time>,
     // texture_atlases: Res<Assets<TextureAtlas>>,
@@ -1086,23 +1132,7 @@ pub fn animate_scroll(
     }
 }
 
-/// DOC
-pub struct ResetDialogBoxEvent {
-    dialog_box: Entity,
-    /// could be
-    ///
-    /// - a Choice
-    /// - a Text
-    text: String,
-}
-
-/// DOC
-///
 /// Reset DialogBox on Event
-///
-/// # Err
-///
-/// In case of a missing DialogBox, add one...
 pub fn reset_dialog_box(
     mut commands: Commands,
 
@@ -1117,7 +1147,7 @@ pub fn reset_dialog_box(
     for event in reset_event.iter() {
         match dialog_box_query.get_mut(event.dialog_box) {
             Err(_e) => {
-                warn!("DEBUG: no DialogBox in the UpperScroll");
+                info!("DEBUG: no DialogBox in the UpperScroll");
                 commands.entity(event.dialog_box).insert(DialogBox::new(
                     event.text.clone(),
                     DIALOG_BOX_UPDATE_DELTA_S,
@@ -1142,18 +1172,16 @@ pub fn reset_dialog_box(
     }
 }
 
-/// DOC: Event
-pub struct EndNodeDialog;
-
-/// DOC
+/// Fills the given interlocutor with a blank "..." dialog
+/// and exit the Combat ( send CombatExitEvent )
 pub fn end_node_dialog(
-    mut end_node_dialog_event: EventReader<EndNodeDialog>,
+    mut end_node_dialog_event: EventReader<EndNodeDialogEvent>,
 
     panel_query: Query<(Entity, &DialogPanel), With<Animator<Style>>>,
     mut interlocutor_query: Query<
         (Entity, &Name, &mut Dialog),
         // Player or NPC
-        // TODO: feature - include Object (rm these withs)
+        // TODO: feature - include Object (rm these Withs)
         Or<(With<Player>, With<NPC>)>,
     >,
 
