@@ -1,34 +1,31 @@
 //! Implement SKILLS
 
-use crate::{
-    combat::stats::*,
+use crate::combat::stats::*;
+use bevy::prelude::*;
 
-};
-
-/// Negative = MALUS
-/// Positive = BONUS
-/// 
-/// Skills :
-/// hp: heal; dmg
-/// mana: gain; consume
-/// initiave: faster; slower
-/// att/def/spe: gain; lose
-pub struct Skills {
-    pub hp: HP,
-    pub mana: MANA,
+/// - Negative = MALUS
+/// - Positive = BONUS
+#[derive(Component)]
+pub struct Skill {
+    /// hp: dmg; heal
+    pub hp: Hp,
+    /// mana: consume; gain
+    pub mana: Mana,
+    /// initiave: slower; faster
     pub initiative: Initiative,
+    /// att: lose; gain
     pub attack: Attack,
+    /// att spe: lose; gain
     pub attack_spe: AttackSpe,
+    /// def: lose; gain
     pub defense: Defense,
+    /// def spe: lose; gain
     pub defense_spe: DefenseSpe,
-    pub skills_queue: Vec![Skills],
-    pub description: String
+    /// The 'list' of skills called after this one
+    pub skills_queue: Vec<Skill>,
+    pub description: String,
 }
 
-fn skill_caller(
-    query: Query<(&NPC)>, // ??
-    skill: Skills,
-    target: &Target
-){
-
+fn skill_caller(query: Query<(Entity, &Skill)>, // ??
+) {
 }

@@ -100,11 +100,11 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
         .insert(Leader)
         .insert(Team(TEAM_MC))
         .insert_bundle(CombatBundle {
-            hp: HP {
+            hp: Hp {
                 current_hp: PLAYER_HP,
                 max_hp: PLAYER_HP,
             },
-            mana: MANA {
+            mana: Mana {
                 current_mana: PLAYER_MANA,
                 max_mana: PLAYER_MANA,
             },

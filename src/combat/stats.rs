@@ -11,8 +11,8 @@ use crate::{
 /// Each entity which can be involved in a combat has this Bundle
 #[derive(Bundle)]
 pub struct CombatBundle {
-    pub hp: HP,
-    pub mana: MANA,
+    pub hp: Hp,
+    pub mana: Mana,
     pub initiative: Initiative,
     pub attack: Attack,
     pub attack_spe: AttackSpe,
@@ -21,19 +21,19 @@ pub struct CombatBundle {
 }
 
 
-/// ----------HP----------
+/// ----------Hp----------
 /// Start of the Game: 50hp -> End of the Game: 1 000hp
 /// Can be modified by level, item, buff, debuff, technics.
 /// At the moment, current_hp <= max_hp
 #[derive(Component)]
-pub struct HP {
+pub struct Hp {
     pub current_hp: i32,
     pub max_hp: i32
 }
 
-impl Default for HP {
+impl Default for Hp {
     fn default() -> Self {
-        HP {
+        Hp {
             current_hp: 50,
             max_hp: 50
         }
@@ -42,34 +42,34 @@ impl Default for HP {
 
 // TODO: a hp bar close to the entity
 pub fn show_hp(
-    player_query: Query<&HP, With<Player>>,
-    npc_query: Query<(&HP, &Name), With<NPC>>,
+    player_query: Query<&Hp, With<Player>>,
+    npc_query: Query<(&Hp, &Name), With<NPC>>,
 ){
     let player_hp = player_query.single();
     for (npc_hp, npc_name) in npc_query.iter() {
         println!(
-            "{}'s HP: {}/{},", 
+            "{}'s Hp: {}/{},", 
             npc_name, npc_hp.current_hp, npc_hp.max_hp);
     }
 
    println!(
-    "player's HP: {}/{}",
+    "player's Hp: {}/{}",
     player_hp.current_hp, player_hp.max_hp);
 }
 
-/// ----------MANA----------
+/// ----------Mana----------
 /// Start of the Game: 0-100mana -> End of the Game: 10 000mana
 /// Can be modified by level, item, buff, debuff, technics.
 /// At the moment, current_mana <= max_mana
 #[derive(Component)]
-pub struct MANA {
+pub struct Mana {
     pub current_mana: i32,
     pub max_mana: i32
 }
 
-impl Default for MANA {
+impl Default for Mana {
     fn default() -> Self {
-        MANA {
+        Mana {
             current_mana: 50,
             max_mana: 50
         }
@@ -78,18 +78,18 @@ impl Default for MANA {
 
 // TODO: a mana bar close to the entity
 pub fn show_mana(
-    player_query: Query<&MANA, With<Player>>,
-    npc_query: Query<(&MANA, &Name), With<NPC>>,
+    player_query: Query<&Mana, With<Player>>,
+    npc_query: Query<(&Mana, &Name), With<NPC>>,
 ){
     let player_mana = player_query.single();
     for (npc_mana, npc_name) in npc_query.iter() {
         println!(
-            "{}'s MANA: {}/{},", 
+            "{}'s Mana: {}/{},", 
             npc_name, npc_mana.current_mana, npc_mana.max_mana);
     }
 
    println!(
-    "player's MANA: {}/{}",
+    "player's Mana: {}/{}",
     player_mana.current_mana, player_mana.max_mana);
 }
 

@@ -179,8 +179,8 @@ fn spawn_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
             },
         })
         .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
+            hp: Hp::default(),
+            mana: Mana::default(),
             initiative: Initiative::default(),
             attack: Attack::default(),
             attack_spe: AttackSpe::default(),
@@ -222,8 +222,8 @@ fn spawn_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
             },
         })
         .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
+            hp: Hp::default(),
+            mana: Mana::default(),
             initiative: Initiative::default(),
             attack: Attack::default(),
             attack_spe: AttackSpe::default(),
@@ -271,8 +271,8 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
             },
         })
         .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
+            hp: Hp::default(),
+            mana: Mana::default(),
             initiative: Initiative::default(),
             attack: Attack::default(),
             attack_spe: AttackSpe::default(),
@@ -335,8 +335,8 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 },
             })
             .insert_bundle(CombatBundle {
-                hp: HP::default(),
-                mana: MANA::default(),
+                hp: Hp::default(),
+                mana: Mana::default(),
                 initiative: Initiative::default(),
                 attack: Attack::default(),
                 attack_spe: AttackSpe::default(),

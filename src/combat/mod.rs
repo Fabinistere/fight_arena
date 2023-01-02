@@ -39,6 +39,7 @@ use bevy_rapier2d::prelude::Velocity;
 use std::time::Duration;
 
 pub mod stats;
+mod skills;
 
 use crate::{
     // combat::stats::*,
