@@ -10,6 +10,7 @@
 //!     - Karma based
 //!     - Event based
 //!     - Choice based
+//!   - A node can send Specific Event
 //!
 //! Tree structure based on https://applied-math-coding.medium.com/a-tree-structure-implemented-in-rust-8344783abd75
 

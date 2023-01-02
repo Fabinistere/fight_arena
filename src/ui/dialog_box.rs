@@ -1,11 +1,14 @@
 //! All base method involved in creating the UI ingame
 //!
-//! EventHandler :
-//!     - Enter in Combat
-//!     - Exit in Combat
-//!     - Open HUD manually (pressing 'o')
-//!
-//! // DOC
+//! EventHandler:
+//! 
+//! - Enter in Combat
+//! - Exit in Combat
+//! - Open HUD manually (pressing 'o')
+//! - Scolls Gestion
+//!   - Update Dialog Tree
+//!   - Update each Scroll
+//!   - Update Dialog Box / Text
 
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
@@ -1029,8 +1032,8 @@ pub fn update_player_scroll(
                     // place = place + 1;
                 }
 
-                // TOTEST: if there is 3 choice into 2, the third one will be cleared?
-                
+                // The button's visibility is based on the size
+                // of the vector: player_scroll.choices
                 reset_event.send(ResetDialogBoxEvent {
                     dialog_box: scroll_children[place],
                     text: choice.to_owned(),

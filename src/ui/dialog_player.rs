@@ -10,21 +10,36 @@ use super::{
     dialog_system::init_tree_file,
 };
 
-/// DOC: Event
+/// Happens when
+///   - ui::dialog_player::button_system
+///     - Choice selected
+///   - ui::dialog_player::skip_forward_dialog
+///     - P pressed
+/// Read in
+///   - ui::dialog_player::dialog_dive
+///     - analyze the current node;
+///     If not empty,
+///       - drop until there is 1 or less text in the UpeerScroll
+///       OR
+///       - go down to the correct child index
 pub struct DialogDiveEvent {
     pub child_index: usize,
     pub skip: bool,
 }
 
+/// Happens when
+///   - ui::dialog_player::dialog_dive
+///     - there is 2 or more text in the UpeerScroll
+/// Read in
+///   - ui::dialog_player::drop_first_text_upper_scroll
+///     - drop first text from the UpperScroll
 pub struct DropFirstTextUpperScroll;
 // No need of : (# upper_scroll <= 1)
 // {
 //     pub upper_scroll: UpperScroll,
 // }
 
-/// DOC
-///
-/// FIXME: Crash when clicking a ghost button
+/// Action for each Interaction of the button
 pub fn button_system(
     mut interaction_query: Query<
         (&Interaction, &mut UiColor, &PlayerChoice, &Children),
@@ -38,8 +53,6 @@ pub fn button_system(
         // let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
-                // if let Ok((_ui_wall, animator, panel)) = query.get_single() {
-
                 dialog_dive_event.send(DialogDiveEvent {
                     child_index: index.0,
                     skip: false,
@@ -60,6 +73,11 @@ pub fn button_system(
     }
 }
 
+
+/// When P's pressed, dive into the dialog ( to the first very child )
+///
+/// # Process
+///
 /// check the upper scroll content
 ///
 /// Only skip text
@@ -101,11 +119,19 @@ pub fn skip_forward_dialog(
     // FIXME: prevent more than one Ui Wall open at the same time
 }
 
-/// DOC
+/// Analyze the current node;
+/// 
+/// If not empty,
+/// - drop until there is 1 or less text in the UpeerScroll
+/// - go down to the correct child index
 ///
-/// Go Down
+/// # Note
+/// 
+/// Every modification of the DialogPanel's content
+/// will modify the dialog contained the concerned interlocutor
 ///
-/// Every modification of the DialogPanel's content will modify the dialog contained the concerned interlocutor
+/// DOC: Noisy comments
+/// FIXME: Quit dialog issue
 pub fn dialog_dive(
     mut dialog_dive_event: EventReader<DialogDiveEvent>,
 
@@ -114,8 +140,6 @@ pub fn dialog_dive(
     upper_scroll_query: Query<&mut UpperScroll, With<Scroll>>,
     mut drop_first_text_upper_scroll_event: EventWriter<DropFirstTextUpperScroll>,
 ) {
-    // DOC: Noisy comments
-
     for event in dialog_dive_event.iter() {
         info!("DEBUG: DialogDive Event");
         let mut panel = panel_query.single_mut();
@@ -172,11 +196,10 @@ pub fn dialog_dive(
     }
 }
 
-/// DOC
+/// Disables empty button,
+/// (invisible == disable)
 ///
-/// Disable empty button (invisible == disable)
-///
-/// Prevent checking a index in the choices list and throwing a OutOfBoundErr
+/// Prevents checking a index in the choices list.
 pub fn hide_empty_button(
     mut button_query: Query<(Entity, &mut Visibility, &PlayerChoice), With<Button>>,
 
@@ -206,7 +229,7 @@ pub fn hide_empty_button(
     }
 }
 
-/// DOC
+/// Drops first text from the UpperScroll
 pub fn drop_first_text_upper_scroll(
     mut drop_event: EventReader<DropFirstTextUpperScroll>,
 
