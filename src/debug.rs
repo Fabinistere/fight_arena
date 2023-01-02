@@ -41,3 +41,17 @@ impl Plugin for DebugPlugin {
 //   - global log file
 //   - specific (Combat/Movement/Dialog) log file
 // ask for sending logs and data to *me* when game crash
+
+// TODO: Create Custom Lint Rule
+// function using query not being added to a plugin
+// event ...
+// plugin ...
+
+// TODO: Create Contribution Example
+// for
+// - fn
+// - struct
+//   - Component
+//   - Event
+//   - Plugin
+// - Module
