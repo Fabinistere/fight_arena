@@ -16,7 +16,7 @@ impl Plugin for UiPlugin {
             .add_event::<dialog_box::CloseDialogBoxEvent>()
             .add_event::<dialog_box::UpdateScrollEvent>()
             .add_event::<dialog_box::ResetDialogBoxEvent>()
-            .add_event::<dialog_box::EndNodeDialog>()
+            .add_event::<dialog_box::EndNodeDialogEvent>()
             .add_event::<dialog_player::DialogDiveEvent>()
             .add_event::<dialog_player::DropFirstTextUpperScroll>()
 
