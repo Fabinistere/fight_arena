@@ -4,11 +4,15 @@ use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
 use crate::collisions::{TesselatedCollider, TesselatedColliderConfig};
 use crate::npc::NPC;
 use crate::player::Player;
-use crate::ui::dialog_box::{DialogPanel, PlayerScroll, UpperScroll};
+use crate::ui::{
+    dialog_panel::DialogPanel,
+    dialog_scroll::{PlayerScroll, UpperScroll},
+};
 
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
+    #[rustfmt::skip]
     fn build(&self, app: &mut App) {
         if cfg!(debug_assertions) {
             app.add_plugin(WorldInspectorPlugin::new())

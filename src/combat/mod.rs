@@ -47,7 +47,7 @@ use crate::{
 
     npc::NPC,
     player::Player,
-    ui::dialog_box::CloseDialogBoxEvent,
+    ui::dialog_panel::CloseDialogPanelEvent,
 };
 
 /// Just help to create a ordered system in the app builder
@@ -122,7 +122,7 @@ impl Plugin for CombatPlugin {
 ///   - npc::movement::pursue
 ///     - target is reach
 /// Read in
-///   - ui::dialog_box::create_dialog_box_on_combat_event
+///   - ui::dialog_panel::create_dialog_panel_on_combat_event
 ///     - open combat ui
 ///   - combat::mod::freeze_in_combat
 ///     - freeze all entities involved in the starting combat
@@ -131,15 +131,15 @@ pub struct CombatEvent {
 }
 
 /// Happens when:
-///   - ui::dialog_box::create_dialog_box_on_key_press
+///   - ui::dialog_panel::create_dialog_panel_on_key_press
 ///     - combat was stoped by the player ('o')
-///   - ui::dialog_box::update_dialog_panel
+///   - ui::dialog_panel::update_dialog_panel
 ///     - End of the dialog
 /// Read in
 ///   - combat::exit_combat
 ///     - Add a FairPlayTimer to all enemies involved in the fight
 ///     - Remove to all entities InCombat Component
-///   - ui::dialog_box::create_dialog_box_on_combat_event
+///   - ui::dialog_panel::create_dialog_panel_on_combat_event
 ///     - close the ui
 pub struct CombatExitEvent;
 
@@ -309,7 +309,7 @@ pub fn exit_combat(
 
     foes_query: Query<(Entity, &Name), (With<NPC>, With<InCombat>, Without<Recruted>)>,
 
-    mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
+    mut close_dialog_panel_event: EventWriter<CloseDialogPanelEvent>,
 ) {
     for _ev in ev_combat_exit.iter() {
         info!("DEBUG: Combat Exit");
@@ -331,14 +331,14 @@ pub fn exit_combat(
         // FIXME: case the ui is not fully open
         // normally we cannot exit while opening (skip is block, and ... no action can yet)
         // so is kinda secure (without certitude)
-        close_dialog_box_event.send(CloseDialogBoxEvent);
+        close_dialog_panel_event.send(CloseDialogPanelEvent);
 
         // UI is open
         // if let Ok((_entity, animator, _style)) = query.get_single()
         // {
         //     // FULLY OPEN
         //     if animator.tweenable().unwrap().progress() >= 1.0 {
-        //         close_dialog_box_event.send(CloseDialogBoxEvent);
+        //         close_dialog_panel_event.send(CloseDialogPanelEvent);
         //     }
         // }
     }
