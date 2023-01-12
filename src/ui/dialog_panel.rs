@@ -21,12 +21,12 @@ use crate::{
     npc::NPC,
     player::Player,
     ui::{
-        dialog_box::ResetDialogBoxEvent,
-        dialog_system::{init_tree_file, DialogType}, dialog_scroll::{ScrollTimer, PlayerChoice},
+        dialog_scroll::{
+            PlayerChoice, PlayerScroll, Scroll, ScrollTimer, UpdateScrollEvent, UpperScroll,
+        },
+        dialog_system::{init_tree_file, Dialog, DialogType},
     },
 };
-
-use super::{dialog_system::Dialog, dialog_scroll::{UpdateScrollEvent, UpperScroll, PlayerScroll, Scroll}};
 
 /// Represents The UI Wall.
 /// Every UI Wall is associated with an entity (can be the player or the interlocutor like an object).
