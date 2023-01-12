@@ -3,11 +3,13 @@
 use bevy::prelude::*;
 use bevy_tweening::Animator;
 
-use crate::constants::ui::dialogs::*;
-
-use super::{
-    dialog_box::{DialogPanel, PlayerChoice, PlayerScroll, Scroll, UpperScroll, UpdateScrollEvent},
-    dialog_system::init_tree_file,
+use crate::{
+    constants::ui::dialogs::*,
+    ui::{
+        dialog_panel::DialogPanel,
+        dialog_scroll::{PlayerChoice, PlayerScroll, Scroll, UpdateScrollEvent, UpperScroll},
+        dialog_system::init_tree_file,
+    }
 };
 
 /// Happens when
@@ -73,7 +75,6 @@ pub fn button_system(
     }
 }
 
-
 /// When P's pressed, dive into the dialog ( to the first very child )
 ///
 /// # Process
@@ -120,13 +121,13 @@ pub fn skip_forward_dialog(
 }
 
 /// Analyze the current node;
-/// 
+///
 /// If not empty,
 /// - drop until there is 1 or less text in the UpeerScroll
 /// - go down to the correct child index
 ///
 /// # Note
-/// 
+///
 /// Every modification of the DialogPanel's content
 /// will modify the dialog contained the concerned interlocutor
 ///
@@ -149,7 +150,7 @@ pub fn dialog_dive(
 
         if dialog_panel.is_empty() {
             warn!("Empty DialogTree; The Interlocutor is still in dialog but has nothing to say.");
-            
+
             // force the chnage detection
             panel.dialog_tree.clear();
             warn!("DEBUG:force clear dialog panel");
