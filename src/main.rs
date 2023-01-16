@@ -7,7 +7,7 @@ use bevy::{
     prelude::*,
     render::{
         camera::ScalingMode,
-        texture::ImageSettings
+        texture::ImagePlugin
     }};
 use bevy_rapier2d::prelude::*;
 use bevy_tweening::TweeningPlugin;
@@ -49,24 +49,28 @@ fn main() {
     app
 
         .insert_resource(ClearColor(CLEAR))
-        .insert_resource(ImageSettings::default_nearest())
         .insert_resource(Msaa { samples: 1 })
         // hitbox
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()
         })
-        .insert_resource(WindowDescriptor {
-            width: height * RESOLUTION,
-            height: height,
-            title: "Fight Arena".to_string(),
-            resizable: false,
-            ..WindowDescriptor::default()
-        })
 
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        width: height * RESOLUTION,
+                        height,
+                        title: "Fight Arena".to_string(),
+                        resizable: false,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
+        )
         .add_plugin(RapierDebugRenderPlugin {
-            depth_test: false,
             mode: DebugRenderMode::all(),
             ..default()
         })
@@ -103,11 +107,11 @@ fn spawn_camera(
 
     camera.projection.scaling_mode = ScalingMode::None;
 
-    commands.spawn_bundle(camera);
+    commands.spawn(camera);
 
 }
 
-fn music(
+fn _music(
     asset_server: Res<AssetServer>, audio: Res<Audio>
 ) {
 

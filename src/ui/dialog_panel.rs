@@ -82,6 +82,7 @@ pub struct EndNodeDialogEvent;
 ///     - close ui
 pub struct CloseDialogPanelEvent;
 
+#[derive(Resource)]
 pub struct DialogPanelResources {
     text_font: Handle<Font>,
     appartements: Handle<Image>,
@@ -138,7 +139,7 @@ pub fn create_dialog_panel_on_key_press(
 ) {
     if keyboard_input.just_pressed(KeyCode::O) {
         if let Ok((_entity, animator, _style)) = query.get_single() {
-            if animator.tweenable().unwrap().progress() >= 1.0 {
+            if animator.tweenable().progress() >= 1.0 {
                 close_dialog_panel_event.send(CloseDialogPanelEvent);
 
                 ev_combat_exit.send(CombatExitEvent);
@@ -247,7 +248,6 @@ pub fn close_dialog_panel(
         if let Ok((entity, mut _animator, style)) = query.get_single_mut() {
             let dialog_panel_tween = Tween::new(
                 EaseFunction::QuadraticIn,
-                TweeningType::Once,
                 Duration::from_millis(DIALOG_PANEL_ANIMATION_TIME_MS),
                 UiPositionLens {
                     start: style.position,
@@ -299,7 +299,6 @@ pub fn create_dialog_panel(
 
         let dialog_panel_tween = Tween::new(
             EaseFunction::QuadraticOut,
-            TweeningType::Once,
             Duration::from_millis(DIALOG_PANEL_ANIMATION_TIME_MS),
             UiPositionLens {
                 start: UiRect {
@@ -319,7 +318,6 @@ pub fn create_dialog_panel(
 
         let panels_tween = Tween::new(
             EaseMethod::Linear,
-            TweeningType::Once,
             Duration::from_millis(1000),
             UiPositionLens {
                 start: UiRect {
@@ -334,33 +332,44 @@ pub fn create_dialog_panel(
         );
 
         commands
-            .spawn_bundle(ImageBundle {
-                image: dialog_panel_resources.appartements.clone().into(),
-                style: Style {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    position_type: PositionType::Relative,
-                    position: UiRect {
-                        top: Val::Px(0.0),
-                        left: Val::Auto,
-                        right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
-                        bottom: Val::Px(0.0),
+            .spawn((
+                // We spawn the paper wall background.
+                // To hide the windows' panels when reaching
+                // the top of the window.
+                // Because the main Wall Background is above these panels.
+                ImageBundle {
+                    image: dialog_panel_resources.appartements.clone().into(),
+                    style: Style {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        position_type: PositionType::Relative,
+                        position: UiRect {
+                            top: Val::Px(0.0),
+                            left: Val::Auto,
+                            right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
+                            bottom: Val::Px(0.0),
+                        },
+                        margin: UiRect {
+                            left: Val::Auto,
+                            right: Val::Px(0.0),
+                            top: Val::Px(0.0),
+                            bottom: Val::Px(0.0),
+                        },
+                        size: Size::new(Val::Auto, Val::Percent(100.0)),
+                        aspect_ratio: Some(284.0 / 400.0),
+                        ..Style::default()
                     },
-                    margin: UiRect {
-                        left: Val::Auto,
-                        right: Val::Px(0.0),
-                        top: Val::Px(0.0),
-                        bottom: Val::Px(0.0),
-                    },
-                    size: Size::new(Val::Auto, Val::Percent(100.0)),
-                    aspect_ratio: Some(284.0 / 400.0),
-                    ..Style::default()
+                    ..ImageBundle::default()
                 },
-                ..ImageBundle::default()
-            })
-            .insert(Name::new("UI Wall"))
+                DialogPanel {
+                    main_interlocutor: *interlocutor,
+                    dialog_tree: dialog_tree.to_owned(),
+                },
+                Animator::new(dialog_panel_tween),
+                Name::new("UI Wall"),
+            ))
             .with_children(|parent| {
                 let child_sprite_style = Style {
                     position_type: PositionType::Absolute,
@@ -370,62 +379,76 @@ pub fn create_dialog_panel(
 
                 // panels under the wall to prevent them from sticking out of the window after being lifted.
                 parent
-                    .spawn_bundle(ImageBundle {
-                        image: dialog_panel_resources.stained_glass_panels.clone().into(),
+                    .spawn((
+                        ImageBundle {
+                            image: dialog_panel_resources.stained_glass_panels.clone().into(),
+                            style: child_sprite_style.clone(),
+                            ..ImageBundle::default()
+                        },
+                        Animator::new(panels_tween),
+                        Name::new("Stained Glass Panel"),
+                    ));
+
+                parent.spawn((
+                    ImageBundle {
+                        image: dialog_panel_resources.background.clone().into(),
                         style: child_sprite_style.clone(),
                         ..ImageBundle::default()
-                    })
-                    .insert(Animator::new(panels_tween));
+                    },
+                    Name::new("Wall Background"),
+                ));
 
-                parent.spawn_bundle(ImageBundle {
-                    image: dialog_panel_resources.background.clone().into(),
-                    style: child_sprite_style.clone(),
-                    ..ImageBundle::default()
-                });
+                parent.spawn((
+                    ImageBundle {
+                        image: dialog_panel_resources.stained_glass_opened.clone().into(),
+                        style: child_sprite_style.clone(),
+                        ..ImageBundle::default()
+                    },
+                    Name::new("Stained Glass Static"),
+                ));
 
-                parent.spawn_bundle(ImageBundle {
-                    image: dialog_panel_resources.stained_glass_opened.clone().into(),
-                    style: child_sprite_style.clone(),
-                    ..ImageBundle::default()
-                });
-
-                parent.spawn_bundle(ImageBundle {
-                    image: dialog_panel_resources.chandelier.clone().into(),
-                    style: child_sprite_style.clone(),
-                    ..ImageBundle::default()
-                });
+                parent.spawn((
+                    ImageBundle {
+                        image: dialog_panel_resources.chandelier.clone().into(),
+                        style: child_sprite_style.clone(),
+                        ..ImageBundle::default()
+                    },
+                    Name::new("Light"),
+                ));
 
                 // Upper Scroll
 
                 parent
-                    .spawn_bundle(ImageBundle {
-                        image: dialog_panel_resources.scroll_animation[0].clone().into(),
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            align_items: AlignItems::FlexStart,
-                            justify_content: JustifyContent::FlexEnd,
-                            ..Style::default()
+                    .spawn((
+                        ImageBundle {
+                            image: dialog_panel_resources.scroll_animation[0].clone().into(),
+                            style: Style {
+                                position_type: PositionType::Absolute,
+                                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                                display: Display::Flex,
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::FlexStart,
+                                justify_content: JustifyContent::FlexEnd,
+                                ..Style::default()
+                            },
+                            ..ImageBundle::default()
                         },
-                        ..ImageBundle::default()
-                    })
-                    .insert(Scroll {
-                        current_frame: 0,
-                        reverse: false,
-                    })
-                    .insert(UpperScroll {
-                        // will be changed in update_dialog_panel
-                        texts: vec![],
-                    })
-                    .insert(Name::new("Upper Scroll"))
-                    .insert(ScrollTimer(Timer::from_seconds(
-                        SCROLL_ANIMATION_DELTA_S,
-                        false,
-                    )))
+                        Scroll {
+                            current_frame: 0,
+                            reverse: false,
+                        },
+                        UpperScroll {
+                            // will be changed in update_dialog_panel
+                            texts: vec![],
+                        },
+                        ScrollTimer(Timer::from_seconds(
+                            SCROLL_ANIMATION_DELTA_S,
+                            TimerMode::Once,
+                        )),
+                        Name::new("Upper Scroll"),
+                    ))
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
+                        parent.spawn(TextBundle {
                             text: Text::from_section(
                                 "",
                                 TextStyle {
@@ -440,6 +463,11 @@ pub fn create_dialog_panel(
                             }),
                             style: Style {
                                 flex_wrap: FlexWrap::Wrap,
+                                // FIXME: Text Position is not quite right...
+                                position: UiRect {
+                                    top: Val::Px(-250.0),
+                                    ..UiRect::default()
+                                },
                                 margin: UiRect {
                                     top: Val::Percent(74.0),
                                     left: Val::Percent(24.0),
@@ -455,7 +483,7 @@ pub fn create_dialog_panel(
                     ;
 
                 // parent
-                //     .spawn_bundle(ImageBundle {
+                //     .spawn(ImageBundle {
                 //         image: texture_atlases
                 //             .get(dialog_panel_resources.scroll_animation.clone())
                 //             .unwrap()
@@ -472,62 +500,67 @@ pub fn create_dialog_panel(
                     asset_server.load("textures/hud/HUD_1px_parchemin_MC_ouvert.png");
 
                 parent
-                    .spawn_bundle(ImageBundle {
-                        image: player_scroll_img.clone().into(),
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            align_items: AlignItems::FlexStart,
-                            justify_content: JustifyContent::FlexEnd,
-                            ..Style::default()
+                    .spawn((
+                        ImageBundle {
+                            image: player_scroll_img.clone().into(),
+                            style: Style {
+                                position_type: PositionType::Absolute,
+                                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                                display: Display::Flex,
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::FlexStart,
+                                justify_content: JustifyContent::FlexEnd,
+                                ..Style::default()
+                            },
+                            ..ImageBundle::default()
                         },
-                        ..ImageBundle::default()
-                    })
-                    .insert(Scroll {
-                        current_frame: 0,
-                        reverse: false,
-                    })
-                    .insert(PlayerScroll {
-                        // will be changed in update_dialog_panel
-                        choices: vec![],
-                    })
-                    .insert(Name::new("Player Scroll"))
-                    .insert(ScrollTimer(Timer::from_seconds(
-                        SCROLL_ANIMATION_DELTA_S,
-                        false,
-                    )))
+                        Scroll {
+                            current_frame: 0,
+                            reverse: false,
+                        },
+                        PlayerScroll {
+                            // will be changed in update_dialog_panel
+                            choices: vec![],
+                        },
+                        ScrollTimer(Timer::from_seconds(
+                            SCROLL_ANIMATION_DELTA_S,
+                            TimerMode::Once,
+                        )),
+                        Name::new("Player Scroll"),
+                    ))
                     .with_children(|parent| {
                         // TODO: feature - 3 PlayerChoice is enough, to have much reuse theses three in another page
 
                         // First potential choice
                         parent
-                            .spawn_bundle(ButtonBundle {
-                                style: Style {
-                                    // TODO: custom size ? (text dependent)
-                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
-                                    margin: UiRect::all(Val::Auto),
-                                    // margin: UiRect {
-                                    //     top: Val::Percent(105.0),
-                                    //     left: Val::Percent(24.0),
-                                    //     ..UiRect::default()
-                                    // },
-                                    // justify_content: JustifyContent::SpaceAround,
-                                    position: UiRect {
-                                        top: Val::Px(-30.0),
-                                        left: Val::Px(10.0),
-                                        ..UiRect::default()
+                            .spawn((
+                                ButtonBundle {
+                                    style: Style {
+                                        // TODO: custom size ? (text dependent)
+                                        size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                        margin: UiRect::all(Val::Auto),
+                                        // margin: UiRect {
+                                        //     top: Val::Percent(105.0),
+                                        //     left: Val::Percent(24.0),
+                                        //     ..UiRect::default()
+                                        // },
+                                        // justify_content: JustifyContent::SpaceAround,
+                                        position: UiRect {
+                                            top: Val::Px(450.0),
+                                            left: Val::Px(10.0),
+                                            ..UiRect::default()
+                                        },
+                                        ..default()
                                     },
+                                    background_color: NORMAL_BUTTON.into(),
                                     ..default()
                                 },
-                                color: NORMAL_BUTTON.into(),
-                                ..default()
-                            })
-                            .insert(PlayerChoice(0))
+                                PlayerChoice(0),
+                                Name::new("First Choice"),
+                            ))
                             // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                             .with_children(|parent| {
-                                parent.spawn_bundle(TextBundle {
+                                parent.spawn(TextBundle {
                                     text: Text::from_section(
                                         "",
                                         TextStyle {
@@ -546,8 +579,7 @@ pub fn create_dialog_panel(
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
-                                            top: Val::Percent(100.0),
-                                            left: Val::Percent(0.0),
+                                            // top: Val::Percent(10.0),
                                             ..UiRect::default()
                                         },
                                         max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
@@ -559,31 +591,34 @@ pub fn create_dialog_panel(
 
                         // Second potential choice
                         parent
-                            .spawn_bundle(ButtonBundle {
-                                style: Style {
-                                    // TODO: custom size ? (text dependent)
-                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
-                                    margin: UiRect::all(Val::Auto),
-                                    // margin: UiRect {
-                                    //     top: Val::Percent(125.0),
-                                    //     left: Val::Percent(24.0),
-                                    //     ..UiRect::default()
-                                    // },
-                                    // justify_content: JustifyContent::SpaceAround,
-                                    position: UiRect {
-                                        top: Val::Px(250.0),
-                                        left: Val::Px(10.0),
-                                        ..UiRect::default()
+                            .spawn((
+                                ButtonBundle {
+                                    style: Style {
+                                        // TODO: custom size ? (text dependent)
+                                        size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                        position: UiRect {
+                                            top: Val::Px(250.0),
+                                            left: Val::Px(10.0),
+                                            ..UiRect::default()
+                                        },
+                                        margin: UiRect::all(Val::Auto),
+                                        // margin: UiRect {
+                                        //     top: Val::Percent(125.0),
+                                        //     left: Val::Percent(24.0),
+                                        //     ..UiRect::default()
+                                        // },
+                                        // justify_content: JustifyContent::SpaceAround,
+                                        ..default()
                                     },
+                                    background_color: NORMAL_BUTTON.into(),
                                     ..default()
                                 },
-                                color: NORMAL_BUTTON.into(),
-                                ..default()
-                            })
-                            .insert(PlayerChoice(1))
+                                PlayerChoice(1),
+                                Name::new("Second Choice"),
+                            ))
                             // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                             .with_children(|parent| {
-                                parent.spawn_bundle(TextBundle {
+                                parent.spawn(TextBundle {
                                     text: Text::from_section(
                                         "",
                                         TextStyle {
@@ -602,8 +637,7 @@ pub fn create_dialog_panel(
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
-                                            top: Val::Percent(100.0),
-                                            left: Val::Percent(0.0),
+                                            // top: Val::Percent(10.0),
                                             ..UiRect::default()
                                         },
                                         max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
@@ -615,31 +649,34 @@ pub fn create_dialog_panel(
 
                         // Third potential choice
                         parent
-                            .spawn_bundle(ButtonBundle {
-                                style: Style {
-                                    // TODO: custom size ? (text dependent)
-                                    size: Size::new(Val::Px(300.0), Val::Px(30.0)),
-                                    margin: UiRect::all(Val::Auto),
-                                    // margin: UiRect {
-                                    //     top: Val::Percent(145.0),
-                                    //     left: Val::Percent(24.0),
-                                    //     ..UiRect::default()
-                                    // },
-                                    // justify_content: JustifyContent::SpaceAround,
-                                    position: UiRect {
-                                        top: Val::Px(530.0),
-                                        left: Val::Px(10.0),
-                                        ..UiRect::default()
+                            .spawn((
+                                ButtonBundle {
+                                    style: Style {
+                                        // TODO: custom size ? (text dependent)
+                                        size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                        position: UiRect {
+                                            top: Val::Px(50.0),
+                                            left: Val::Px(10.0),
+                                            ..UiRect::default()
+                                        },
+                                        margin: UiRect::all(Val::Auto),
+                                        // margin: UiRect {
+                                        //     top: Val::Percent(145.0),
+                                        //     left: Val::Percent(24.0),
+                                        //     ..UiRect::default()
+                                        // },
+                                        // justify_content: JustifyContent::SpaceAround,
+                                        ..default()
                                     },
+                                    background_color: NORMAL_BUTTON.into(),
                                     ..default()
                                 },
-                                color: NORMAL_BUTTON.into(),
-                                ..default()
-                            })
-                            .insert(PlayerChoice(2))
+                                PlayerChoice(2),
+                                Name::new("Third Choice"),
+                            ))
                             // .insert(DialogBox::new("".to_owned(), DIALOG_BOX_UPDATE_DELTA_S))
                             .with_children(|parent| {
-                                parent.spawn_bundle(TextBundle {
+                                parent.spawn(TextBundle {
                                     text: Text::from_section(
                                         "",
                                         TextStyle {
@@ -658,8 +695,7 @@ pub fn create_dialog_panel(
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
-                                            top: Val::Percent(100.0),
-                                            left: Val::Percent(0.0),
+                                            // top: Val::Percent(10.0),
                                             ..UiRect::default()
                                         },
                                         max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
@@ -673,7 +709,7 @@ pub fn create_dialog_panel(
                 // Button
 
                 // parent
-                //     .spawn_bundle(ButtonBundle {
+                //     .spawn(ButtonBundle {
                 //         style: Style {
                 //             size: Size::new(Val::Px(150.0), Val::Px(65.0)),
                 //             // center button
@@ -684,11 +720,11 @@ pub fn create_dialog_panel(
                 //             align_items: AlignItems::Center,
                 //             ..default()
                 //         },
-                //         color: NORMAL_BUTTON.into(),
+                //         background_color: NORMAL_BUTTON.into(),
                 //         ..default()
                 //     })
                 //     .with_children(|parent| {
-                //         parent.spawn_bundle(TextBundle::from_section(
+                //         parent.spawn(TextBundle::from_section(
                 //             "Button",
                 //             TextStyle {
                 //                 font: asset_server.load("fonts/dpcomic.ttf"),
@@ -697,12 +733,7 @@ pub fn create_dialog_panel(
                 //             },
                 //         ));
                 //     });
-            })
-            .insert(DialogPanel {
-                main_interlocutor: *interlocutor,
-                dialog_tree: dialog_tree.to_owned(),
-            })
-            .insert(Animator::new(dialog_panel_tween));
+            });
 
         // check with system ordering if this event will be catch
         create_scroll_content.send(UpdateScrollEvent);

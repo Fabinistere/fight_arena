@@ -312,12 +312,13 @@ pub fn add_pursuit_urge(
                     .insert(PursuitBehavior)
                     .with_children(|parent| {
                         parent
-                            .spawn()
-                            .insert(Collider::ball(80.))
-                            .insert(ActiveEvents::COLLISION_EVENTS)
-                            .insert(Sensor)
-                            .insert(PursuitSensor)
-                            .insert(Name::new("Pursuit Range"));
+                            .spawn((
+                                Collider::ball(80.),
+                                ActiveEvents::COLLISION_EVENTS,
+                                Sensor,
+                                PursuitSensor,
+                                Name::new("Pursuit Range"),
+                            ));
                     });
 
                 // insert the new target into the npc
@@ -353,7 +354,7 @@ pub fn remove_pursuit_urge(
 
                 commands.entity(npc.0).insert(FairPlayTimer {
                     // create the non-repeating rest timer
-                    timer: Timer::new(Duration::from_secs(EVASION_TIMER), false),
+                    timer: Timer::new(Duration::from_secs(EVASION_TIMER), TimerMode::Once),
                 });
 
                 // insert DetectionSensor into the Entity npc.0
@@ -418,12 +419,13 @@ pub fn add_detection_aura(
                     .insert(DetectionBehavior)
                     .with_children(|parent| {
                         parent
-                            .spawn()
-                            .insert(Collider::ball(40.))
-                            .insert(ActiveEvents::COLLISION_EVENTS)
-                            .insert(Sensor)
-                            .insert(DetectionSensor)
-                            .insert(Name::new("Detection Range"));
+                            .spawn((
+                                Collider::ball(40.),
+                                ActiveEvents::COLLISION_EVENTS,
+                                Sensor,
+                                DetectionSensor,
+                                Name::new("Detection Range")
+                            ));
                     });
             }
 

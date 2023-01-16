@@ -73,53 +73,56 @@ fn player_movement(
 
 fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
     commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: TextureAtlasSprite::new(PLAYER_STARTING_ANIM),
-            texture_atlas: fabiens.0.clone(),
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.0, 6.),
-                scale: Vec3::splat(PLAYER_SCALE),
+        .spawn((
+            SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(PLAYER_STARTING_ANIM),
+                texture_atlas: fabiens.0.clone(),
+                transform: Transform {
+                    translation: Vec3::new(0.0, 0.0, 6.),
+                    scale: Vec3::splat(PLAYER_SCALE),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert_bundle(MovementBundle {
-            speed: Speed::default(),
-            velocity: Velocity {
-                linvel: Vect::ZERO,
-                angvel: 0.0,
+            RigidBody::Dynamic,
+            LockedAxes::ROTATION_LOCKED,
+            MovementBundle {
+                speed: Speed::default(),
+                velocity: Velocity {
+                    linvel: Vect::ZERO,
+                    angvel: 0.0,
+                },
             },
-        })
-        .insert(Name::new("Player"))
-        .insert(Player)
-        .insert(Dialog { current_node: Some(MORGAN_DIALOG.to_owned()) })
-        .insert(Karma(10))
-        // Combat
-        .insert(Leader)
-        .insert(Team(TEAM_MC))
-        .insert_bundle(CombatBundle {
-            hp: HP {
-                current_hp: PLAYER_HP,
-                max_hp: PLAYER_HP,
-            },
-            mana: MANA {
-                current_mana: PLAYER_MANA,
-                max_mana: PLAYER_MANA,
-            },
-            initiative: Initiative(PLAYER_INITIATIVE),
-            attack: Attack(PLAYER_ATTACK),
-            attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
-            defense: Defense(PLAYER_DEFENSE),
-            defense_spe: DefenseSpe(PLAYER_DEFENSE_SPE),
-        })
+            Name::new("Player"),
+            Player,
+            Dialog { current_node: Some(MORGAN_DIALOG.to_owned()) },
+            Karma(10),
+            // Combat
+            Leader,
+            Team(TEAM_MC),
+            CombatBundle {
+                hp: HP {
+                    current_hp: PLAYER_HP,
+                    max_hp: PLAYER_HP,
+                },
+                mana: MANA {
+                    current_mana: PLAYER_MANA,
+                    max_mana: PLAYER_MANA,
+                },
+                initiative: Initiative(PLAYER_INITIATIVE),
+                attack: Attack(PLAYER_ATTACK),
+                attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
+                defense: Defense(PLAYER_DEFENSE),
+                defense_spe: DefenseSpe(PLAYER_DEFENSE_SPE),
+            }
+        ))
         .with_children(|parent| {
             parent
-                .spawn()
-                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
-                .insert(CharacterHitbox);
+                .spawn((
+                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                    CharacterHitbox
+                ));
 
             // parent
             //     .spawn()

@@ -6,11 +6,11 @@ edition = "2021"
 
 [dependencies]
 
-bevy = { version = "0.8", features = ["dynamic"] }
-bevy-inspector-egui = "0.12.1"
+bevy = { version = "0.9", features = ["dynamic"] }
+bevy-inspector-egui = "0.15"
 # bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" } # for bevy 0.8
-bevy_rapier2d = { version = "0.16", features = ["simd-stable", "debug-render"] }
-bevy_tweening = "0.5"
+bevy_rapier2d = { version = "0.19", features = ["simd-stable", "debug-render"] }
+bevy_tweening = "0.6"
 
 density-mesh-core = "1.5"
 density-mesh-image = "1.5"
@@ -21,6 +21,10 @@ rand = "0.8.5"
 
 [profile.dev.package."*"]
 opt-level = 3
+# for mac...
+# incremental = false
 
 [profile.dev]
 opt-level = 1
+# for mac...
+# incremental = false
