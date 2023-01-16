@@ -99,7 +99,7 @@ pub fn just_walk(
             // REFACTOR: change this part by sending a event : FREEZE
             commands.entity(npc).insert(RestTime {
                 // create the non-repeating rest timer
-                timer: Timer::new(Duration::from_secs(REST_TIMER), false),
+                timer: Timer::new(Duration::from_secs(REST_TIMER), TimerMode::Once),
             });
         }
     }

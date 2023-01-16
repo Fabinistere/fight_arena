@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 pub struct FabienPlugin;
 
-#[derive(Clone)]
+#[derive(Clone, Resource)]
 pub struct FabienSheet(pub Handle<TextureAtlas>);
 
 impl Plugin  for FabienPlugin {
@@ -28,6 +28,8 @@ fn load_character_spritesheet(
         Vec2::splat(34.),
         4,
         12,
+        None,
+        None,
     );
 
     let atlas_handle

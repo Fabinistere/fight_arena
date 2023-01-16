@@ -78,13 +78,13 @@ impl Plugin for CombatPlugin {
             .add_system_to_stage(
                 CoreStage::Update,
                 enter_combat
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    // .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(CombatState::Initiation)
             )
             .add_system_to_stage(
                 CoreStage::Update,
                 exit_combat
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    // .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(CombatState::Evasion)
                     .before(CombatState::Observation)
             )
@@ -230,6 +230,7 @@ pub fn enter_combat(
     mut foes_query: Query<(Entity, &GroupSize), (With<NPC>, Without<Recruted>)>,
 ) {
     for ev in ev_combat_enter.iter() {
+        info!("Combat Event");
         let player = player_query.single_mut();
 
         commands.entity(player).insert(InCombat);
@@ -272,7 +273,7 @@ pub fn enter_combat(
 
 /// For each entity in combat, freeze their movement
 pub fn freeze_in_combat(mut characters_query: Query<(Entity, &mut Velocity), With<InCombat>>) {
-    // QUESTION: Maybe be not for the member of the company
+    // TOTEST: QUESTION: Maybe be not for the member of the company
     // to let them reach the player
 
     for (_character, mut rb_vel) in characters_query.iter_mut() {
@@ -288,6 +289,7 @@ pub fn spawn_party_members(
 ) {
     for _ev in ev_spawn_party_members.iter() {
         // ev.group_size
+        // TODO: Spawn Party Member
     }
 }
 
@@ -322,7 +324,7 @@ pub fn exit_combat(
         // With InCombat and Without Recruted mean that these entities are enemies.
         for (foes, _name) in foes_query.iter() {
             commands.entity(foes).insert(FairPlayTimer {
-                timer: Timer::new(Duration::from_secs(EVASION_TIMER), false),
+                timer: Timer::new(Duration::from_secs(EVASION_TIMER), TimerMode::Once),
             });
 
             commands.entity(foes).remove::<InCombat>();

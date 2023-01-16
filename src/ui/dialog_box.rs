@@ -24,7 +24,7 @@ impl DialogBox {
             text,
             progress: 0,
             finished: false,
-            update_timer: Timer::from_seconds(update_time, true),
+            update_timer: Timer::from_seconds(update_time, TimerMode::Once),
         }
     }
 
@@ -33,7 +33,7 @@ impl DialogBox {
     //     *self.text = text;
     //     *self.progress = 0;
     //     *self.finished = false;
-    //     *self.update_timer = Timer::from_seconds(update_time, true);
+    //     *self.update_timer = Timer::from_seconds(update_time, TimerMode::Once);
     // }
 }
 
