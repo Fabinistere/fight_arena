@@ -22,6 +22,9 @@ impl Plugin for UiPlugin {
             .add_event::<dialog_player::DialogDiveEvent>()
             .add_event::<dialog_player::DropFirstTextUpperScroll>()
             .add_event::<dialog_box::ResetDialogBoxEvent>()
+            // Trigger Event
+            // .add_event::<dialog_system::FightEvent>()
+            .add_event::<dialog_system::TriggerEvent>()
 
             .add_startup_system(dialog_panel::load_textures)
 
@@ -48,6 +51,7 @@ impl Plugin for UiPlugin {
 
             .add_system(dialog_player::dialog_dive)
             .add_system(dialog_player::drop_first_text_upper_scroll)
+            .add_system(dialog_player::throw_trigger_event)
 
             .add_system(dialog_panel::end_node_dialog)
             .add_system(dialog_panel::close_dialog_panel)

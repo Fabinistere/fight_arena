@@ -160,6 +160,19 @@ impl FromStr for GameEvent {
     }
 }
 
+/// Happens in
+///   - ui::dialog_player
+///     - dialog_dive
+///     Exit a node
+/// Read in
+///   - ???
+///     - ???
+///     Match the Enum and handle it
+///     REFACTOR: or/and TriggerEvent Handle by sending these real Event
+pub struct TriggerEvent(pub Vec<ThrowableEvent>);
+// pub struct FightEvent;
+
+/// DOC
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum ThrowableEvent {
     FightEvent,

@@ -8,7 +8,7 @@ use crate::{
     ui::{
         dialog_panel::DialogPanel,
         dialog_scroll::{PlayerChoice, PlayerScroll, Scroll, UpdateScrollEvent, UpperScroll},
-        dialog_system::init_tree_file,
+        dialog_system::{init_tree_file, TriggerEvent, ThrowableEvent},
     }
 };
 
@@ -137,9 +137,10 @@ pub fn dialog_dive(
     mut dialog_dive_event: EventReader<DialogDiveEvent>,
 
     mut panel_query: Query<&mut DialogPanel, With<Animator<Style>>>,
-
     upper_scroll_query: Query<&mut UpperScroll, With<Scroll>>,
+
     mut drop_first_text_upper_scroll_event: EventWriter<DropFirstTextUpperScroll>,
+    mut trigger_event: EventWriter<TriggerEvent>,
 ) {
     for event in dialog_dive_event.iter() {
         info!("DEBUG: DialogDive Event");
@@ -174,9 +175,13 @@ pub fn dialog_dive(
             } else if !(dialog_tree.borrow().is_choice() && event.skip) {
                 // shouldn't exist : end choice (which hasn't child)
                 // so, we don't test it here
+
+                trigger_event.send(TriggerEvent(dialog_tree.borrow().trigger_event.clone()));
+
                 if dialog_tree.borrow().is_end_node() {
                     // will be handle by the update_dialog_panel system
                     // as Exit the Combat
+
                     panel.dialog_tree.clear();
                     info!("clear dialog panel");
                 } else {
@@ -225,6 +230,25 @@ pub fn hide_empty_button(
                         choice_index, visibility.is_visible
                     );
                 }
+            }
+        }
+    }
+}
+
+/// DOC
+/// 
+/// Options
+/// 
+/// - Match the enum into handle it direclty
+/// - Match the enum into throw the correct event
+pub fn throw_trigger_event(
+    mut trigger_event: EventReader<TriggerEvent>,
+) {
+    for trigger in trigger_event.iter() {
+        for event_to_exec in trigger.0.iter() {
+            match event_to_exec {
+                ThrowableEvent::FightEvent => { info!("Fight Event") }
+                ThrowableEvent::HasFriend => { info!("Has Friend Event") }
             }
         }
     }
