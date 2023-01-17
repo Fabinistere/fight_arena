@@ -12,3 +12,6 @@ Cargo.lock
 # Assets are deported to avoir pure waste of energy
 # due to git storage not adapt for this kind of purpose
 /assets/
+
+# Custom Code setup
+/.vscode/**

@@ -36,10 +36,6 @@ pub struct DialogDiveEvent {
 ///   - ui::dialog_player::drop_first_text_upper_scroll
 ///     - drop first text from the UpperScroll
 pub struct DropFirstTextUpperScroll;
-// No need of : (# upper_scroll <= 1)
-// {
-//     pub upper_scroll: UpperScroll,
-// }
 
 /// Action for each Interaction of the button
 pub fn button_system(
