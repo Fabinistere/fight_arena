@@ -22,11 +22,6 @@ pub struct DetectionSensor;
 #[derive(Component)]
 pub struct PursuitSensor;
 
-// pub struct NPCDetectionEvent {
-//     pub npc_entity: Entity,
-//     pub deteted_entity: Entity,
-// }
-
 /// Happens when:
 ///   - npc::movement::pursue
 ///     - target is not found/exist
@@ -37,8 +32,6 @@ pub struct StopChaseEvent {
 }
 
 /// Happens when:
-///   - ~~npc::mod~~
-///     - creating npc
 ///   - npc::aggression::remove_pursuit_urge
 ///     - restablish -*dominance*- the detection behavior
 ///       over the pursuit beh

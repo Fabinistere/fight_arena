@@ -776,7 +776,6 @@ pub fn update_dialog_panel(
 ) {
     // REFACTOR: Never Nester Mode requested
     // DOC: Noisy Comments
-    // TODO: feature - find a way to execute trigger_event somewhere
 
     // the panel must be open already and their dialog_tree modified
     // else:
