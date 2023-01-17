@@ -1,6 +1,6 @@
 [package]
 name = "fight_arena"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Olf EPAIN aka Wabtey", "Morgan Van Amerongen <vanamerongen.morgan@gmail.com>"]
 edition = "2021"
 
