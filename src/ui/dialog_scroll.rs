@@ -61,7 +61,6 @@ pub struct PlayerChoice(pub usize);
 ///     or update Text in existing dialogBox.
 ///   - ui::dialog_panel::update_player_scroll
 ///     - update choices displayed in the player scroll.
-///     
 pub struct UpdateScrollEvent;
 
 /// # Note

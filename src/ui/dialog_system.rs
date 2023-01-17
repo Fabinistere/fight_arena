@@ -165,14 +165,17 @@ impl FromStr for GameEvent {
 ///     - dialog_dive
 ///     Exit a node
 /// Read in
-///   - ???
-///     - ???
+///   - ui::dialog_player
+///     - throw_trigger_event
 ///     Match the Enum and handle it
 ///     REFACTOR: or/and TriggerEvent Handle by sending these real Event
 pub struct TriggerEvent(pub Vec<ThrowableEvent>);
 // pub struct FightEvent;
 
 /// DOC
+/// 
+/// List all triggerable event,
+/// that can be send when quitting a dialog node
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum ThrowableEvent {
     FightEvent,
