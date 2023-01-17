@@ -41,7 +41,7 @@ impl Default for HP {
 }
 
 // TODO: a hp bar close to the entity
-pub fn show_hp(
+pub fn _show_hp(
     player_query: Query<&HP, With<Player>>,
     npc_query: Query<(&HP, &Name), With<NPC>>,
 ){
@@ -77,7 +77,7 @@ impl Default for MANA {
 }
 
 // TODO: a mana bar close to the entity
-pub fn show_mana(
+pub fn _show_mana(
     player_query: Query<&MANA, With<Player>>,
     npc_query: Query<(&MANA, &Name), With<NPC>>,
 ){
@@ -169,7 +169,7 @@ impl Default for Initiative {
 /// 
 /// Sort the result in a nice table
 /// In case of egality: pick the higher initiative boyo to be on top
-pub fn roll_initiative(
+pub fn _roll_initiative(
     player_query: Query<&Initiative, With<Player>>,
     npc_query: Query<&Initiative, With<NPC>>
 ) {

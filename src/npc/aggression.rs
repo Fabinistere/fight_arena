@@ -22,36 +22,6 @@ pub struct DetectionSensor;
 #[derive(Component)]
 pub struct PursuitSensor;
 
-// pub struct NPCDetectionEvent {
-//     pub npc_entity: Entity,
-//     pub deteted_entity: Entity,
-// }
-
-/// Happens when:
-///   - npc::movement::pursue
-///     - target is reach
-/// Read in
-///   - ui::dialog_box::create_dialog_box_on_combat_event
-///     - open combat ui
-///   - combat::mod::freeze_in_combat
-///     - freeze all entities involved in the starting combat
-pub struct CombatEvent {
-    pub npc_entity: Entity,
-}
-
-/// Happens when:
-///   - ???
-///     - combat was stoped by the player
-///   - ui::dialog_box::update_dialog_panel
-///     - End of the dialog
-/// Read in
-///   - combat::exit_combat
-///     - Add a FairPlayTimer to all enemies involved in the fight
-///     - Remove to all entities InCombat Component
-///   - ui::dialog_box::create_dialog_box_on_combat_event
-///     - close the ui
-pub struct CombatExitEvent;
-
 /// Happens when:
 ///   - npc::movement::pursue
 ///     - target is not found/exist
@@ -62,8 +32,6 @@ pub struct StopChaseEvent {
 }
 
 /// Happens when:
-///   - ~~npc::mod~~
-///     - creating npc
 ///   - npc::aggression::remove_pursuit_urge
 ///     - restablish -*dominance*- the detection behavior
 ///       over the pursuit beh
@@ -337,12 +305,13 @@ pub fn add_pursuit_urge(
                     .insert(PursuitBehavior)
                     .with_children(|parent| {
                         parent
-                            .spawn()
-                            .insert(Collider::ball(80.))
-                            .insert(ActiveEvents::COLLISION_EVENTS)
-                            .insert(Sensor)
-                            .insert(PursuitSensor)
-                            .insert(Name::new("Pursuit Range"));
+                            .spawn((
+                                Collider::ball(80.),
+                                ActiveEvents::COLLISION_EVENTS,
+                                Sensor,
+                                PursuitSensor,
+                                Name::new("Pursuit Range"),
+                            ));
                     });
 
                 // insert the new target into the npc
@@ -378,7 +347,7 @@ pub fn remove_pursuit_urge(
 
                 commands.entity(npc.0).insert(FairPlayTimer {
                     // create the non-repeating rest timer
-                    timer: Timer::new(Duration::from_secs(EVASION_TIMER), false),
+                    timer: Timer::new(Duration::from_secs(EVASION_TIMER), TimerMode::Once),
                 });
 
                 // insert DetectionSensor into the Entity npc.0
@@ -443,12 +412,13 @@ pub fn add_detection_aura(
                     .insert(DetectionBehavior)
                     .with_children(|parent| {
                         parent
-                            .spawn()
-                            .insert(Collider::ball(40.))
-                            .insert(ActiveEvents::COLLISION_EVENTS)
-                            .insert(Sensor)
-                            .insert(DetectionSensor)
-                            .insert(Name::new("Detection Range"));
+                            .spawn((
+                                Collider::ball(40.),
+                                ActiveEvents::COLLISION_EVENTS,
+                                Sensor,
+                                DetectionSensor,
+                                Name::new("Detection Range")
+                            ));
                     });
             }
 

@@ -45,12 +45,9 @@ use crate::{
     // combat::stats::{show_hp, show_mana}
     constants::{character::npc::movement::EVASION_TIMER, FIXED_TIME_STEP},
 
-    npc::{
-        aggression::{CombatEvent, CombatExitEvent},
-        NPC,
-    },
+    npc::NPC,
     player::Player,
-    ui::dialog_box::CloseDialogBoxEvent,
+    ui::dialog_panel::CloseDialogPanelEvent,
 };
 
 /// Just help to create a ordered system in the app builder
@@ -74,17 +71,20 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<SpawnCombatFoesEvent>()
+            .add_event::<CombatEvent>()
+            .add_event::<CombatExitEvent>()
+
             .add_system(spawn_party_members.before(CombatState::Initiation))
             .add_system_to_stage(
                 CoreStage::Update,
                 enter_combat
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    // .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(CombatState::Initiation)
             )
             .add_system_to_stage(
                 CoreStage::Update,
                 exit_combat
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
+                    // .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .label(CombatState::Evasion)
                     .before(CombatState::Observation)
             )
@@ -117,6 +117,31 @@ impl Plugin for CombatPlugin {
             ;
     }
 }
+
+/// Happens when:
+///   - npc::movement::pursue
+///     - target is reach
+/// Read in
+///   - ui::dialog_panel::create_dialog_panel_on_combat_event
+///     - open combat ui
+///   - combat::mod::freeze_in_combat
+///     - freeze all entities involved in the starting combat
+pub struct CombatEvent {
+    pub npc_entity: Entity,
+}
+
+/// Happens when:
+///   - ui::dialog_panel::create_dialog_panel_on_key_press
+///     - combat was stoped by the player ('o')
+///   - ui::dialog_panel::update_dialog_panel
+///     - End of the dialog
+/// Read in
+///   - combat::exit_combat
+///     - Add a FairPlayTimer to all enemies involved in the fight
+///     - Remove to all entities InCombat Component
+///   - ui::dialog_panel::create_dialog_panel_on_combat_event
+///     - close the ui
+pub struct CombatExitEvent;
 
 fn observation() {
     // println!("Now it's your turn...")
@@ -205,6 +230,7 @@ pub fn enter_combat(
     mut foes_query: Query<(Entity, &GroupSize), (With<NPC>, Without<Recruted>)>,
 ) {
     for ev in ev_combat_enter.iter() {
+        info!("Combat Event");
         let player = player_query.single_mut();
 
         commands.entity(player).insert(InCombat);
@@ -240,14 +266,14 @@ pub fn enter_combat(
             }
 
             // Err(e)
-            _ => continue,
+            _ => warn!("The NPC stoped by the CombatEvent does not match the enemy's entity."),
         }
     }
 }
 
 /// For each entity in combat, freeze their movement
 pub fn freeze_in_combat(mut characters_query: Query<(Entity, &mut Velocity), With<InCombat>>) {
-    // QUESTION: Maybe be not for the member of the company
+    // TOTEST: QUESTION: Maybe be not for the member of the company
     // to let them reach the player
 
     for (_character, mut rb_vel) in characters_query.iter_mut() {
@@ -259,11 +285,11 @@ pub fn freeze_in_combat(mut characters_query: Query<(Entity, &mut Velocity), Wit
 /// Event Handler of SpawnCombatFoesEvent
 pub fn spawn_party_members(
     // mut commands: Commands,
-
     mut ev_spawn_party_members: EventReader<SpawnCombatFoesEvent>,
 ) {
     for _ev in ev_spawn_party_members.iter() {
         // ev.group_size
+        // TODO: Spawn Party Member
     }
 }
 
@@ -272,6 +298,8 @@ pub fn spawn_party_members(
 /// apply to all npc involved in a interaction the IdleBehavior
 pub fn exit_combat(
     mut commands: Commands,
+
+    mut ev_combat_exit: EventReader<CombatExitEvent>,
 
     allies_query: Query<
         (Entity, &Name),
@@ -283,10 +311,11 @@ pub fn exit_combat(
 
     foes_query: Query<(Entity, &Name), (With<NPC>, With<InCombat>, Without<Recruted>)>,
 
-    mut ev_combat_exit: EventReader<CombatExitEvent>,
-    mut close_dialog_box_event: EventWriter<CloseDialogBoxEvent>,
+    mut close_dialog_panel_event: EventWriter<CloseDialogPanelEvent>,
 ) {
     for _ev in ev_combat_exit.iter() {
+        info!("DEBUG: Combat Exit");
+
         for (allie, _name) in allies_query.iter() {
             commands.entity(allie).remove::<InCombat>();
         }
@@ -295,7 +324,7 @@ pub fn exit_combat(
         // With InCombat and Without Recruted mean that these entities are enemies.
         for (foes, _name) in foes_query.iter() {
             commands.entity(foes).insert(FairPlayTimer {
-                timer: Timer::new(Duration::from_secs(EVASION_TIMER), false),
+                timer: Timer::new(Duration::from_secs(EVASION_TIMER), TimerMode::Once),
             });
 
             commands.entity(foes).remove::<InCombat>();
@@ -304,14 +333,14 @@ pub fn exit_combat(
         // FIXME: case the ui is not fully open
         // normally we cannot exit while opening (skip is block, and ... no action can yet)
         // so is kinda secure (without certitude)
-        close_dialog_box_event.send(CloseDialogBoxEvent);
+        close_dialog_panel_event.send(CloseDialogPanelEvent);
 
         // UI is open
         // if let Ok((_entity, animator, _style)) = query.get_single()
         // {
-        //     // FULLY OPEN    
+        //     // FULLY OPEN
         //     if animator.tweenable().unwrap().progress() >= 1.0 {
-        //         close_dialog_box_event.send(CloseDialogBoxEvent);
+        //         close_dialog_panel_event.send(CloseDialogPanelEvent);
         //     }
         // }
     }

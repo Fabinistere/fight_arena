@@ -80,13 +80,13 @@ impl Plugin for NPCPlugin {
             // when an enemy npc catch the player or an ally attached to the group
             // initialize a Combat
             // Combat mean A lock dialogue : Talk or Fight
-            .add_event::<aggression::CombatEvent>()
-            .add_event::<aggression::CombatExitEvent>()
             .add_event::<aggression::StopChaseEvent>()
             .add_event::<aggression::DetectionModeEvent>()
             .add_event::<aggression::EngagePursuitEvent>()
+
             .add_startup_system(spawn_characters)
             .add_startup_system(spawn_aggresives_characters)
+            
             .add_system_set_to_stage(
                 CoreStage::Update,
                 SystemSet::new()
@@ -154,88 +154,95 @@ impl Plugin for NPCPlugin {
 fn spawn_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
     // ADMIRAL
     commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: TextureAtlasSprite::new(ADMIRAL_STARTING_ANIM),
-            texture_atlas: fabien.0.clone(),
-            transform: Transform {
-                translation: Vec3::new(-20., 35., NPC_Z_BACK),
-                scale: Vec3::splat(NPC_SCALE),
+        .spawn((
+            SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(ADMIRAL_STARTING_ANIM),
+                texture_atlas: fabien.0.clone(),
+                transform: Transform {
+                    translation: Vec3::new(-20., 35., NPC_Z_BACK),
+                    scale: Vec3::splat(NPC_SCALE),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(Name::new("NPC Admiral"))
-        .insert(NPC)
-        .insert(Team(TEAM_MC))
-        .insert(Recruted)
-        .insert(FollowupBehavior)
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert_bundle(MovementBundle {
-            speed: Speed::default(),
-            velocity: Velocity {
-                linvel: Vect::ZERO,
-                angvel: 0.0,
+            Name::new("NPC Admiral"),
+            NPC,
+            Team(TEAM_MC),
+            Recruted,
+            FollowupBehavior,
+            RigidBody::Dynamic,
+            LockedAxes::ROTATION_LOCKED,
+            MovementBundle {
+                speed: Speed::default(),
+                velocity: Velocity {
+                    linvel: Vect::ZERO,
+                    angvel: 0.0,
+                },
             },
-        })
-        .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
-            initiative: Initiative::default(),
-            attack: Attack::default(),
-            attack_spe: AttackSpe::default(),
-            defense: Defense::default(),
-            defense_spe: DefenseSpe::default(),
-        })
+            CombatBundle {
+                hp: HP::default(),
+                mana: MANA::default(),
+                initiative: Initiative::default(),
+                attack: Attack::default(),
+                attack_spe: AttackSpe::default(),
+                defense: Defense::default(),
+                defense_spe: DefenseSpe::default(),
+            },
+
+        ))
         .with_children(|parent| {
             parent
-                .spawn()
-                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
-                .insert(CharacterHitbox);
+                .spawn((
+                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                    CharacterHitbox
+                ));
         });
 
     // HUGO
     commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: TextureAtlasSprite::new(HUGO_STARTING_ANIM),
-            texture_atlas: fabien.0.clone(),
-            transform: Transform {
-                translation: Vec3::new(-70., -55., NPC_Z_BACK),
-                scale: Vec3::splat(NPC_SCALE),
+        .spawn((
+            SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(HUGO_STARTING_ANIM),
+                texture_atlas: fabien.0.clone(),
+                transform: Transform {
+                    translation: Vec3::new(-70., -55., NPC_Z_BACK),
+                    scale: Vec3::splat(NPC_SCALE),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .insert(Name::new("NPC Hugo"))
-        .insert(NPC)
-        .insert(Team(TEAM_MC))
-        .insert(Recruted)
-        .insert(FollowupBehavior)
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert_bundle(MovementBundle {
-            speed: Speed::default(),
-            velocity: Velocity {
-                linvel: Vect::ZERO,
-                angvel: 0.0,
+            Name::new("NPC Hugo"),
+            NPC,
+            Team(TEAM_MC),
+            Recruted,
+            FollowupBehavior,
+            RigidBody::Dynamic,
+            LockedAxes::ROTATION_LOCKED,
+            MovementBundle {
+                speed: Speed::default(),
+                velocity: Velocity {
+                    linvel: Vect::ZERO,
+                    angvel: 0.0,
+                },
             },
-        })
-        .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
-            initiative: Initiative::default(),
-            attack: Attack::default(),
-            attack_spe: AttackSpe::default(),
-            defense: Defense::default(),
-            defense_spe: DefenseSpe::default(),
-        })
+            CombatBundle {
+                hp: HP::default(),
+                mana: MANA::default(),
+                initiative: Initiative::default(),
+                attack: Attack::default(),
+                attack_spe: AttackSpe::default(),
+                defense: Defense::default(),
+                defense_spe: DefenseSpe::default(),
+            },
+        ))
         .with_children(|parent| {
             parent
-                .spawn()
-                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
-                .insert(CharacterHitbox);
+                .spawn((
+                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                    CharacterHitbox
+                ));
         });
 }
 
@@ -244,97 +251,34 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
 
     // OLF
     commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: TextureAtlasSprite::new(OLF_STARTING_ANIM),
-            texture_atlas: fabien.0.clone(),
-            transform: Transform {
-                translation: Vec3::new(-20., 55., NPC_Z_BACK),
-                scale: Vec3::splat(NPC_SCALE),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Name::new("NPC Olf"))
-        .insert(NPC)
-        .insert(Leader)
-        .insert(Team(TEAM_OLF))
-        .insert(JustWalkBehavior {
-            destination: give_a_direction(),
-        })
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert_bundle(MovementBundle {
-            speed: Speed(NPC_SPEED_LEADER),
-            velocity: Velocity {
-                linvel: Vect::ZERO,
-                angvel: 0.0,
-            },
-        })
-        .insert_bundle(CombatBundle {
-            hp: HP::default(),
-            mana: MANA::default(),
-            initiative: Initiative::default(),
-            attack: Attack::default(),
-            attack_spe: AttackSpe::default(),
-            defense: Defense::default(),
-            defense_spe: DefenseSpe::default(),
-        })
-        .insert(Dialog{ current_node: Some(String::from(OLF_DIALOG))})
-        // 5 Fabicurion are hidden within Olf's silhouette
-        .insert(GroupSize(5))
-        .insert(DetectionBehavior)
-        .with_children(|parent| {
-            parent
-                .spawn()
-                .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
-                .insert(CharacterHitbox);
-
-            parent
-                .spawn()
-                .insert(Collider::ball(40.))
-                .insert(ActiveEvents::COLLISION_EVENTS)
-                .insert(Sensor)
-                .insert(DetectionSensor)
-                .insert(Name::new("Detection Range"));
-        });
-
-    // Two FABICURION
-    for i in 0..2 {
-        let name = "NPC Fabicurion nmb".replace("nmb", &i.to_string());
-
-        commands
-            .spawn_bundle(SpriteSheetBundle {
-                sprite: TextureAtlasSprite::new(FABICURION_STARTING_ANIM),
+        .spawn((
+            SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(OLF_STARTING_ANIM),
                 texture_atlas: fabien.0.clone(),
                 transform: Transform {
-                    translation: Vec3::new(
-                        -20. + (i * 10) as f32,
-                        55. + (i * 10) as f32,
-                        NPC_Z_BACK,
-                    ),
+                    translation: Vec3::new(-20., 55., NPC_Z_BACK),
                     scale: Vec3::splat(NPC_SCALE),
                     ..default()
                 },
                 ..default()
-            })
-            .insert(Name::new(name))
-            .insert(NPC)
-            .insert(Leader)
-            .insert(Team(TEAM_OLF))
-            .insert(JustWalkBehavior {
+            },
+            Name::new("NPC Olf"),
+            NPC,
+            Leader,
+            Team(TEAM_OLF),
+            JustWalkBehavior {
                 destination: give_a_direction(),
-            })
-            .insert(RigidBody::Dynamic)
-            .insert(LockedAxes::ROTATION_LOCKED)
-            .insert_bundle(MovementBundle {
-                speed: Speed(NPC_SPEED),
+            },
+            RigidBody::Dynamic,
+            LockedAxes::ROTATION_LOCKED,
+            MovementBundle {
+                speed: Speed(NPC_SPEED_LEADER),
                 velocity: Velocity {
                     linvel: Vect::ZERO,
                     angvel: 0.0,
                 },
-            })
-            .insert_bundle(CombatBundle {
+            },
+            CombatBundle {
                 hp: HP::default(),
                 mana: MANA::default(),
                 initiative: Initiative::default(),
@@ -342,25 +286,96 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 attack_spe: AttackSpe::default(),
                 defense: Defense::default(),
                 defense_spe: DefenseSpe::default(),
-            })
-            // 2 Fabicurion are hidden behind the representant
-            .insert(GroupSize(2))
-            .insert(DetectionBehavior)
-            .insert(Dialog{ current_node: Some(String::from(FABIEN_DIALOG))})
+            },
+            Dialog{ current_node: Some(String::from(OLF_DIALOG))},
+            // 5 Fabicurion are hidden within Olf's silhouette
+            GroupSize(5),
+            DetectionBehavior,
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                    CharacterHitbox
+                ));
+
+            parent
+                .spawn((
+                    Collider::ball(40.),
+                    ActiveEvents::COLLISION_EVENTS,
+                    Sensor,
+                    DetectionSensor,
+                    Name::new("Detection Range")
+                ));
+        });
+
+    // Two FABICURION
+    for i in 0..2 {
+        let name = "NPC Fabicurion nmb".replace("nmb", &i.to_string());
+
+        commands
+            .spawn((
+                SpriteSheetBundle {
+                    sprite: TextureAtlasSprite::new(FABICURION_STARTING_ANIM),
+                    texture_atlas: fabien.0.clone(),
+                    transform: Transform {
+                        translation: Vec3::new(
+                            -20. + (i * 10) as f32,
+                            55. + (i * 10) as f32,
+                            NPC_Z_BACK,
+                        ),
+                        scale: Vec3::splat(NPC_SCALE),
+                        ..default()
+                    },
+                    ..default()
+                },
+                Name::new(name),
+                NPC,
+                Leader,
+                Team(TEAM_OLF),
+                JustWalkBehavior {
+                    destination: give_a_direction(),
+                },
+                RigidBody::Dynamic,
+                LockedAxes::ROTATION_LOCKED,
+                MovementBundle {
+                    speed: Speed(NPC_SPEED),
+                    velocity: Velocity {
+                        linvel: Vect::ZERO,
+                        angvel: 0.0,
+                    },
+                },
+                CombatBundle {
+                    hp: HP::default(),
+                    mana: MANA::default(),
+                    initiative: Initiative::default(),
+                    attack: Attack::default(),
+                    attack_spe: AttackSpe::default(),
+                    defense: Defense::default(),
+                    defense_spe: DefenseSpe::default(),
+                },
+                // 2 Fabicurion are hidden behind the representant
+                GroupSize(2),
+                DetectionBehavior,
+                Dialog{ current_node: Some(String::from(FABIEN_DIALOG))},
+            ))
             .with_children(|parent| {
                 parent
-                    .spawn()
-                    .insert(Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT))
-                    .insert(Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0))
-                    .insert(CharacterHitbox);
+                    .spawn((
+                        Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                        Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                        CharacterHitbox,
+                    ));
 
                 parent
-                    .spawn()
-                    .insert(Collider::ball(40.))
-                    .insert(ActiveEvents::COLLISION_EVENTS)
-                    .insert(Sensor)
-                    .insert(DetectionSensor)
-                    .insert(Name::new("Detection Range"));
+                    .spawn((
+                        Collider::ball(40.),
+                        ActiveEvents::COLLISION_EVENTS,
+                        Sensor,
+                        DetectionSensor,
+                        Name::new("Detection Range")
+                    ));
             });
     }
 }

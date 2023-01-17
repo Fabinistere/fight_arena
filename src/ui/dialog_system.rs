@@ -10,6 +10,7 @@
 //!     - Karma based
 //!     - Event based
 //!     - Choice based
+//!   - A node can send Specific Event
 //!
 //! Tree structure based on https://applied-math-coding.medium.com/a-tree-structure-implemented-in-rust-8344783abd75
 
@@ -86,7 +87,7 @@ impl DialogType {
 
     /// Only compare the type,
     /// it don't compare content
-    fn eq(&self, comp: DialogType) -> bool {
+    fn _eq(&self, comp: DialogType) -> bool {
         match (self.clone(), comp) {
             (DialogType::Text(_), DialogType::Text(_)) => return true,
             (
@@ -159,6 +160,22 @@ impl FromStr for GameEvent {
     }
 }
 
+/// Happens in
+///   - ui::dialog_player
+///     - dialog_dive
+///     Exit a node
+/// Read in
+///   - ui::dialog_player
+///     - throw_trigger_event
+///     Match the Enum and handle it
+///     REFACTOR: or/and TriggerEvent Handle by sending these real Event
+pub struct TriggerEvent(pub Vec<ThrowableEvent>);
+// pub struct FightEvent;
+
+/// DOC
+/// 
+/// List all triggerable event,
+/// that can be send when quitting a dialog node
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum ThrowableEvent {
     FightEvent,
@@ -276,6 +293,16 @@ impl DialogNode {
     pub fn is_choice(&self) -> bool {
         if !self.dialog_type.is_empty() {
             return self.dialog_type[0].is_choice();
+        }
+        return false;
+    }
+
+    /// # Return
+    ///
+    /// true if the type of the first element (of dialog_type) is choice
+    pub fn is_text(&self) -> bool {
+        if !self.dialog_type.is_empty() {
+            return self.dialog_type[0].is_text();
         }
         return false;
     }
@@ -425,10 +452,11 @@ impl DialogNode {
                     }
 
                     None => {
-                        res.push_str("None\n");
+                        res.push_str("None");
                     }
                 }
             }
+            res.push('\n');
         }
         res.push_str("\n\nEND");
 
@@ -825,8 +853,8 @@ pub fn init_tree_file(s: String) -> Rc<RefCell<DialogNode>> {
     // let mut new_line = false;
 
     let chars = s.chars().collect::<Vec<char>>();
-    println!("{}", chars.len());
-    println!("{}", s);
+    // println!("{}", chars.len());
+    // println!("{}", s);
 
     for (_, c) in chars
         .iter()
@@ -1524,6 +1552,17 @@ mod tests {
 
 - Sure\n"
                     .to_string()
+            );
+        }
+
+        #[test]
+        fn test_print_from_file_monologue() {
+
+            let root = init_tree_file(String::from("# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n"));
+
+            assert_eq!(
+                root.borrow().print_file(),
+                "# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n".to_string()
             );
         }
 

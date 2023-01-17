@@ -14,15 +14,19 @@ Aggressive NPC can
 - detect player and enemy
 - chase them
 - trigger CombatEvent
+  - Display their dialog
 - wait 5s before retargeting someone
+
+Player can
+
+- choose answer in dialog
+- move around
 
 Collision works thanks to bevy_retrograde
 
 Press o to see the grateful future
 
-
-[Preview of Chase](https://user-images.githubusercontent.com/73140258/198221963-00eaaa8c-6ab9-4142-8519-d4124fc5dd82.mp4)
-
+[Preview of the demo](https://user-images.githubusercontent.com/73140258/212979807-92f376d4-a974-4827-88af-2687e725bc3b.mp4)
 
 ### For a future
 
@@ -30,7 +34,6 @@ Press o to see the grateful future
   - Pathfind ?
 - NPC will have some personnality
   - Implement landmark/place
-  - Will have dialogue
 - Combat system
   - Talk
   - Fight
@@ -38,19 +41,22 @@ Press o to see the grateful future
     - UI
     - Combat Phases
 
-    ```mermaid
-    graph
-        Observation-->ManageStuff;
-        ManageStuff-->Observation;
-        Observation-->Skills;
-        Skills-->Observation;
-        Skills-->Target;
-        Target-->Skills;
-        Target-->RollInitiative;
-        RollInitiative-->Target;
-        RollInitiative-->ExecuteSkills-->RollInitiative;
-        ExecuteSkills-->Observation;
-    ```
+```mermaid
+graph
+    Observation-->ManageStuff;
+    ManageStuff-->Observation;
+    Observation-->Skills;
+    Skills-->Observation;
+    Skills-->Target;
+    Target-->Skills;
+    Target-->RollInitiative;
+    RollInitiative-->Target;
+    RollInitiative-->ExecuteSkills-->RollInitiative;
+    ExecuteSkills-->Observation;
+```
+
+- Cinematics and story
+- Menu
 
 ## Contribute
 
