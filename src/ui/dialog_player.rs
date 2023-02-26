@@ -172,6 +172,7 @@ pub fn dialog_dive(
                 // shouldn't exist : end choice (which hasn't child)
                 // so, we don't test it here
 
+                // REFACTOR: Check if the Trigger event field is not empty before sending anything
                 trigger_event.send(TriggerEvent(dialog_tree.borrow().trigger_event.clone()));
 
                 if dialog_tree.borrow().is_end_node() {

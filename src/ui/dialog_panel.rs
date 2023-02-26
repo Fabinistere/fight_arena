@@ -458,22 +458,20 @@ pub fn create_dialog_panel(
                                 },
                             )
                             .with_alignment(TextAlignment {
-                                vertical: VerticalAlign::Top,
+                                vertical: VerticalAlign::Bottom,
                                 horizontal: HorizontalAlign::Left,
                             }),
                             style: Style {
                                 flex_wrap: FlexWrap::Wrap,
-                                // FIXME: Text Position is not quite right...
                                 position: UiRect {
-                                    top: Val::Px(-250.0),
+                                    top: Val::Px(375.0),
                                     ..UiRect::default()
                                 },
                                 margin: UiRect {
-                                    top: Val::Percent(74.0),
                                     left: Val::Percent(24.0),
                                     ..UiRect::default()
                                 },
-                                max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
                                 ..Style::default()
                             },
                             ..TextBundle::default()
