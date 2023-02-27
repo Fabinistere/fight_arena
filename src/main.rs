@@ -1,36 +1,34 @@
 //! Fight Arena is a test repertory where I can develop the NPC and Combat system for our FTO game
-//! 
+//!
 //! Follow along with the tutorial serie by Logic Projects <3
 
 #![allow(clippy::redundant_field_names)]
 use bevy::{
     prelude::*,
-    render::{
-        camera::ScalingMode,
-        texture::ImagePlugin
-    }};
+    render::{camera::ScalingMode, texture::ImagePlugin},
+};
 use bevy_rapier2d::prelude::*;
 use bevy_tweening::TweeningPlugin;
 
 pub mod collisions;
-pub mod constants;
 mod combat;
+pub mod constants;
 mod debug;
-mod spritesheet;
 mod locations;
 mod movement;
 mod npc;
 pub mod player;
+mod spritesheet;
 pub mod ui;
 
 use collisions::RetroPhysicsPlugin;
 use combat::CombatPlugin;
 use constants::*;
 use debug::DebugPlugin;
-use spritesheet::{FabienPlugin, FabienSheet};
 use locations::LocationsPlugin;
 use npc::NPCPlugin;
 use player::PlayerPlugin;
+use spritesheet::{FabienPlugin, FabienSheet};
 use ui::UiPlugin;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -39,9 +37,10 @@ pub enum GameState {
     Playing,
     Interaction,
     Combat,
-    Discussion
+    Discussion,
 }
 
+#[rustfmt::skip]
 fn main() {
     // When building for WASM, print panics to the browser console
     #[cfg(target_arch = "wasm32")]
@@ -92,15 +91,13 @@ fn main() {
         .add_state(GameState::Playing)
         
         .add_startup_system(spawn_camera)
-        // .add_startup_system(music)
+        .add_startup_system(music)
         ;
 
     app.run();
 }
 
-fn spawn_camera(
-    mut commands: Commands
-) {
+fn spawn_camera(mut commands: Commands) {
     let mut camera = Camera2dBundle::default();
 
     camera.projection.top = 50. * TILE_SIZE;
@@ -112,14 +109,9 @@ fn spawn_camera(
     camera.projection.scaling_mode = ScalingMode::None;
 
     commands.spawn(camera);
-
 }
 
-fn _music(
-    asset_server: Res<AssetServer>, audio: Res<Audio>
-) {
-
-    
+fn music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
     let music = asset_server.load("sounds/FTO_Dracula_theme.ogg");
     // audio.play(music);
     audio.play_with_settings(music, PlaybackSettings::LOOP.with_volume(0.10));
