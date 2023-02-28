@@ -378,16 +378,15 @@ pub fn create_dialog_panel(
                 };
 
                 // panels under the wall to prevent them from sticking out of the window after being lifted.
-                parent
-                    .spawn((
-                        ImageBundle {
-                            image: dialog_panel_resources.stained_glass_panels.clone().into(),
-                            style: child_sprite_style.clone(),
-                            ..ImageBundle::default()
-                        },
-                        Animator::new(panels_tween),
-                        Name::new("Stained Glass Panel"),
-                    ));
+                parent.spawn((
+                    ImageBundle {
+                        image: dialog_panel_resources.stained_glass_panels.clone().into(),
+                        style: child_sprite_style.clone(),
+                        ..ImageBundle::default()
+                    },
+                    Animator::new(panels_tween),
+                    Name::new("Stained Glass Panel"),
+                ));
 
                 parent.spawn((
                     ImageBundle {

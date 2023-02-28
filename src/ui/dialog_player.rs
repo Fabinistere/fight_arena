@@ -8,8 +8,8 @@ use crate::{
     ui::{
         dialog_panel::DialogPanel,
         dialog_scroll::{PlayerChoice, PlayerScroll, Scroll, UpdateScrollEvent, UpperScroll},
-        dialog_system::{init_tree_file, TriggerEvent, ThrowableEvent},
-    }
+        dialog_system::{init_tree_file, ThrowableEvent, TriggerEvent},
+    },
 };
 
 /// Happens when
@@ -96,8 +96,7 @@ pub fn skip_forward_dialog(
     // or just with ui_wall.finished: bool
     if let Ok((_ui_wall, animator)) = query.get_single() {
         // prevent skip while opening the panel
-        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1.0
-        {
+        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1.0 {
             // be patient for god sake
             warn!("attempt of skip while the panel was opening");
             // TODO: feature - skip the animation ?! (i think it's already fast, so no)
@@ -233,19 +232,21 @@ pub fn hide_empty_button(
 }
 
 /// DOC
-/// 
+///
 /// Options
-/// 
+///
 /// - Match the enum into handle it direclty
 /// - Match the enum into throw the correct event
-pub fn throw_trigger_event(
-    mut trigger_event: EventReader<TriggerEvent>,
-) {
+pub fn throw_trigger_event(mut trigger_event: EventReader<TriggerEvent>) {
     for trigger in trigger_event.iter() {
         for event_to_exec in trigger.0.iter() {
             match event_to_exec {
-                ThrowableEvent::FightEvent => { info!("Fight Event") }
-                ThrowableEvent::HasFriend => { info!("Has Friend Event") }
+                ThrowableEvent::FightEvent => {
+                    info!("Fight Event")
+                }
+                ThrowableEvent::HasFriend => {
+                    info!("Has Friend Event")
+                }
             }
         }
     }

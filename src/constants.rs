@@ -32,12 +32,12 @@ pub mod locations {
         pub const BANNERS_POSITION: (f32, f32, f32) =
             (23. * TILE_SIZE, 935. * TILE_SIZE, THRONE_Z_BACK);
 
-        pub const THRONE_Z_BACK: f32 = 3.;
+        pub const THRONE_Z_BACK: f32 = 4.;
         pub const THRONE_Z_FRONT: f32 = 7.;
         pub const THRONE_POSITION: (f32, f32, f32) =
             (23. * TILE_SIZE, 74. * TILE_SIZE, THRONE_Z_BACK);
 
-        pub const PILLAR_Z_BACK: f32 = 3.;
+        pub const PILLAR_Z_BACK: f32 = 4.;
         pub const PILLAR_Z_FRONT: f32 = 7.;
 
         // make the pillar above and on coherence with the pillar hitbox
@@ -77,7 +77,7 @@ pub mod character {
 
         pub const NPC_SCALE: f32 = super::CHAR_SCALE;
 
-        pub const NPC_Z_BACK: f32 = 2.;
+        pub const NPC_Z_BACK: f32 = 3.;
         pub const NPC_Z_FRONT: f32 = 8.;
 
         pub const ADMIRAL_STARTING_ANIM: usize = 0;
@@ -197,7 +197,9 @@ pub mod ui {
         pub const SCROLL_ANIMATION_DELTA_S: f32 = 0.1;
         pub const SCROLL_ANIMATION_FRAMES_NUMBER: usize = 45;
 
-        pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+        pub const TRANSPARENT_BUTTON: Color = Color::rgba(0., 0., 0., 0.);
+        // pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+        pub const NORMAL_BUTTON: Color = Color::rgba(0.01, 0.01, 0.01, 0.01);
         pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
         pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
     }
