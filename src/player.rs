@@ -6,11 +6,15 @@ use crate::{
     // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{stats::*, InCombat, Karma, Leader, Team},
     constants::{
-        character::{player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH, CHAR_HITBOX_Y_OFFSET, npc::dialog::MORGAN_DIALOG},
+        character::{
+            npc::dialog::MORGAN_DIALOG, player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH,
+            CHAR_HITBOX_Y_OFFSET,
+        },
         combat::team::TEAM_MC,
     },
     movement::*,
-    FabienSheet, ui::dialog_system::Dialog,
+    ui::dialog_system::Dialog,
+    FabienSheet,
 };
 
 pub struct PlayerPlugin;
@@ -48,10 +52,14 @@ fn player_movement(
     if !player_query.is_empty() {
         let (speed, mut rb_vel) = player_query.single_mut();
 
-        let up = keyboard_input.pressed(KeyCode::Z);
-        let down = keyboard_input.pressed(KeyCode::S);
-        let left = keyboard_input.pressed(KeyCode::Q);
-        let right = keyboard_input.pressed(KeyCode::D);
+        let up = keyboard_input.pressed(KeyCode::Z)
+            || keyboard_input.pressed(KeyCode::Up)
+            || keyboard_input.pressed(KeyCode::W);
+        let down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
+        let left = keyboard_input.pressed(KeyCode::Q)
+            || keyboard_input.pressed(KeyCode::Left)
+            || keyboard_input.pressed(KeyCode::A);
+        let right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
         let x_axis = -(right as i8) + left as i8;
         let y_axis = -(down as i8) + up as i8;
@@ -63,8 +71,6 @@ fn player_movement(
             vel_x *= (std::f32::consts::PI / 4.0).cos();
             vel_y *= (std::f32::consts::PI / 4.0).cos();
         }
-
-        
 
         rb_vel.linvel.x = vel_x;
         rb_vel.linvel.y = vel_y;
@@ -95,7 +101,9 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
             },
             Name::new("Player"),
             Player,
-            Dialog { current_node: Some(MORGAN_DIALOG.to_owned()) },
+            Dialog {
+                current_node: Some(MORGAN_DIALOG.to_owned()),
+            },
             Karma(10),
             // Combat
             Leader,
@@ -114,15 +122,14 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
                 attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
                 defense: Defense(PLAYER_DEFENSE),
                 defense_spe: DefenseSpe(PLAYER_DEFENSE_SPE),
-            }
+            },
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
-                    CharacterHitbox
-                ));
+            parent.spawn((
+                Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                CharacterHitbox,
+            ));
 
             // parent
             //     .spawn()
