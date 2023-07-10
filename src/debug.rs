@@ -1,12 +1,12 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use crate::collisions::{TesselatedCollider, TesselatedColliderConfig};
-use crate::npc::NPC;
-use crate::player::Player;
-use crate::ui::{
-    dialog_panel::DialogPanel,
-    dialog_scroll::{PlayerScroll, UpperScroll},
+use crate::{
+    collisions::{TesselatedCollider, TesselatedColliderConfig},
+    ui::{
+        dialog_panel::DialogPanel,
+        dialog_scroll::{PlayerScroll, UpperScroll},
+    },
 };
 
 pub struct DebugPlugin;
@@ -16,20 +16,22 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         if cfg!(debug_assertions) {
             app.add_plugin(WorldInspectorPlugin::new())
-                .register_inspectable::<Player>()
-                .register_inspectable::<NPC>()
 
-                // UI
+                /* -------------------------------------------------------------------------- */
+                /*                                     UI                                     */
+                /* -------------------------------------------------------------------------- */
 
-                .register_inspectable::<DialogPanel>()
-                // .register_inspectable::<DialogBox>()
-                .register_inspectable::<UpperScroll>()
-                .register_inspectable::<PlayerScroll>()
+                .register_type::<DialogPanel>()
+                // .register_type::<DialogBox>()
+                .register_type::<UpperScroll>()
+                .register_type::<PlayerScroll>()
 
-                // hitbox
+                /* -------------------------------------------------------------------------- */
+                /*                                   Hitbox                                   */
+                /* -------------------------------------------------------------------------- */
 
-                .register_inspectable::<TesselatedCollider>()
-                .register_inspectable::<TesselatedColliderConfig>()
+                .register_type::<TesselatedCollider>()
+                .register_type::<TesselatedColliderConfig>()
                 ;
         }
     }

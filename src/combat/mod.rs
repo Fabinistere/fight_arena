@@ -30,11 +30,7 @@
 //!   - Combat Evasion (quit)
 //!
 
-use bevy::{
-    prelude::*,
-    // ecs::schedule::ShouldRun,
-    time::FixedTimestep,
-};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
 use std::time::Duration;
 
@@ -43,7 +39,7 @@ pub mod stats;
 use crate::{
     // combat::stats::*,
     // combat::stats::{show_hp, show_mana}
-    constants::{character::npc::movement::EVASION_TIMER, FIXED_TIME_STEP},
+    constants::character::npc::movement::EVASION_TIMER,
 
     npc::NPC,
     player::Player,
@@ -51,7 +47,7 @@ use crate::{
 };
 
 /// Just help to create a ordered system in the app builder
-#[derive(PartialEq, Clone, Hash, Debug, Eq, SystemLabel)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 enum CombatState {
     Initiation,
     Observation,
@@ -69,52 +65,28 @@ pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<SpawnCombatFoesEvent>()
+        app.add_event::<SpawnCombatFoesEvent>()
             .add_event::<CombatEvent>()
             .add_event::<CombatExitEvent>()
-
             .add_system(spawn_party_members.before(CombatState::Initiation))
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_systems((
                 enter_combat
-                    // .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(CombatState::Initiation)
-            )
-            .add_system_to_stage(
-                CoreStage::Update,
+                    .in_set(CombatState::Initiation)
+                    .in_base_set(CoreSet::Update),
                 exit_combat
-                    // .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(CombatState::Evasion)
+                    .in_set(CombatState::Evasion)
                     .before(CombatState::Observation)
-            )
-            .add_system_to_stage(
-                CoreStage::Update,
+                    .in_base_set(CoreSet::Update),
                 freeze_in_combat
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .after(CombatState::Evasion)
-            )
-            .add_system_to_stage(
-                CoreStage::Update,
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
                 observation
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(CombatState::Observation)
+                    .in_set(CombatState::Observation)
                     .after(CombatState::Initiation)
-            )
-            // .add_system_to_stage(
-            //     CoreStage::Update,
-            //     stats::roll_initiative
-            //         .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-            //         .label(CombatState::RollInitiative)
-            // )
-            // .add_system_set_to_stage(
-            //     CoreStage::PostUpdate,
-            //     SystemSet::new()
-            //         .with_run_criteria(run_if_pressed_h)
-            //         .with_system(show_hp)
-            //         .with_system(show_mana)
-            // )
-            ;
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
+            ));
     }
 }
 

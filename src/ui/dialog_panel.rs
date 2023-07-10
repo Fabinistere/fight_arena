@@ -11,7 +11,6 @@
 //!   - Update Dialog Box / Text
 
 use bevy::prelude::*;
-use bevy_inspector_egui::Inspectable;
 use bevy_tweening::{lens::UiPositionLens, *};
 use std::time::Duration;
 
@@ -38,7 +37,8 @@ use crate::{
 /// # Note
 ///
 /// TODO: feature - sync author with interlocutor (to know which one is talking)
-#[derive(Component, Inspectable)]
+/// REFACTOR: Turn DialogPanel into a Resource
+#[derive(Component, Reflect)]
 pub struct DialogPanel {
     // keep track of the origanal interlocutor
     // their dialog will be change/update in update_dialog_tree
@@ -363,6 +363,7 @@ pub fn create_dialog_panel(
                     },
                     ..ImageBundle::default()
                 },
+                // REFACTOR: Turn DialogPanel into a Resource
                 DialogPanel {
                     main_interlocutor: *interlocutor,
                     dialog_tree: dialog_tree.to_owned(),
@@ -378,16 +379,15 @@ pub fn create_dialog_panel(
                 };
 
                 // panels under the wall to prevent them from sticking out of the window after being lifted.
-                parent
-                    .spawn((
-                        ImageBundle {
-                            image: dialog_panel_resources.stained_glass_panels.clone().into(),
-                            style: child_sprite_style.clone(),
-                            ..ImageBundle::default()
-                        },
-                        Animator::new(panels_tween),
-                        Name::new("Stained Glass Panel"),
-                    ));
+                parent.spawn((
+                    ImageBundle {
+                        image: dialog_panel_resources.stained_glass_panels.clone().into(),
+                        style: child_sprite_style.clone(),
+                        ..ImageBundle::default()
+                    },
+                    Animator::new(panels_tween),
+                    Name::new("Stained Glass Panel"),
+                ));
 
                 parent.spawn((
                     ImageBundle {
@@ -457,23 +457,18 @@ pub fn create_dialog_panel(
                                     color: Color::BLACK,
                                 },
                             )
-                            .with_alignment(TextAlignment {
-                                vertical: VerticalAlign::Top,
-                                horizontal: HorizontalAlign::Left,
-                            }),
+                            .with_alignment(TextAlignment::Left),
                             style: Style {
                                 flex_wrap: FlexWrap::Wrap,
-                                // FIXME: Text Position is not quite right...
                                 position: UiRect {
-                                    top: Val::Px(-250.0),
+                                    top: Val::Px(375.0),
                                     ..UiRect::default()
                                 },
                                 margin: UiRect {
-                                    top: Val::Percent(74.0),
                                     left: Val::Percent(24.0),
                                     ..UiRect::default()
                                 },
-                                max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
                                 ..Style::default()
                             },
                             ..TextBundle::default()
@@ -570,12 +565,7 @@ pub fn create_dialog_panel(
                                             color: Color::BLACK,
                                         },
                                     )
-                                    .with_alignment(
-                                        TextAlignment {
-                                            vertical: VerticalAlign::Top,
-                                            horizontal: HorizontalAlign::Left,
-                                        },
-                                    ),
+                                    .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
@@ -628,12 +618,7 @@ pub fn create_dialog_panel(
                                             color: Color::BLACK,
                                         },
                                     )
-                                    .with_alignment(
-                                        TextAlignment {
-                                            vertical: VerticalAlign::Top,
-                                            horizontal: HorizontalAlign::Left,
-                                        },
-                                    ),
+                                    .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
@@ -686,12 +671,7 @@ pub fn create_dialog_panel(
                                             color: Color::BLACK,
                                         },
                                     )
-                                    .with_alignment(
-                                        TextAlignment {
-                                            vertical: VerticalAlign::Top,
-                                            horizontal: HorizontalAlign::Left,
-                                        },
-                                    ),
+                                    .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
                                         margin: UiRect {
