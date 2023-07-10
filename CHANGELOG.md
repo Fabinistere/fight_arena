@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/fabinistere/bevy_trun-based_combat#license)
 - the player can now move with wasd and the arrows
 - Startup underun :) (with the last commit: "Minor Fixes and GameFeeling: Merge branch 'feature-web' into develop")
 
