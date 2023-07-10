@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Bevy 0.10 Migration - [0.4.1] - 2023-07-10
 
-[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)
+[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1)
 
 ### Added
 
