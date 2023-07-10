@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bevy 0.10.1
+- Bevy [0.10.1](https://bevyengine.org/learn/migration-guides/0.9-0.10/)
   - Bevy 0.9 migration artefact
     - change UI Coordinates to topLeft (multipliate all x coordinates by -1)
   - bevy_rapier2d [0.21](https://github.com/dimforge/bevy_rapier/blob/master/CHANGELOG.md#0210--07-march-2023)
