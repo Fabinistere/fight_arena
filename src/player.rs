@@ -57,10 +57,14 @@ fn player_movement(
     if !player_query.is_empty() {
         let (speed, mut rb_vel) = player_query.single_mut();
 
-        let up = keyboard_input.pressed(KeyCode::Z);
-        let down = keyboard_input.pressed(KeyCode::S);
-        let left = keyboard_input.pressed(KeyCode::Q);
-        let right = keyboard_input.pressed(KeyCode::D);
+        let up = keyboard_input.pressed(KeyCode::Z)
+            || keyboard_input.pressed(KeyCode::Up)
+            || keyboard_input.pressed(KeyCode::W);
+        let down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
+        let left = keyboard_input.pressed(KeyCode::Q)
+            || keyboard_input.pressed(KeyCode::Left)
+            || keyboard_input.pressed(KeyCode::A);
+        let right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
 
         let x_axis = right as i8 - (left as i8);
         let y_axis = -(down as i8) + up as i8;

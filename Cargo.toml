@@ -14,21 +14,25 @@ bevy_ecs = "0.10"
 bevy = "0.10"
 bevy_ecs = "0.10"
 wasm-bindgen = "0.2"
+# a panic hook that will cause the messages to appear in the browser console
+console_error_panic_hook = "0.1"
 
 [dependencies]
 
+# ----------- Common ----------
 # bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" }
-bevy_rapier2d = { version = "0.21", features = ["simd-stable", "debug-render-2d"] }
 bevy_tweening = "0.7"
 bevy_reflect = "0.10"
+image = "0.23"
 
-#### Fog Shader ####
-# bevy_retrograde = "0.2"
+rand = "0.8.5"
+
+# ----- Hitbox - Velocity -----
+bevy_rapier2d = { version = "0.21", features = ["simd-stable", "debug-render-2d"] }
+
 
 density-mesh-core = "1.5"
 density-mesh-image = "1.5"
-image = "0.23"
-rand = "0.8.5"
 
 # ----------- Debug -----------
 bevy-inspector-egui = "0.18"

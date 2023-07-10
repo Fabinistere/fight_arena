@@ -8,7 +8,7 @@ use crate::{
     ui::{
         dialog_panel::DialogPanel,
         dialog_scroll::{PlayerChoice, PlayerScroll, Scroll, UpdateScrollEvent, UpperScroll},
-        dialog_system::{init_tree_file, TriggerEvent},
+        dialog_system::init_tree_file,
     },
 };
 

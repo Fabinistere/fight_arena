@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)
 
+### Added
+
+- the player can now move with wasd and the arrows
+- Startup underun :) (with the last commit: "Minor Fixes and GameFeeling: Merge branch 'feature-web' into develop")
+
 ### Changed
 
 - Bevy 0.10.1
@@ -29,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - bevy_ui
     - `UIImage` its now compose of the field `texture`
   - Windows as entities
+- the npcs spawn after the map, with z=2: They are below.
+- DarkGrey for inactive buttons is not good -> now transparent
 
 ### Removed
 

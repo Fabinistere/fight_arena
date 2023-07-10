@@ -39,7 +39,12 @@ pub enum GameState {
     Discussion,
 }
 
+#[rustfmt::skip]
 fn main() {
+    // When building for WASM, print panics to the browser console
+    #[cfg(target_arch = "wasm32")]
+    console_error_panic_hook::set_once();
+
     let mut app = App::new();
     app.add_state::<GameState>()
         .insert_resource(FixedTime::new_from_secs(FIXED_TIME_STEP))
