@@ -1,33 +1,42 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::Inspectable;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
     // collisions::{TesselatedCollider, TesselatedColliderConfig},
     combat::{stats::*, InCombat, Karma, Leader, Team},
     constants::{
-        character::{player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH, CHAR_HITBOX_Y_OFFSET, npc::dialog::MORGAN_DIALOG},
+        character::{
+            npc::dialog::MORGAN_DIALOG, player::*, CHAR_HITBOX_HEIGHT, CHAR_HITBOX_WIDTH,
+            CHAR_HITBOX_Y_OFFSET,
+        },
         combat::team::TEAM_MC,
     },
     movement::*,
-    FabienSheet, ui::dialog_system::Dialog,
+    ui::dialog_system::Dialog,
+    FabienSheet,
 };
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+pub enum PlayerSet {
+    Movement,
+}
 
 pub struct PlayerPlugin;
 
-#[derive(Component, Inspectable)]
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(spawn_player).add_systems((
+            player_movement.in_set(PlayerSet::Movement),
+            camera_follow.after(PlayerSet::Movement),
+        ));
+    }
+}
+
+#[derive(Component)]
 pub struct Player;
 
 #[derive(Component)]
 pub struct PlayerSensor;
-
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_player)
-            .add_system(player_movement.label("movement"))
-            .add_system(camera_follow.after("movement"));
-    }
-}
 
 fn camera_follow(
     player_query: Query<&Transform, With<Player>>,
@@ -53,7 +62,7 @@ fn player_movement(
         let left = keyboard_input.pressed(KeyCode::Q);
         let right = keyboard_input.pressed(KeyCode::D);
 
-        let x_axis = -(right as i8) + left as i8;
+        let x_axis = right as i8 - (left as i8);
         let y_axis = -(down as i8) + up as i8;
 
         let mut vel_x = x_axis as f32 * **speed;
@@ -63,8 +72,6 @@ fn player_movement(
             vel_x *= (std::f32::consts::PI / 4.0).cos();
             vel_y *= (std::f32::consts::PI / 4.0).cos();
         }
-
-        
 
         rb_vel.linvel.x = vel_x;
         rb_vel.linvel.y = vel_y;
@@ -95,7 +102,9 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
             },
             Name::new("Player"),
             Player,
-            Dialog { current_node: Some(MORGAN_DIALOG.to_owned()) },
+            Dialog {
+                current_node: Some(MORGAN_DIALOG.to_owned()),
+            },
             Karma(10),
             // Combat
             Leader,
@@ -114,15 +123,14 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
                 attack_spe: AttackSpe(PLAYER_ATTACK_SPE),
                 defense: Defense(PLAYER_DEFENSE),
                 defense_spe: DefenseSpe(PLAYER_DEFENSE_SPE),
-            }
+            },
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
-                    CharacterHitbox
-                ));
+            parent.spawn((
+                Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                CharacterHitbox,
+            ));
 
             // parent
             //     .spawn()

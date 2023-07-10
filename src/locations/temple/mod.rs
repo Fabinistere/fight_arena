@@ -1,4 +1,4 @@
-use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use super::Location;
@@ -16,30 +16,13 @@ pub struct TemplePlugin;
 
 impl Plugin for TemplePlugin {
     fn build(&self, app: &mut App) {
-        app.add_state(PlayerLocation::Temple)
+        app.add_state::<PlayerLocation>()
             .add_event::<SpawnPillarEvent>()
-            .add_system_set(
-                SystemSet::on_enter(Location::Temple)
-                    .with_system(setup_temple)
-                    .with_system(spawn_pillars),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .with_run_criteria(run_if_in_temple)
-                    .with_system(throne_position),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .with_run_criteria(run_if_in_temple)
-                    .with_system(pillar_position),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .with_run_criteria(run_if_in_temple)
-                    .with_system(npc_z_position),
+            .add_systems((setup_temple, spawn_pillars).in_schedule(OnEnter(Location::Temple)))
+            .add_systems(
+                (throne_position, pillar_position, npc_z_position)
+                    // CoreSet::PostUpdate
+                    .in_set(OnUpdate(Location::Temple)),
             );
     }
 }
@@ -64,18 +47,11 @@ pub struct ZPosition(f32);
 ///     - spawn_pillars
 struct SpawnPillarEvent;
 
-// States
-#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+/// REFACTOR: Use Location only ?
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum PlayerLocation {
+    #[default]
     Temple,
-}
-
-fn run_if_in_temple(location: Res<State<Location>>) -> ShouldRun {
-    if location.current() == &Location::Temple {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
 }
 
 /// XXX: doesn't work well

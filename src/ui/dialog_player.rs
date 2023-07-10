@@ -8,8 +8,8 @@ use crate::{
     ui::{
         dialog_panel::DialogPanel,
         dialog_scroll::{PlayerChoice, PlayerScroll, Scroll, UpdateScrollEvent, UpperScroll},
-        dialog_system::{init_tree_file, TriggerEvent, ThrowableEvent},
-    }
+        dialog_system::{init_tree_file, TriggerEvent},
+    },
 };
 
 /// Happens when
@@ -96,8 +96,7 @@ pub fn skip_forward_dialog(
     // or just with ui_wall.finished: bool
     if let Ok((_ui_wall, animator)) = query.get_single() {
         // prevent skip while opening the panel
-        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1.0
-        {
+        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1.0 {
             // be patient for god sake
             warn!("attempt of skip while the panel was opening");
             // TODO: feature - skip the animation ?! (i think it's already fast, so no)
@@ -136,7 +135,7 @@ pub fn dialog_dive(
     upper_scroll_query: Query<&mut UpperScroll, With<Scroll>>,
 
     mut drop_first_text_upper_scroll_event: EventWriter<DropFirstTextUpperScroll>,
-    mut trigger_event: EventWriter<TriggerEvent>,
+    // mut trigger_event: EventWriter<TriggerEvent>,
 ) {
     for event in dialog_dive_event.iter() {
         info!("DEBUG: DialogDive Event");
@@ -173,7 +172,7 @@ pub fn dialog_dive(
                 // so, we don't test it here
 
                 // REFACTOR: Check if the Trigger event field is not empty before sending anything
-                trigger_event.send(TriggerEvent(dialog_tree.borrow().trigger_event.clone()));
+                // trigger_event.send(TriggerEvent(dialog_tree.borrow().trigger_event.clone()));
 
                 if dialog_tree.borrow().is_end_node() {
                     // will be handle by the update_dialog_panel system
@@ -200,7 +199,7 @@ pub fn dialog_dive(
 }
 
 /// Disables empty button,
-/// (invisible == disable)
+/// (hidden == disable)
 ///
 /// Prevents checking a index in the choices list.
 pub fn hide_empty_button(
@@ -218,13 +217,20 @@ pub fn hide_empty_button(
                 // FIXME: handle this error
                 Err(e) => warn!("Err: A Player Scroll's child is not a button: {:?}", e),
                 Ok((_, mut visibility, player_choice)) => {
+                    // REFACTOR: just deref it
                     let choice_index = player_choice.0;
                     let choices = player_scroll.choices.clone();
 
-                    visibility.is_visible = choice_index < choices.len();
+                    *visibility = if choice_index < choices.len() {
+                        Visibility::Inherited
+                    } else {
+                        Visibility::Hidden
+                    };
+
                     info!(
                         "button °{:?} visibility switch: {:?}",
-                        choice_index, visibility.is_visible
+                        choice_index,
+                        *visibility == Visibility::Inherited
                     );
                 }
             }
@@ -232,24 +238,27 @@ pub fn hide_empty_button(
     }
 }
 
-/// DOC
-/// 
-/// Options
-/// 
-/// - Match the enum into handle it direclty
-/// - Match the enum into throw the correct event
-pub fn throw_trigger_event(
-    mut trigger_event: EventReader<TriggerEvent>,
-) {
-    for trigger in trigger_event.iter() {
-        for event_to_exec in trigger.0.iter() {
-            match event_to_exec {
-                ThrowableEvent::FightEvent => { info!("Fight Event") }
-                ThrowableEvent::HasFriend => { info!("Has Friend Event") }
-            }
-        }
-    }
-}
+// /// DOC
+// /// TODO: feat - Add triggerEvent (and add to the app)
+// ///
+// /// Options
+// ///
+// /// - Match the enum into handle it direclty
+// /// - Match the enum into throw the correct event
+// pub fn throw_trigger_event(mut trigger_event: EventReader<TriggerEvent>) {
+//     for TriggerEvent(triggers) in trigger_event.iter() {
+//         for event_to_exec in triggers.iter() {
+//             match event_to_exec {
+//                 ThrowableEvent::FightEvent => {
+//                     info!("Fight Event")
+//                 }
+//                 ThrowableEvent::HasFriend => {
+//                     info!("Has Friend Event")
+//                 }
+//             }
+//         }
+//     }
+// }
 
 /// Drops first text from the UpperScroll
 pub fn drop_first_text_upper_scroll(

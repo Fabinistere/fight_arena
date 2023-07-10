@@ -1,15 +1,12 @@
 use bevy::prelude::*;
-use bevy::time::FixedTimestep;
-use bevy_inspector_egui::Inspectable;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
     combat::{stats::*, GroupSize, Leader, Recruted, Team},
-    constants::FIXED_TIME_STEP,
     constants::{
         character::{
             npc::{
-                dialog::{OLF_DIALOG, FABIEN_DIALOG},
+                dialog::{FABIEN_DIALOG, OLF_DIALOG},
                 movement::{NPC_SPEED, NPC_SPEED_LEADER},
                 *,
             },
@@ -31,13 +28,13 @@ pub mod aggression;
 pub mod idle;
 pub mod movement;
 
-#[derive(Component, Inspectable)]
+#[derive(Component, Reflect)]
 pub struct NPC;
 
 #[derive(Default)]
 pub struct NPCPlugin;
 
-#[derive(PartialEq, Clone, Hash, Debug, Eq, SystemLabel)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum NPCSystems {
     Stroll,
     Follow,
@@ -83,67 +80,64 @@ impl Plugin for NPCPlugin {
             .add_event::<aggression::StopChaseEvent>()
             .add_event::<aggression::DetectionModeEvent>()
             .add_event::<aggression::EngagePursuitEvent>()
-
             .add_startup_system(spawn_characters)
             .add_startup_system(spawn_aggresives_characters)
-            
-            .add_system_set_to_stage(
-                CoreStage::Update,
-                SystemSet::new()
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .with_system(movement::just_walk.label(NPCSystems::Stroll))
-                    .with_system(movement::follow.label(NPCSystems::Follow))
-                    .with_system(
-                        idle::do_flexing
-                            .label(NPCSystems::Idle)
-                            .after(NPCSystems::Stroll),
-                    ),
+            .add_systems(
+                (
+                    movement::just_walk.in_set(NPCSystems::Stroll),
+                    idle::do_flexing
+                        .in_set(NPCSystems::Idle)
+                        .after(NPCSystems::Stroll),
+                    movement::follow.in_set(NPCSystems::Follow),
+                )
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
             // .add_system(aggression::add_pursuit_urge)
             // .add_system(aggression::remove_pursuit_urge)
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_system(
                 aggression::add_detection_aura
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .before(NPCSystems::FindTargets),
+                    .before(NPCSystems::FindTargets)
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_system(
                 aggression::threat_detection
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::FindTargets),
+                    .in_set(NPCSystems::FindTargets)
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_system(
                 aggression::add_pursuit_urge
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
                     .before(NPCSystems::Chase)
-                    .after(NPCSystems::FindTargets),
+                    .after(NPCSystems::FindTargets)
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_system(
                 movement::pursue
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::Chase)
-                    .after(NPCSystems::FindTargets),
+                    .in_set(NPCSystems::Chase)
+                    .after(NPCSystems::FindTargets)
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_system(
                 aggression::remove_pursuit_urge
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .label(NPCSystems::StopChase)
-                    .after(NPCSystems::Chase),
+                    .in_set(NPCSystems::StopChase)
+                    .after(NPCSystems::Chase)
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
-            .add_system_to_stage(
-                CoreStage::Update,
+            .add_system(
                 aggression::fair_play_wait
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .after(NPCSystems::StopChase),
+                    .after(NPCSystems::StopChase)
+                    .in_base_set(CoreSet::Update)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             )
             .add_system(
                 aggression::add_detection_aura
-                    .with_run_criteria(FixedTimestep::step(FIXED_TIME_STEP as f64))
-                    .after(NPCSystems::StopChase),
+                    .after(NPCSystems::StopChase)
+                    .in_schedule(CoreSchedule::FixedUpdate),
             );
     }
 }
@@ -188,15 +182,13 @@ fn spawn_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
                 defense: Defense::default(),
                 defense_spe: DefenseSpe::default(),
             },
-
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
-                    CharacterHitbox
-                ));
+            parent.spawn((
+                Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                CharacterHitbox,
+            ));
         });
 
     // HUGO
@@ -237,12 +229,11 @@ fn spawn_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
             },
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
-                    CharacterHitbox
-                ));
+            parent.spawn((
+                Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                CharacterHitbox,
+            ));
         });
 }
 
@@ -287,27 +278,27 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 defense: Defense::default(),
                 defense_spe: DefenseSpe::default(),
             },
-            Dialog{ current_node: Some(String::from(OLF_DIALOG))},
+            Dialog {
+                current_node: Some(String::from(OLF_DIALOG)),
+            },
             // 5 Fabicurion are hidden within Olf's silhouette
             GroupSize(5),
             DetectionBehavior,
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
-                    CharacterHitbox
-                ));
+            parent.spawn((
+                Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                CharacterHitbox,
+            ));
 
-            parent
-                .spawn((
-                    Collider::ball(40.),
-                    ActiveEvents::COLLISION_EVENTS,
-                    Sensor,
-                    DetectionSensor,
-                    Name::new("Detection Range")
-                ));
+            parent.spawn((
+                Collider::ball(40.),
+                ActiveEvents::COLLISION_EVENTS,
+                Sensor,
+                DetectionSensor,
+                Name::new("Detection Range"),
+            ));
         });
 
     // Two FABICURION
@@ -358,24 +349,24 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 // 2 Fabicurion are hidden behind the representant
                 GroupSize(2),
                 DetectionBehavior,
-                Dialog{ current_node: Some(String::from(FABIEN_DIALOG))},
+                Dialog {
+                    current_node: Some(String::from(FABIEN_DIALOG)),
+                },
             ))
             .with_children(|parent| {
-                parent
-                    .spawn((
-                        Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                        Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
-                        CharacterHitbox,
-                    ));
+                parent.spawn((
+                    Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
+                    Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                    CharacterHitbox,
+                ));
 
-                parent
-                    .spawn((
-                        Collider::ball(40.),
-                        ActiveEvents::COLLISION_EVENTS,
-                        Sensor,
-                        DetectionSensor,
-                        Name::new("Detection Range")
-                    ));
+                parent.spawn((
+                    Collider::ball(40.),
+                    ActiveEvents::COLLISION_EVENTS,
+                    Sensor,
+                    DetectionSensor,
+                    Name::new("Detection Range"),
+                ));
             });
     }
 }

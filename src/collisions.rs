@@ -4,7 +4,6 @@
 
 use bevy::prelude::*;
 use bevy::render::texture::Image;
-use bevy_inspector_egui::Inspectable;
 use density_mesh_core::prelude::GenerateDensityMeshSettings;
 use density_mesh_core::prelude::PointsSeparation;
 
@@ -35,7 +34,7 @@ impl Default for RetroPhysicsPlugin {
 
 impl Plugin for RetroPhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PostUpdate, generate_colliders);
+        app.add_system(generate_colliders.in_base_set(CoreSet::PostUpdate));
     }
 }
 
@@ -136,7 +135,7 @@ use image::GenericImageView;
 use image::ImageBuffer;
 
 /// Sprite collision tesselator config
-#[derive(Debug, Clone, Inspectable)]
+#[derive(Debug, Clone, Reflect)]
 pub struct TesselatedColliderConfig {
     /// The minimum separation between generated vertices. This is, in effect, controls the
     /// "resolution" of the mesh, with a value of 0 meaning that vertices may be placed on each
@@ -178,7 +177,7 @@ impl Default for TesselatedColliderConfig {
 
 /// A component used to automatically add a [`CollisionShape`] to an entity that is generated
 /// automatically by tesselating [`Image`] collision shape based on it's alpha channel
-#[derive(Default, Component, Inspectable)]
+#[derive(Default, Component, Reflect)]
 pub struct TesselatedCollider {
     pub texture: Handle<Image>,
     pub tesselator_config: TesselatedColliderConfig,

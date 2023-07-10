@@ -15,6 +15,7 @@ pub const CLEAR: bevy::render::color::Color = bevy::render::color::Color::rgb(0.
 
 pub const FIXED_TIME_STEP: f32 = 1.0 / 60.0;
 
+pub const HEIGHT: f32 = 720.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 pub const TILE_SIZE: f32 = 1.;
 
@@ -25,17 +26,17 @@ pub mod locations {
         pub const BACKGROUND_Z: f32 = 0.;
 
         // Vec3::splat(TILE_SIZE*0.1)
-        pub const TEMPLE_SCALE: (f32, f32, f32) = (-1., 1., 1.);
+        pub const TEMPLE_SCALE: (f32, f32, f32) = (1., 1., 1.);
         pub const TEMPLE_Z: f32 = 2.0;
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
 
         pub const BANNERS_POSITION: (f32, f32, f32) =
-            (23. * TILE_SIZE, 935. * TILE_SIZE, THRONE_Z_BACK);
+            (-23. * TILE_SIZE, 935. * TILE_SIZE, THRONE_Z_BACK);
 
         pub const THRONE_Z_BACK: f32 = 3.;
         pub const THRONE_Z_FRONT: f32 = 7.;
         pub const THRONE_POSITION: (f32, f32, f32) =
-            (23. * TILE_SIZE, 74. * TILE_SIZE, THRONE_Z_BACK);
+            (-23. * TILE_SIZE, 74. * TILE_SIZE, THRONE_Z_BACK);
 
         pub const PILLAR_Z_BACK: f32 = 3.;
         pub const PILLAR_Z_FRONT: f32 = 7.;
@@ -46,17 +47,17 @@ pub mod locations {
         pub const PILLAR_HITBOX_Y_OFFSET: f32 = -12.5;
 
         pub const PILLAR_POSITION_1: (f32, f32, f32) =
-            (48.5 * TILE_SIZE, 28. * TILE_SIZE, PILLAR_Z_BACK);
+            (-48.5 * TILE_SIZE, 28. * TILE_SIZE, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_2: (f32, f32, f32) =
-            (48.5 * TILE_SIZE, -12. * TILE_SIZE, PILLAR_Z_BACK);
+            (-48.5 * TILE_SIZE, -12. * TILE_SIZE, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_3: (f32, f32, f32) =
-            (48.5 * TILE_SIZE, -52. * TILE_SIZE, PILLAR_Z_BACK);
+            (-48.5 * TILE_SIZE, -52. * TILE_SIZE, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_4: (f32, f32, f32) =
-            (-02.5 * TILE_SIZE, 28. * TILE_SIZE, PILLAR_Z_BACK);
+            (2.5 * TILE_SIZE, 28. * TILE_SIZE, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_5: (f32, f32, f32) =
-            (-02.5 * TILE_SIZE, -12. * TILE_SIZE, PILLAR_Z_BACK);
+            (2.5 * TILE_SIZE, -12. * TILE_SIZE, PILLAR_Z_BACK);
         pub const PILLAR_POSITION_6: (f32, f32, f32) =
-            (-02.5 * TILE_SIZE, -52. * TILE_SIZE, PILLAR_Z_BACK);
+            (2.5 * TILE_SIZE, -52. * TILE_SIZE, PILLAR_Z_BACK);
     }
 }
 

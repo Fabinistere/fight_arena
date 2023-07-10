@@ -1,7 +1,6 @@
 //! Scrolls
 
 use bevy::prelude::*;
-use bevy_inspector_egui::Inspectable;
 
 use crate::{
     constants::ui::dialogs::SCROLL_ANIMATION_FRAMES_NUMBER, ui::dialog_box::ResetDialogBoxEvent,
@@ -32,13 +31,13 @@ pub struct Scroll {
 pub struct ScrollTimer(pub Timer);
 
 /// Saves every text, in order, contained in the current dialog node.
-#[derive(Component, Inspectable)]
+#[derive(Component, Reflect)]
 pub struct UpperScroll {
     pub texts: Vec<String>,
 }
 
 /// Saves all choice we could have to display
-#[derive(Component, Inspectable)]
+#[derive(Component, Reflect)]
 pub struct PlayerScroll {
     pub choices: Vec<String>,
 }
@@ -95,7 +94,7 @@ pub fn animate_scroll(
                 }
             }
 
-            image.0 = dialog_panel_resources.scroll_animation[scroll.current_frame].clone();
+            image.texture = dialog_panel_resources.scroll_animation[scroll.current_frame].clone();
         }
     }
 }
@@ -138,8 +137,6 @@ pub fn update_upper_scroll(
                 }
             }
         }
-
-        
     }
 }
 

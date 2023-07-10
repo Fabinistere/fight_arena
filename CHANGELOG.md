@@ -5,9 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Bevy 0.10 Migration - [0.4.1] - 2023-07-10
+
+[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)
+
+### Changed
+
+- Bevy 0.10.1
+  - Bevy 0.9 migration artefact
+    - change UI Coordinates to topLeft (multipliate all x coordinates by -1)
+  - bevy_rapier2d [0.21](https://github.com/dimforge/bevy_rapier/blob/master/CHANGELOG.md#0210--07-march-2023)
+    - feature `debug-render` change to `debug-render-2d`
+  - bevy_inspector
+    - `Inspector` -> `Reflect`
+    And `register_inspector` to `register_type`
+  - Visibility change
+  - ECS
+    - `add_systems()` accepts tuples
+    - No More Stage -> `.in_base_set(CoreSet::T)`
+    - No more systemSet -> `in_set()`
+    - `Label` -> `SystemSet`
+    - `FreeSystemSet` no longer support raw `str`
+  - bevy_ui
+    - `UIImage` its now compose of the field `texture`
+  - Windows as entities
+
+### Removed
+
+- remove no longer working (in add_systems tuple) methods
+  - `ui::dialog_player::throw_trigger_event()`
+
 ## Dialog Update - [0.4.0] - 2023-01-17
 
-[Github tag](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.0)
+[![v0.4.0](https://img.shields.io/badge/v0.4.0-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.0)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.0)
 
 ### Preview
 
@@ -35,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Chase Update - [0.3.0] - 2022-10-27
 
-[Github tag](https://github.com/Fabinistere/fight_arena/releases/tag/v0.3.0)
+[![v0.3.0](https://img.shields.io/badge/v0.3.0-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.3.0)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.3.0)
 
 ### Preview
 
@@ -66,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Follow Update - [0.2.0] - 2022-09-20
 
-[Github tag](https://github.com/Fabinistere/fight_arena/releases/tag/v0.2.0)
+[![v0.2.0](https://img.shields.io/badge/v0.2.0-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.2.0)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.2.0)
 
 ### Preview
 
@@ -87,7 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Stroll Update - [0.1.0] - 2022-08-20
 
-[Github tag](https://github.com/Fabinistere/fight_arena/releases/tag/v0.1.0)
+[![v0.1.0](https://img.shields.io/badge/v0.1.0-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.1.0)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.1.0)
 
 ### Added
 
