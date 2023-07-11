@@ -25,10 +25,13 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_player).add_systems((
-            player_movement.in_set(PlayerSet::Movement),
-            camera_follow.after(PlayerSet::Movement),
-        ));
+        app.add_systems(Startup, spawn_player).add_systems(
+            Update,
+            (
+                player_movement.in_set(PlayerSet::Movement),
+                camera_follow.after(PlayerSet::Movement),
+            ),
+        );
     }
 }
 
@@ -73,8 +76,8 @@ fn player_movement(
         let mut vel_y = y_axis as f32 * **speed;
 
         if x_axis != 0 && y_axis != 0 {
-            vel_x *= (std::f32::consts::PI / 4.0).cos();
-            vel_y *= (std::f32::consts::PI / 4.0).cos();
+            vel_x *= (std::f32::consts::PI / 4.).cos();
+            vel_y *= (std::f32::consts::PI / 4.).cos();
         }
 
         rb_vel.linvel.x = vel_x;
@@ -89,7 +92,7 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
                 sprite: TextureAtlasSprite::new(PLAYER_STARTING_ANIM),
                 texture_atlas: fabiens.0.clone(),
                 transform: Transform {
-                    translation: Vec3::new(0.0, 0.0, 6.),
+                    translation: Vec3::new(0., 0., 6.),
                     scale: Vec3::splat(PLAYER_SCALE),
                     ..default()
                 },
@@ -101,7 +104,7 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
                 speed: Speed::default(),
                 velocity: Velocity {
                     linvel: Vect::ZERO,
-                    angvel: 0.0,
+                    angvel: 0.,
                 },
             },
             Name::new("Player"),
@@ -132,15 +135,15 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
         .with_children(|parent| {
             parent.spawn((
                 Collider::cuboid(CHAR_HITBOX_WIDTH, CHAR_HITBOX_HEIGHT),
-                Transform::from_xyz(0.0, CHAR_HITBOX_Y_OFFSET, 0.0),
+                Transform::from_xyz(0., CHAR_HITBOX_Y_OFFSET, 0.),
                 CharacterHitbox,
             ));
 
             // parent
             //     .spawn()
             //     .insert(Collider::segment(
-            //         Vect::new(-CHAR_HITBOX_WIDTH, 0.0),
-            //         Vect::new(CHAR_HITBOX_WIDTH, 0.0),
+            //         Vect::new(-CHAR_HITBOX_WIDTH, 0.),
+            //         Vect::new(CHAR_HITBOX_WIDTH, 0.),
             //     ))
             //     .insert(Sensor)
             //     .insert(ActiveEvents::COLLISION_EVENTS)

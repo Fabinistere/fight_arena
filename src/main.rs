@@ -39,7 +39,7 @@ pub enum GameState {
     Discussion,
 }
 
-#[rustfmt::skip]
+// #[rustfmt::skip]
 fn main() {
     // When building for WASM, print panics to the browser console
     #[cfg(target_arch = "wasm32")]
@@ -67,25 +67,27 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
+            RapierDebugRenderPlugin {
+                mode: DebugRenderMode::all(),
+                ..default()
+            },
+            RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.),
+            RetroPhysicsPlugin::default(),
+            TweeningPlugin,
+            CombatPlugin,
+            DebugPlugin,
+            FabienPlugin,
+            LocationsPlugin,
+            NPCPlugin,
+            PlayerPlugin,
+            UiPlugin,
         )
-        .add_plugin(RapierDebugRenderPlugin {
-            mode: DebugRenderMode::all(),
-            ..default()
-        })
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.0))
-        .add_plugin(RetroPhysicsPlugin::default())
-        .add_plugin(TweeningPlugin)
-        .add_plugin(CombatPlugin)
-        .add_plugin(DebugPlugin)
-        .add_plugin(FabienPlugin)
-        .add_plugin(LocationsPlugin)
-        .add_plugin(NPCPlugin)
-        .add_plugin(PlayerPlugin)
-        .add_plugin(UiPlugin)
-        .add_startup_systems((
-            spawn_camera,
-            // music,
-        ));
+        .add_systems(
+            Startup,
+            (
+                spawn_camera, // music,
+            ),
+        );
 
     app.run();
 }

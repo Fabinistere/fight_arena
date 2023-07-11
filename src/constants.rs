@@ -5,18 +5,18 @@
 //! magical number = ratio
 
 pub const BACKGROUND_COLOR: bevy::render::color::Color = bevy::render::color::Color::Rgba {
-    red: 58.0 / 256.0,
-    green: 36.0 / 256.0,
-    blue: 48.0 / 256.0,
-    alpha: 1.0,
+    red: 58. / 256.,
+    green: 36. / 256.,
+    blue: 48. / 256.,
+    alpha: 1.,
 };
 
 pub const CLEAR: bevy::render::color::Color = bevy::render::color::Color::rgb(0.1, 0.1, 0.1);
 
-pub const FIXED_TIME_STEP: f32 = 1.0 / 60.0;
+pub const FIXED_TIME_STEP: f32 = 1. / 60.;
 
-pub const HEIGHT: f32 = 720.0;
-pub const RESOLUTION: f32 = 16.0 / 9.0;
+pub const HEIGHT: f32 = 720.
+pub const RESOLUTION: f32 = 16. / 9.;
 pub const TILE_SIZE: f32 = 1.;
 
 pub mod locations {
@@ -27,7 +27,7 @@ pub mod locations {
 
         // Vec3::splat(TILE_SIZE*0.1)
         pub const TEMPLE_SCALE: (f32, f32, f32) = (1., 1., 1.);
-        pub const TEMPLE_Z: f32 = 2.0;
+        pub const TEMPLE_Z: f32 = 2.;
         pub const TEMPLE_POSITION: (f32, f32, f32) = (0., 0., TEMPLE_Z);
 
         pub const BANNERS_POSITION: (f32, f32, f32) =
@@ -191,16 +191,16 @@ pub mod ui {
     pub mod dialogs {
         use bevy::prelude::Color;
 
-        pub const DIALOG_PANEL_ANIMATION_OFFSET: f32 = -1000.0;
-        pub const DIALOG_BOX_UPDATE_DELTA_S: f32 = 0.05;
+        pub const DIALOG_PANEL_ANIMATION_OFFSET: f32 = -1000.;
+        pub const DIALOG_BOX_UPDATE_DELTA_S: f32 = 0.5;
         pub const DIALOG_PANEL_ANIMATION_TIME_MS: u64 = 500;
-        pub const SCROLL_SIZE: (f32, f32) = (490.0, 11700.0 / 45.0);
+        pub const SCROLL_SIZE: (f32, f32) = (490., 11700. / 45.);
         pub const SCROLL_ANIMATION_DELTA_S: f32 = 0.1;
         pub const SCROLL_ANIMATION_FRAMES_NUMBER: usize = 45;
 
         pub const TRANSPARENT_BUTTON: Color = Color::rgba(0., 0., 0., 0.);
         // pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-        pub const NORMAL_BUTTON: Color = Color::rgba(0.01, 0.01, 0.01, 0.01);
+        pub const NORMAL_BUTTON: Color = Color::rgba(0.1, 0.1, 0.1, 0.1);
         pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
         pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
     }

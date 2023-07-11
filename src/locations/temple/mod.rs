@@ -18,11 +18,11 @@ impl Plugin for TemplePlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<PlayerLocation>()
             .add_event::<SpawnPillarEvent>()
-            .add_systems((setup_temple, spawn_pillars).in_schedule(OnEnter(Location::Temple)))
+            .add_systems(OnEnter(Location::Temple), (setup_temple, spawn_pillars))
             .add_systems(
+                PostUpdate,
                 (throne_position, pillar_position, npc_z_position)
-                    // CoreSet::PostUpdate
-                    .in_set(OnUpdate(Location::Temple)),
+                    .run_if(in_state(Location::Temple)),
             );
     }
 }
@@ -45,6 +45,7 @@ pub struct ZPosition(f32);
 /// Read in
 ///   - location::temple::mod
 ///     - spawn_pillars
+#[derive(Event)]
 struct SpawnPillarEvent;
 
 /// REFACTOR: Use Location only ?
@@ -190,7 +191,7 @@ fn setup_temple(mut commands: Commands, asset_server: Res<AssetServer>) {
                         vertice_radius: 0.4,
                     },
                 },
-                Transform::from_xyz(0.0, 0., 0.0),
+                Transform::from_xyz(0., 0., 0.),
                 Name::new("Throne Hitbox"),
             ));
         });
@@ -280,7 +281,7 @@ fn spawn_pillars(mut commands: Commands, asset_server: Res<AssetServer>) {
                         },
                         ..default()
                     },
-                    Transform::from_xyz(0.0, PILLAR_HITBOX_Y_OFFSET, 0.0),
+                    Transform::from_xyz(0., PILLAR_HITBOX_Y_OFFSET, 0.),
                 ));
             });
     }

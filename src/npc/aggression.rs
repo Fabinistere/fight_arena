@@ -27,6 +27,7 @@ pub struct PursuitSensor;
 ///     - target is not found/exist
 ///     - target is reach
 /// Read in npc::aggression::remove_pursuit_urge
+#[derive(Event)]
 pub struct StopChaseEvent {
     pub npc_entity: Entity,
 }
@@ -38,6 +39,7 @@ pub struct StopChaseEvent {
 /// Read in
 ///   - npc::aggression::add_detection_aura
 ///     - creates THE DetectionSensor in the entity
+#[derive(Event)]
 pub struct DetectionModeEvent {
     pub entity: Entity,
 }
@@ -50,6 +52,7 @@ pub struct DetectionModeEvent {
 ///     - remove DetectionBehavior from the entity
 ///     - insert PursuitBehavior into the entity
 ///     - insert the Target into the entity
+#[derive(Event)]
 pub struct EngagePursuitEvent {
     npc_entity: Entity,
     detection_sensor_entity: Entity,
@@ -304,14 +307,13 @@ pub fn add_pursuit_urge(
                     .entity(npc.0)
                     .insert(PursuitBehavior)
                     .with_children(|parent| {
-                        parent
-                            .spawn((
-                                Collider::ball(80.),
-                                ActiveEvents::COLLISION_EVENTS,
-                                Sensor,
-                                PursuitSensor,
-                                Name::new("Pursuit Range"),
-                            ));
+                        parent.spawn((
+                            Collider::ball(80.),
+                            ActiveEvents::COLLISION_EVENTS,
+                            Sensor,
+                            PursuitSensor,
+                            Name::new("Pursuit Range"),
+                        ));
                     });
 
                 // insert the new target into the npc
@@ -411,14 +413,13 @@ pub fn add_detection_aura(
                     .entity(npc.0)
                     .insert(DetectionBehavior)
                     .with_children(|parent| {
-                        parent
-                            .spawn((
-                                Collider::ball(40.),
-                                ActiveEvents::COLLISION_EVENTS,
-                                Sensor,
-                                DetectionSensor,
-                                Name::new("Detection Range")
-                            ));
+                        parent.spawn((
+                            Collider::ball(40.),
+                            ActiveEvents::COLLISION_EVENTS,
+                            Sensor,
+                            DetectionSensor,
+                            Name::new("Detection Range"),
+                        ));
                     });
             }
 

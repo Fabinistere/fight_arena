@@ -6,7 +6,7 @@ pub struct InteractionPlugin;
 
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(choose_interaction.in_schedule(OnEnter(GameState::Interaction)));
+        app.add_systems(OnEnter(GameState::Interaction), choose_interaction);
     }
 }
 
