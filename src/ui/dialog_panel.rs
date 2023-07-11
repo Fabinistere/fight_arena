@@ -423,6 +423,7 @@ pub fn create_dialog_panel(
                 parent
                     .spawn((
                         ImageBundle {
+                            // REFACTOR: Replace by a spritesheet
                             image: dialog_panel_resources.scroll_animation[0].clone().into(),
                             style: Style {
                                 position_type: PositionType::Absolute,
