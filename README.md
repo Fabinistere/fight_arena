@@ -1,7 +1,6 @@
 # Fight Arena
 
-<!-- TODO: Bevy 0.11 -->
-[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1)
+[![v0.4.2](https://img.shields.io/badge/v0.4.2-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.2)](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.2)
 [![Bevy tracking](https://img.shields.io/badge/Bevy%20tracking-released%20version-lightblue)](https://github.com/bevyengine/bevy/blob/main/docs/plugins_guidelines.md#main-branch-tracking)
 [![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/fabinistere/bevy_trun-based_combat#license)
 
@@ -35,9 +34,7 @@ Press o to see the grateful future
 
 [Release Demo](https://fabinistere.github.io/figh_arena/)
 
-<!-- TODO: Draft the github tag 0.4.1 (migration to bevy 0.10) -->
-
-[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)
+[![v0.4.2](https://img.shields.io/badge/v0.4.2-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)
 
 ### For a future
 
