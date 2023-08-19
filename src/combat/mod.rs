@@ -68,25 +68,25 @@ impl Plugin for CombatPlugin {
         app.add_event::<SpawnCombatFoesEvent>()
             .add_event::<CombatEvent>()
             .add_event::<CombatExitEvent>()
-            .add_system(spawn_party_members.before(CombatState::Initiation))
-            .add_systems((
-                enter_combat
-                    .in_set(CombatState::Initiation)
-                    .in_base_set(CoreSet::Update),
-                exit_combat
-                    .in_set(CombatState::Evasion)
-                    .before(CombatState::Observation)
-                    .in_base_set(CoreSet::Update),
-                freeze_in_combat
-                    .after(CombatState::Evasion)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-                observation
-                    .in_set(CombatState::Observation)
-                    .after(CombatState::Initiation)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            ));
+            .add_systems(
+                Update,
+                (
+                    spawn_party_members.before(CombatState::Initiation),
+                    enter_combat.in_set(CombatState::Initiation),
+                    exit_combat
+                        .in_set(CombatState::Evasion)
+                        .before(CombatState::Observation),
+                ),
+            )
+            .add_systems(
+                FixedUpdate,
+                (
+                    freeze_in_combat.after(CombatState::Evasion),
+                    observation
+                        .in_set(CombatState::Observation)
+                        .after(CombatState::Initiation),
+                ),
+            );
     }
 }
 
@@ -98,6 +98,7 @@ impl Plugin for CombatPlugin {
 ///     - open combat ui
 ///   - combat::mod::freeze_in_combat
 ///     - freeze all entities involved in the starting combat
+#[derive(Event)]
 pub struct CombatEvent {
     pub npc_entity: Entity,
 }
@@ -113,6 +114,7 @@ pub struct CombatEvent {
 ///     - Remove to all entities InCombat Component
 ///   - ui::dialog_panel::create_dialog_panel_on_combat_event
 ///     - close the ui
+#[derive(Event)]
 pub struct CombatExitEvent;
 
 fn observation() {
@@ -172,6 +174,7 @@ pub struct FairPlayTimer {
 ///   - combat::mod::spawn_party_members
 ///     - Spawn every foes hidden behind the initial
 ///       aggressive npc
+#[derive(Event)]
 pub struct SpawnCombatFoesEvent {
     pub leader: Entity,
     pub group_size: i32,
@@ -311,7 +314,7 @@ pub fn exit_combat(
         // if let Ok((_entity, animator, _style)) = query.get_single()
         // {
         //     // FULLY OPEN
-        //     if animator.tweenable().unwrap().progress() >= 1.0 {
+        //     if animator.tweenable().unwrap().progress() >= 1. {
         //         close_dialog_panel_event.send(CloseDialogPanelEvent);
         //     }
         // }

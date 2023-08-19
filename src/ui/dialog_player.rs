@@ -24,6 +24,7 @@ use crate::{
 ///       - drop until there is 1 or less text in the UpeerScroll
 ///       OR
 ///       - go down to the correct child index
+#[derive(Event)]
 pub struct DialogDiveEvent {
     pub child_index: usize,
     pub skip: bool,
@@ -35,6 +36,7 @@ pub struct DialogDiveEvent {
 /// Read in
 ///   - ui::dialog_player::drop_first_text_upper_scroll
 ///     - drop first text from the UpperScroll
+#[derive(Event)]
 pub struct DropFirstTextUpperScroll;
 
 /// Action for each Interaction of the button
@@ -50,7 +52,7 @@ pub fn button_system(
     for (interaction, mut color, index, _children) in &mut interaction_query {
         // let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
-            Interaction::Clicked => {
+            Interaction::Pressed => {
                 dialog_dive_event.send(DialogDiveEvent {
                     child_index: index.0,
                     skip: false,
@@ -96,7 +98,7 @@ pub fn skip_forward_dialog(
     // or just with ui_wall.finished: bool
     if let Ok((_ui_wall, animator)) = query.get_single() {
         // prevent skip while opening the panel
-        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1.0 {
+        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1. {
             // be patient for god sake
             warn!("attempt of skip while the panel was opening");
             // TODO: feature - skip the animation ?! (i think it's already fast, so no)

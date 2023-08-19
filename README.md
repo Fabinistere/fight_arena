@@ -1,7 +1,6 @@
 # Fight Arena
 
-TODO: Bevy 0.11
-
+[![v0.4.2](https://img.shields.io/badge/v0.4.2-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)
 [![Bevy tracking](https://img.shields.io/badge/Bevy%20tracking-released%20version-lightblue)](https://github.com/bevyengine/bevy/blob/main/docs/plugins_guidelines.md#main-branch-tracking)
 [![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/fabinistere/bevy_trun-based_combat#license)
 
@@ -35,22 +34,21 @@ Press o to see the grateful future
 
 [Release Demo](https://fabinistere.github.io/figh_arena/)
 
-<!-- TODO: Draft the github tag 0.4.1 (migration to bevy 0.10) -->
-
-[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)
-
 ### For a future
 
-- NPC will Avoid collider
-  - Pathfind ?
-- NPC will have some personnality
-  - Implement landmark/place
-- Combat system
-  - Talk
-  - Fight
-    - Placement
-    - UI
-    - Combat Phases
+- [ ] NPC will Avoid collider
+  - [ ] Pathfind ?
+  - [ ] Fly Strategy ?
+- [ ] NPC will have some personnality
+  - [ ] Implement landmark/place
+- [x] Combat system
+  - [x] Dialog (in this [github repo](https://github.com/Fabinistere/yml_dialog))
+    - [x] Talk
+    - [x] Trigger Event
+  - [x] Fight (in this [github repo](https://github.com/Fabinistere/bevy_turn-based_combat))
+    - [x] Placement
+    - [x] UI
+    - [x] Combat Phases
 
 ```mermaid
 graph
@@ -78,15 +76,15 @@ This project also follows to [A successful Git branching model](https://nvie.com
 
 ### Assets deported - Ecological Issue
 
-From now on, all my repertory using musics and images changing a lot will have a particular folder in our org's cloud.
+From now on, all my repertories using music and images that change frequently will have a special folder in our organisation's cloud.
 To avoid using the git storage for such maters.
-Indeed store image in git means if only one pixel changed the git will save the previous and the next image completly.
-Which happens to be a pure waste of energy in my case.
+In fact, storing an image in git means that if a single pixel changes, git will completely save the previous image and the next image.
+Which turns out to be a complete waste of energy in my case.
 
 SO, to have the assets of the last commit, please download this folder:
-[assets](https://drive.google.com/drive/folders/1jcYH7U0qzLvyE25JEkXixoA6EWw6KNN5?usp=share_link)
+[Download Assets](https://drive.google.com/drive/folders/1jcYH7U0qzLvyE25JEkXixoA6EWw6KNN5?usp=share_link)
 
-To find previous assets, they will be given in the given realase
+To find previous assets, they will be indicated in the given database.
 
 ## License
 

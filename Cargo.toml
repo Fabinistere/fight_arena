@@ -1,6 +1,6 @@
 [package]
 name = "fight_arena"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Olf EPAIN <wabtey@disroot.org>", "Morgan Van Amerongen <vanamerongen.morgan@gmail.com>"]
 repository = "https://github.com/Fabinistere/fight_arena"
 license = "MIT OR Apache-2.0"
@@ -8,12 +8,12 @@ edition = "2021"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # default-features = false, features = ["bevy_asset", "bevy_scene", "bevy_winit", "render", "x11", "png", "wayland", "dynamic"]
-bevy = { version = "0.10",  features = ["dynamic_linking"] }
-bevy_ecs = "0.10"
+bevy = { version = "0.11",  features = ["dynamic_linking"] }
+bevy_ecs = "0.11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-bevy = "0.10"
-bevy_ecs = "0.10"
+bevy = "0.11"
+bevy_ecs = "0.11"
 wasm-bindgen = "0.2"
 # a panic hook that will cause the messages to appear in the browser console
 console_error_panic_hook = "0.1"
@@ -22,21 +22,22 @@ console_error_panic_hook = "0.1"
 
 # ----------- Common ----------
 # bevy_kira_audio = { git = "https://github.com/NiklasEi/bevy_kira_audio.git" }
-bevy_tweening = "0.7"
-bevy_reflect = "0.10"
+bevy_tweening = "0.8"
+bevy_reflect = "0.11"
 image = "0.23"
 
 rand = "0.8.5"
 
 # ----- Hitbox - Velocity -----
-bevy_rapier2d = { version = "0.21", features = ["simd-stable", "debug-render-2d"] }
+bevy_rapier2d = { version = "0.22", features = ["simd-stable", "debug-render-2d"] }
 
 
 density-mesh-core = "1.5"
 density-mesh-image = "1.5"
 
 # ----------- Debug -----------
-bevy-inspector-egui = "0.18"
+# until a clear release, we're tracking `main`
+bevy-inspector-egui = { version = "0.18", git = "https://github.com/jakobhellermann/bevy-inspector-egui", rev = "a181bdf5c5c621d524d63ee89e22570e01e1b162" }
 log = "0.4.17"
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:

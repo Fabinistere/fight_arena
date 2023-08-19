@@ -19,6 +19,7 @@
 use std::{cell::RefCell, fmt, rc::Rc, str::FromStr};
 
 use bevy::prelude::{info, warn, Component};
+use bevy_ecs::event::Event;
 
 use crate::constants::character::{KARMA_MAX, KARMA_MIN};
 
@@ -169,11 +170,11 @@ impl FromStr for GameEvent {
 ///     - throw_trigger_event
 ///     Match the Enum and handle it
 ///     REFACTOR: or/and TriggerEvent Handle by sending these real Event
+#[derive(Event)]
 pub struct TriggerEvent(pub Vec<ThrowableEvent>);
-// pub struct FightEvent;
 
 /// DOC
-/// 
+///
 /// List all triggerable event,
 /// that can be send when quitting a dialog node
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -1557,12 +1558,14 @@ mod tests {
 
         #[test]
         fn test_print_from_file_monologue() {
-
-            let root = init_tree_file(String::from("# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n"));
+            let root = init_tree_file(String::from(
+                "# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n",
+            ));
 
             assert_eq!(
                 root.borrow().print_file(),
-                "# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n".to_string()
+                "# Olf\n\n- Hello\n- Did you just\n- Call me ?\n- Or was it my imagination\n"
+                    .to_string()
             );
         }
 

@@ -3,7 +3,7 @@
 //! Follow along with the tutorial serie by Logic Projects <3
 
 #![allow(clippy::redundant_field_names)]
-use bevy::{prelude::*, render::texture::ImagePlugin, window::WindowResolution};
+use bevy::{audio::Volume, prelude::*, render::texture::ImagePlugin, window::WindowResolution};
 use bevy_rapier2d::prelude::*;
 use bevy_tweening::TweeningPlugin;
 
@@ -39,7 +39,7 @@ pub enum GameState {
     Discussion,
 }
 
-#[rustfmt::skip]
+// #[rustfmt::skip]
 fn main() {
     // When building for WASM, print panics to the browser console
     #[cfg(target_arch = "wasm32")]
@@ -55,7 +55,7 @@ fn main() {
             gravity: Vec2::ZERO,
             ..default()
         })
-        .add_plugins(
+        .add_plugins((
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -67,25 +67,28 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-        )
-        .add_plugin(RapierDebugRenderPlugin {
-            mode: DebugRenderMode::all(),
-            ..default()
-        })
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.0))
-        .add_plugin(RetroPhysicsPlugin::default())
-        .add_plugin(TweeningPlugin)
-        .add_plugin(CombatPlugin)
-        .add_plugin(DebugPlugin)
-        .add_plugin(FabienPlugin)
-        .add_plugin(LocationsPlugin)
-        .add_plugin(NPCPlugin)
-        .add_plugin(PlayerPlugin)
-        .add_plugin(UiPlugin)
-        .add_startup_systems((
-            spawn_camera,
-            // music,
-        ));
+            RapierDebugRenderPlugin {
+                mode: DebugRenderMode::all(),
+                ..default()
+            },
+            RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1.0),
+            RetroPhysicsPlugin::default(),
+            TweeningPlugin,
+            CombatPlugin,
+            DebugPlugin,
+            FabienPlugin,
+            LocationsPlugin,
+            NPCPlugin,
+            PlayerPlugin,
+            UiPlugin,
+        ))
+        .add_systems(
+            Startup,
+            (
+                spawn_camera,
+                // music,
+            ),
+        );
 
     app.run();
 }
@@ -98,10 +101,18 @@ fn spawn_camera(mut commands: Commands) {
     commands.spawn(camera);
 }
 
-fn _music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
-    let music = asset_server.load("sounds/FTO_Dracula_theme.ogg");
-    // audio.play(music);
-    audio.play_with_settings(music, PlaybackSettings::LOOP.with_volume(0.10));
+/// Marker component for our music entity
+#[derive(Component)]
+struct CastleTheme;
+
+fn _music(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("sounds/FTO_Dracula_theme.ogg"),
+            settings: PlaybackSettings::LOOP.with_volume(Volume::new_relative(0.10)),
+        },
+        CastleTheme,
+    ));
 
     println!("audio playing...");
 }
