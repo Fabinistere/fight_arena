@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [![**Full Commits History**](https://img.shields.io/badge/GitHubLog-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/bevy_turn-based_combat/commits/v0.4.2)](https://github.com/Fabinistere/bevy_turn-based_combat/commits/v0.4.2)
 
 - [Migration Guide Bevy 0.10 -> 0.11](https://bevyengine.org/learn/migration-guides/0.10-0.11/)
+- *not needed* [Changelog Bevy Rapier 0.21 -> 0.22](https://github.com/dimforge/bevy_rapier/blob/master/CHANGELOG.md#0220-10-july-2023)
 
 ### Changed
 
@@ -29,7 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     For the `size`, `margin`, `border`, and `padding` fields of `Style`, `Val::Undefined` should be replaced with `Val::Px(0.)`.
     For the `min_size`, `max_size`, `left`, `right`, `top` and `bottom` fields of `Style`, `Val::Undefined` should be replaced with `Val::Auto`
   - `Interaction::Clicked` replaced by `Interaction::Pressed`
-  - TODO: The Y axe's inverted once again !
+  <!-- - TODO: The Y axe's inverted once again ! -->
+- Dependencies
+  - bevy_rapier_2d `0.22`
+  - bevy_tweening `0.8`
+  - bevy-inspector-egui `main tracking`
 
 ## Bevy 0.10 Migration - [v0.4.1](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1) - 2023-07-10
 
