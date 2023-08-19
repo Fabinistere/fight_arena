@@ -89,11 +89,6 @@ impl Plugin for NPCPlugin {
                         .in_set(NPCSystems::Idle)
                         .after(NPCSystems::Stroll),
                     movement::follow.in_set(NPCSystems::Follow),
-                ),
-            )
-            .add_systems(
-                FixedUpdate,
-                (
                     aggression::add_detection_aura.before(NPCSystems::FindTargets),
                     aggression::threat_detection.in_set(NPCSystems::FindTargets),
                     aggression::add_pursuit_urge

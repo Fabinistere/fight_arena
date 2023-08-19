@@ -20,7 +20,7 @@ impl Plugin for TemplePlugin {
             .add_event::<SpawnPillarEvent>()
             .add_systems(OnEnter(Location::Temple), (setup_temple, spawn_pillars))
             .add_systems(
-                Update, // PostUpdate,
+                PostUpdate,
                 (throne_position, pillar_position, npc_z_position)
                     .run_if(in_state(Location::Temple)),
             );

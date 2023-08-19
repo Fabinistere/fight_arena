@@ -172,7 +172,6 @@ impl FromStr for GameEvent {
 ///     REFACTOR: or/and TriggerEvent Handle by sending these real Event
 #[derive(Event)]
 pub struct TriggerEvent(pub Vec<ThrowableEvent>);
-// pub struct FightEvent;
 
 /// DOC
 ///

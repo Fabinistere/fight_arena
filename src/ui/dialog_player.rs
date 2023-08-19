@@ -98,7 +98,7 @@ pub fn skip_forward_dialog(
     // or just with ui_wall.finished: bool
     if let Ok((_ui_wall, animator)) = query.get_single() {
         // prevent skip while opening the panel
-        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1.0 {
+        if keyboard_input.just_pressed(KeyCode::P) && animator.tweenable().progress() < 1. {
             // be patient for god sake
             warn!("attempt of skip while the panel was opening");
             // TODO: feature - skip the animation ?! (i think it's already fast, so no)

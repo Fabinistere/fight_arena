@@ -206,7 +206,7 @@ pub fn create_dialog_panel_on_combat_event(
         // if already open go to combat tab
         if let Ok((_entity, _animator, _style)) = query.get_single() {
             // close any open ui
-            // if animator.tweenable().unwrap().progress() >= 1.0 {
+            // if animator.tweenable().unwrap().progress() >= 1. {
             //     close_dialog_panel_event.send(CloseDialogPanelEvent);
             // }
         } else {
@@ -253,7 +253,12 @@ pub fn close_dialog_panel(
                 EaseFunction::QuadraticIn,
                 Duration::from_millis(DIALOG_PANEL_ANIMATION_TIME_MS),
                 UiPositionLens {
-                    start: UiRect { left: style.left, right: style.right, top: style.top, bottom: style.bottom },
+                    start: UiRect {
+                        left: style.left,
+                        right: style.right,
+                        top: style.top,
+                        bottom: style.bottom,
+                    },
                     end: UiRect {
                         left: Val::Auto,
                         top: Val::Px(0.),
@@ -348,10 +353,9 @@ pub fn create_dialog_panel(
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         position_type: PositionType::Relative,
-                            top: Val::Px(0.),
-                            left: Val::Auto,
-                            right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
-                            bottom: Val::Px(0.),
+                        top: Val::Px(0.),
+                        right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
+                        bottom: Val::Px(0.),
                         margin: UiRect {
                             left: Val::Auto,
                             right: Val::Px(0.),
@@ -424,6 +428,7 @@ pub fn create_dialog_panel(
                 parent
                     .spawn((
                         ImageBundle {
+                            // REFACTOR: Replace by a spritesheet
                             image: dialog_panel_resources.scroll_animation[0].clone().into(),
                             style: Style {
                                 position_type: PositionType::Absolute,
@@ -469,7 +474,8 @@ pub fn create_dialog_panel(
                                     left: Val::Percent(24.),
                                     ..UiRect::default()
                                 },
-                                width: Val::Px(300.), 
+                                // Percent ?
+                                width: Val::Px(300.),
                                 height: Val::Percent(100.),
                                 ..Style::default()
                             },
@@ -535,6 +541,7 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
+                                        // Percent ?
                                         width: Val::Px(300.),
                                         height: Val::Px(30.),
                                         margin: UiRect::all(Val::Auto),
@@ -545,7 +552,7 @@ pub fn create_dialog_panel(
                                         // },
                                         // justify_content: JustifyContent::SpaceAround,
                                         top: Val::Px(450.),
-                                            left: Val::Px(10.),
+                                        left: Val::Px(10.),
                                         ..default()
                                     },
                                     background_color: NORMAL_BUTTON.into(),
@@ -569,10 +576,6 @@ pub fn create_dialog_panel(
                                     .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
-                                        margin: UiRect {
-                                            // top: Val::Percent(10.0),
-                                            ..UiRect::default()
-                                        },
                                         max_width: Val::Px(300.),
                                         max_height: Val::Percent(100.),
                                         ..Style::default()
@@ -589,8 +592,8 @@ pub fn create_dialog_panel(
                                         // TODO: custom size ? (text dependent)
                                         width: Val::Px(300.),
                                         height: Val::Px(30.),
-                                            top: Val::Px(250.),
-                                            left: Val::Px(10.),
+                                        top: Val::Px(250.),
+                                        left: Val::Px(10.),
                                         margin: UiRect::all(Val::Auto),
                                         // margin: UiRect {
                                         //     top: Val::Percent(125.0),
@@ -621,10 +624,6 @@ pub fn create_dialog_panel(
                                     .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
-                                        margin: UiRect {
-                                            // top: Val::Percent(10.0),
-                                            ..UiRect::default()
-                                        },
                                         max_width: Val::Px(300.),
                                         max_height: Val::Percent(100.),
                                         ..Style::default()
@@ -642,7 +641,7 @@ pub fn create_dialog_panel(
                                         width: Val::Px(300.),
                                         height: Val::Px(30.),
                                         top: Val::Px(50.),
-                                            left: Val::Px(10.),
+                                        left: Val::Px(10.),
                                         margin: UiRect::all(Val::Auto),
                                         // margin: UiRect {
                                         //     top: Val::Percent(145.0),
@@ -673,10 +672,6 @@ pub fn create_dialog_panel(
                                     .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
-                                        margin: UiRect {
-                                            // top: Val::Percent(10.0),
-                                            ..UiRect::default()
-                                        },
                                         max_width: Val::Px(300.),
                                         max_height: Val::Percent(100.),
                                         ..Style::default()

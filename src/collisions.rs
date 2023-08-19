@@ -27,7 +27,7 @@ pub struct RetroPhysicsPlugin {
 impl Default for RetroPhysicsPlugin {
     fn default() -> Self {
         Self {
-            pixels_per_meter: 8.0,
+            pixels_per_meter: 8.,
         }
     }
 }
@@ -93,7 +93,7 @@ pub fn create_convex_collider_from_image(
         vec![],
         density_map,
         GenerateDensityMeshSettings {
-            extrude_size: if tesselator_config.extrusion != 0.0 {
+            extrude_size: if tesselator_config.extrusion != 0. {
                 Some(tesselator_config.extrusion)
             } else {
                 None
@@ -113,13 +113,13 @@ pub fn create_convex_collider_from_image(
         .iter()
         .map(|point| {
             Vec2::new(
-                (point.x - width as f32 / 2.0) + 0.5,
-                -(point.y - height as f32 / 2.0) - 0.5,
+                (point.x - width as f32 / 2.) + 0.5,
+                -(point.y - height as f32 / 2.) - 0.5,
             )
         })
         .collect::<Vec<_>>();
 
-    if tesselator_config.vertice_radius == 0.0 {
+    if tesselator_config.vertice_radius == 0. {
         Collider::convex_hull(&points)
     } else {
         Collider::round_convex_hull(&points, tesselator_config.vertice_radius)

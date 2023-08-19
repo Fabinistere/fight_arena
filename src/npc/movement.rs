@@ -34,7 +34,7 @@ pub struct DetectionBehavior;
 
 #[derive(Default, Component)]
 pub struct PursuitBehavior;
-// pub const PROXIMITY_RADIUS: f32 = 64.0;
+// pub const PROXIMITY_RADIUS: f32 = 64.;
 
 #[derive(Clone, Copy, Component)]
 pub struct Target(pub Option<Entity>);
@@ -243,8 +243,8 @@ fn move_to(target_transform: &GlobalTransform, transform: &Transform, speed: &Sp
     let mut vel_y = y_axis as f32 * **speed;
 
     if x_axis != 0 && y_axis != 0 {
-        vel_x *= (std::f32::consts::PI / 4.0).cos();
-        vel_y *= (std::f32::consts::PI / 4.0).cos();
+        vel_x *= (std::f32::consts::PI / 4.).cos();
+        vel_y *= (std::f32::consts::PI / 4.).cos();
     }
 
     return (vel_x, vel_y);
@@ -266,8 +266,8 @@ fn move_to_dest(target_vec3: Vec3, transform: &Transform, speed: &Speed) -> (f32
     let mut vel_y = y_axis as f32 * **speed;
 
     if x_axis != 0 && y_axis != 0 {
-        vel_x *= (std::f32::consts::PI / 4.0).cos();
-        vel_y *= (std::f32::consts::PI / 4.0).cos();
+        vel_x *= (std::f32::consts::PI / 4.).cos();
+        vel_y *= (std::f32::consts::PI / 4.).cos();
     }
 
     return (vel_x, vel_y);

@@ -39,7 +39,7 @@ pub enum GameState {
     Discussion,
 }
 
-#[rustfmt::skip]
+// #[rustfmt::skip]
 fn main() {
     // When building for WASM, print panics to the browser console
     #[cfg(target_arch = "wasm32")]
@@ -82,10 +82,13 @@ fn main() {
             PlayerPlugin,
             UiPlugin,
         ))
-        .add_systems(Startup, (
-            spawn_camera,
-            // music,
-        ));
+        .add_systems(
+            Startup,
+            (
+                spawn_camera,
+                // music,
+            ),
+        );
 
     app.run();
 }
