@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - bevy_tweening `0.8`
   - bevy-inspector-egui `main tracking`
 
+### Note
+
+- I did this migration twice :0
+Always check your branch tree !!
+
 ## Bevy 0.10 Migration - [v0.4.1](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1) - 2023-07-10
 
 - [Migration Guide Bevy 0.9 -> 0.10](https://bevyengine.org/learn/migration-guides/0.9-0.10/)
