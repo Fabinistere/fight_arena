@@ -34,7 +34,7 @@ impl Default for RetroPhysicsPlugin {
 
 impl Plugin for RetroPhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(generate_colliders.in_base_set(CoreSet::PostUpdate));
+        app.add_systems(PostUpdate, generate_colliders);
     }
 }
 

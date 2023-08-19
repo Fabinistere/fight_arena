@@ -56,6 +56,7 @@ pub struct DialogPanel {
 /// Read in
 ///   - ui::dialog_panel::create_dialog_panel
 ///     - for a given String, creates basic ui entities ( ui + fx )
+#[derive(Event)]
 pub struct CreateDialogPanelEvent {
     interlocutor: Entity,
     dialog_tree: String,
@@ -68,6 +69,7 @@ pub struct CreateDialogPanelEvent {
 ///   - ui::dialog_panel::end_node_dialog
 ///     - fills the given interlocutor with a blank "..." dialog
 ///     and exit the Combat ( send CombatExitEvent )
+#[derive(Event)]
 pub struct EndNodeDialogEvent;
 
 /// Happens when
@@ -80,6 +82,7 @@ pub struct EndNodeDialogEvent;
 /// Read in
 ///   - ui::dialog_panel::close_dialog_panel
 ///     - close ui
+#[derive(Event)]
 pub struct CloseDialogPanelEvent;
 
 #[derive(Resource)]
@@ -139,7 +142,7 @@ pub fn create_dialog_panel_on_key_press(
 ) {
     if keyboard_input.just_pressed(KeyCode::O) {
         if let Ok((_entity, animator, _style)) = query.get_single() {
-            if animator.tweenable().progress() >= 1.0 {
+            if animator.tweenable().progress() >= 1. {
                 close_dialog_panel_event.send(CloseDialogPanelEvent);
 
                 ev_combat_exit.send(CombatExitEvent);
@@ -250,12 +253,12 @@ pub fn close_dialog_panel(
                 EaseFunction::QuadraticIn,
                 Duration::from_millis(DIALOG_PANEL_ANIMATION_TIME_MS),
                 UiPositionLens {
-                    start: style.position,
+                    start: UiRect { left: style.left, right: style.right, top: style.top, bottom: style.bottom },
                     end: UiRect {
                         left: Val::Auto,
-                        top: Val::Px(0.0),
+                        top: Val::Px(0.),
                         right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
-                        bottom: Val::Px(0.0),
+                        bottom: Val::Px(0.),
                     },
                 },
             )
@@ -303,15 +306,15 @@ pub fn create_dialog_panel(
             UiPositionLens {
                 start: UiRect {
                     left: Val::Auto,
-                    top: Val::Px(0.0),
+                    top: Val::Px(0.),
                     right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
-                    bottom: Val::Px(0.0),
+                    bottom: Val::Px(0.),
                 },
                 end: UiRect {
                     left: Val::Auto,
-                    top: Val::Px(0.0),
-                    right: Val::Px(0.0),
-                    bottom: Val::Px(0.0),
+                    top: Val::Px(0.),
+                    right: Val::Px(0.),
+                    bottom: Val::Px(0.),
                 },
             },
         );
@@ -321,11 +324,11 @@ pub fn create_dialog_panel(
             Duration::from_millis(1000),
             UiPositionLens {
                 start: UiRect {
-                    top: Val::Px(0.0),
+                    top: Val::Px(0.),
                     ..UiRect::default()
                 },
                 end: UiRect {
-                    top: Val::Px(-160.0),
+                    top: Val::Px(-160.),
                     ..UiRect::default()
                 },
             },
@@ -345,20 +348,19 @@ pub fn create_dialog_panel(
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         position_type: PositionType::Relative,
-                        position: UiRect {
-                            top: Val::Px(0.0),
+                            top: Val::Px(0.),
                             left: Val::Auto,
                             right: Val::Px(DIALOG_PANEL_ANIMATION_OFFSET),
-                            bottom: Val::Px(0.0),
-                        },
+                            bottom: Val::Px(0.),
                         margin: UiRect {
                             left: Val::Auto,
-                            right: Val::Px(0.0),
-                            top: Val::Px(0.0),
-                            bottom: Val::Px(0.0),
+                            right: Val::Px(0.),
+                            top: Val::Px(0.),
+                            bottom: Val::Px(0.),
                         },
-                        size: Size::new(Val::Auto, Val::Percent(100.0)),
-                        aspect_ratio: Some(284.0 / 400.0),
+                        width: Val::Auto,
+                        height: Val::Percent(100.),
+                        aspect_ratio: Some(284. / 400.),
                         ..Style::default()
                     },
                     ..ImageBundle::default()
@@ -374,7 +376,8 @@ pub fn create_dialog_panel(
             .with_children(|parent| {
                 let child_sprite_style = Style {
                     position_type: PositionType::Absolute,
-                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
                     ..Style::default()
                 };
 
@@ -424,7 +427,8 @@ pub fn create_dialog_panel(
                             image: dialog_panel_resources.scroll_animation[0].clone().into(),
                             style: Style {
                                 position_type: PositionType::Absolute,
-                                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                                width: Val::Percent(100.),
+                                height: Val::Percent(100.),
                                 display: Display::Flex,
                                 flex_direction: FlexDirection::Column,
                                 align_items: AlignItems::FlexStart,
@@ -453,22 +457,20 @@ pub fn create_dialog_panel(
                                 "",
                                 TextStyle {
                                     font: dialog_panel_resources.text_font.clone(),
-                                    font_size: 30.0,
+                                    font_size: 30.,
                                     color: Color::BLACK,
                                 },
                             )
                             .with_alignment(TextAlignment::Left),
                             style: Style {
                                 flex_wrap: FlexWrap::Wrap,
-                                position: UiRect {
-                                    top: Val::Px(375.0),
-                                    ..UiRect::default()
-                                },
+                                top: Val::Px(375.),
                                 margin: UiRect {
-                                    left: Val::Percent(24.0),
+                                    left: Val::Percent(24.),
                                     ..UiRect::default()
                                 },
-                                size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                width: Val::Px(300.), 
+                                height: Val::Percent(100.),
                                 ..Style::default()
                             },
                             ..TextBundle::default()
@@ -500,7 +502,8 @@ pub fn create_dialog_panel(
                             image: player_scroll_img.clone().into(),
                             style: Style {
                                 position_type: PositionType::Absolute,
-                                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                                width: Val::Percent(100.),
+                                height: Val::Percent(100.),
                                 display: Display::Flex,
                                 flex_direction: FlexDirection::Column,
                                 align_items: AlignItems::FlexStart,
@@ -532,7 +535,8 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
-                                        size: Size::new(Val::Px(300.0), Val::Px(30.0)),
+                                        width: Val::Px(300.),
+                                        height: Val::Px(30.),
                                         margin: UiRect::all(Val::Auto),
                                         // margin: UiRect {
                                         //     top: Val::Percent(105.0),
@@ -540,11 +544,8 @@ pub fn create_dialog_panel(
                                         //     ..UiRect::default()
                                         // },
                                         // justify_content: JustifyContent::SpaceAround,
-                                        position: UiRect {
-                                            top: Val::Px(450.0),
-                                            left: Val::Px(10.0),
-                                            ..UiRect::default()
-                                        },
+                                        top: Val::Px(450.),
+                                            left: Val::Px(10.),
                                         ..default()
                                     },
                                     background_color: NORMAL_BUTTON.into(),
@@ -561,7 +562,7 @@ pub fn create_dialog_panel(
                                         TextStyle {
                                             font: dialog_panel_resources.text_font.clone(),
                                             // TODO: Find the correct value for the choice font size
-                                            font_size: 20.0,
+                                            font_size: 20.,
                                             color: Color::BLACK,
                                         },
                                     )
@@ -572,7 +573,8 @@ pub fn create_dialog_panel(
                                             // top: Val::Percent(10.0),
                                             ..UiRect::default()
                                         },
-                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        max_width: Val::Px(300.),
+                                        max_height: Val::Percent(100.),
                                         ..Style::default()
                                     },
                                     ..TextBundle::default()
@@ -585,12 +587,10 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
-                                        size: Size::new(Val::Px(300.0), Val::Px(30.0)),
-                                        position: UiRect {
-                                            top: Val::Px(250.0),
-                                            left: Val::Px(10.0),
-                                            ..UiRect::default()
-                                        },
+                                        width: Val::Px(300.),
+                                        height: Val::Px(30.),
+                                            top: Val::Px(250.),
+                                            left: Val::Px(10.),
                                         margin: UiRect::all(Val::Auto),
                                         // margin: UiRect {
                                         //     top: Val::Percent(125.0),
@@ -614,7 +614,7 @@ pub fn create_dialog_panel(
                                         TextStyle {
                                             font: dialog_panel_resources.text_font.clone(),
                                             // TODO: Find the correct value for the choice font size
-                                            font_size: 20.0,
+                                            font_size: 20.,
                                             color: Color::BLACK,
                                         },
                                     )
@@ -625,7 +625,8 @@ pub fn create_dialog_panel(
                                             // top: Val::Percent(10.0),
                                             ..UiRect::default()
                                         },
-                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        max_width: Val::Px(300.),
+                                        max_height: Val::Percent(100.),
                                         ..Style::default()
                                     },
                                     ..TextBundle::default()
@@ -638,12 +639,10 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
-                                        size: Size::new(Val::Px(300.0), Val::Px(30.0)),
-                                        position: UiRect {
-                                            top: Val::Px(50.0),
-                                            left: Val::Px(10.0),
-                                            ..UiRect::default()
-                                        },
+                                        width: Val::Px(300.),
+                                        height: Val::Px(30.),
+                                        top: Val::Px(50.),
+                                            left: Val::Px(10.),
                                         margin: UiRect::all(Val::Auto),
                                         // margin: UiRect {
                                         //     top: Val::Percent(145.0),
@@ -667,7 +666,7 @@ pub fn create_dialog_panel(
                                         TextStyle {
                                             font: dialog_panel_resources.text_font.clone(),
                                             // TODO: Find the correct value for the choice font size
-                                            font_size: 20.0,
+                                            font_size: 20.,
                                             color: Color::BLACK,
                                         },
                                     )
@@ -678,41 +677,14 @@ pub fn create_dialog_panel(
                                             // top: Val::Percent(10.0),
                                             ..UiRect::default()
                                         },
-                                        max_size: Size::new(Val::Px(300.0), Val::Percent(100.0)),
+                                        max_width: Val::Px(300.),
+                                        max_height: Val::Percent(100.),
                                         ..Style::default()
                                     },
                                     ..TextBundle::default()
                                 });
                             });
                     });
-
-                // Button
-
-                // parent
-                //     .spawn(ButtonBundle {
-                //         style: Style {
-                //             size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                //             // center button
-                //             margin: UiRect::all(Val::Auto),
-                //             // horizontally center child text
-                //             justify_content: JustifyContent::Center,
-                //             // vertically center child text
-                //             align_items: AlignItems::Center,
-                //             ..default()
-                //         },
-                //         background_color: NORMAL_BUTTON.into(),
-                //         ..default()
-                //     })
-                //     .with_children(|parent| {
-                //         parent.spawn(TextBundle::from_section(
-                //             "Button",
-                //             TextStyle {
-                //                 font: asset_server.load("fonts/dpcomic.ttf"),
-                //                 font_size: 40.0,
-                //                 color: Color::rgb(0.9, 0.9, 0.9),
-                //             },
-                //         ));
-                //     });
             });
 
         // check with system ordering if this event will be catch

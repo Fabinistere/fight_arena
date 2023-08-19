@@ -18,11 +18,11 @@ impl Plugin for TemplePlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<PlayerLocation>()
             .add_event::<SpawnPillarEvent>()
-            .add_systems((setup_temple, spawn_pillars).in_schedule(OnEnter(Location::Temple)))
+            .add_systems(OnEnter(Location::Temple), (setup_temple, spawn_pillars))
             .add_systems(
+                Update, // PostUpdate,
                 (throne_position, pillar_position, npc_z_position)
-                    // CoreSet::PostUpdate
-                    .in_set(OnUpdate(Location::Temple)),
+                    .run_if(in_state(Location::Temple)),
             );
     }
 }
@@ -45,6 +45,7 @@ pub struct ZPosition(f32);
 /// Read in
 ///   - location::temple::mod
 ///     - spawn_pillars
+#[derive(Event)]
 struct SpawnPillarEvent;
 
 /// REFACTOR: Use Location only ?

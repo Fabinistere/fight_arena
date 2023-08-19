@@ -26,11 +26,11 @@ impl Plugin for UiPlugin {
             // .add_event::<dialog_system::FightEvent>()
             // .add_event::<dialog_system::TriggerEvent>()
 
-            .add_startup_system(dialog_panel::load_textures)
+            .add_systems(Startup, dialog_panel::load_textures)
 
             // OPTIMIZE: System Ordering
 
-            .add_systems((
+            .add_systems(Update, (
                 dialog_panel::create_dialog_panel_on_key_press,
                 dialog_panel::create_dialog_panel_on_combat_event,
                 dialog_panel::create_dialog_panel,
@@ -57,9 +57,9 @@ impl Plugin for UiPlugin {
             ))
             
             // crash when in this big tuple: (but not when in a simple `.add_system()`)
-            .add_system(dialog_panel::end_node_dialog)
-            .add_system(dialog_panel::close_dialog_panel)
-            .add_system(dialog_panel::despawn_dialog_panel)
+            .add_systems(Update, dialog_panel::end_node_dialog)
+            .add_systems(Update, dialog_panel::close_dialog_panel)
+            .add_systems(Update, dialog_panel::despawn_dialog_panel)
             ;
     }
 }

@@ -15,7 +15,9 @@ impl Plugin for DebugPlugin {
     #[rustfmt::skip]
     fn build(&self, app: &mut App) {
         if cfg!(debug_assertions) {
-            app.add_plugin(WorldInspectorPlugin::new())
+            app.add_plugins((
+                WorldInspectorPlugin::new(),
+            ))
 
                 /* -------------------------------------------------------------------------- */
                 /*                                     UI                                     */

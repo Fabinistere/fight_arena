@@ -1,7 +1,6 @@
 # Fight Arena
 
-TODO: Bevy 0.11
-
+[![v0.4.2](https://img.shields.io/badge/v0.4.2-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)
 [![Bevy tracking](https://img.shields.io/badge/Bevy%20tracking-released%20version-lightblue)](https://github.com/bevyengine/bevy/blob/main/docs/plugins_guidelines.md#main-branch-tracking)
 [![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/fabinistere/bevy_trun-based_combat#license)
 
@@ -41,16 +40,19 @@ Press o to see the grateful future
 
 ### For a future
 
-- NPC will Avoid collider
-  - Pathfind ?
-- NPC will have some personnality
-  - Implement landmark/place
-- Combat system
-  - Talk
-  - Fight
-    - Placement
-    - UI
-    - Combat Phases
+- [ ] NPC will Avoid collider
+  - [ ] Pathfind ?
+  - [ ] Fly Strategy ?
+- [ ] NPC will have some personnality
+  - [ ] Implement landmark/place
+- [x] Combat system
+  - [x] Dialog (in this [github repo](https://github.com/Fabinistere/yml_dialog))
+    - [x] Talk
+    - [x] Trigger Event
+  - [x] Fight (in this [github repo](https://github.com/Fabinistere/bevy_turn-based_combat))
+    - [x] Placement
+    - [x] UI
+    - [x] Combat Phases
 
 ```mermaid
 graph

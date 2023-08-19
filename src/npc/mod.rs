@@ -80,64 +80,34 @@ impl Plugin for NPCPlugin {
             .add_event::<aggression::StopChaseEvent>()
             .add_event::<aggression::DetectionModeEvent>()
             .add_event::<aggression::EngagePursuitEvent>()
-            .add_startup_system(spawn_characters)
-            .add_startup_system(spawn_aggresives_characters)
+            .add_systems(Startup, (spawn_characters, spawn_aggresives_characters))
             .add_systems(
+                FixedUpdate,
                 (
                     movement::just_walk.in_set(NPCSystems::Stroll),
                     idle::do_flexing
                         .in_set(NPCSystems::Idle)
                         .after(NPCSystems::Stroll),
                     movement::follow.in_set(NPCSystems::Follow),
-                )
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
+                ),
             )
-            // .add_system(aggression::add_pursuit_urge)
-            // .add_system(aggression::remove_pursuit_urge)
-            .add_system(
-                aggression::add_detection_aura
-                    .before(NPCSystems::FindTargets)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            )
-            .add_system(
-                aggression::threat_detection
-                    .in_set(NPCSystems::FindTargets)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            )
-            .add_system(
-                aggression::add_pursuit_urge
-                    .before(NPCSystems::Chase)
-                    .after(NPCSystems::FindTargets)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            )
-            .add_system(
-                movement::pursue
-                    .in_set(NPCSystems::Chase)
-                    .after(NPCSystems::FindTargets)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            )
-            .add_system(
-                aggression::remove_pursuit_urge
-                    .in_set(NPCSystems::StopChase)
-                    .after(NPCSystems::Chase)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            )
-            .add_system(
-                aggression::fair_play_wait
-                    .after(NPCSystems::StopChase)
-                    .in_base_set(CoreSet::Update)
-                    .in_schedule(CoreSchedule::FixedUpdate),
-            )
-            .add_system(
-                aggression::add_detection_aura
-                    .after(NPCSystems::StopChase)
-                    .in_schedule(CoreSchedule::FixedUpdate),
+            .add_systems(
+                FixedUpdate,
+                (
+                    aggression::add_detection_aura.before(NPCSystems::FindTargets),
+                    aggression::threat_detection.in_set(NPCSystems::FindTargets),
+                    aggression::add_pursuit_urge
+                        .before(NPCSystems::Chase)
+                        .after(NPCSystems::FindTargets),
+                    movement::pursue
+                        .in_set(NPCSystems::Chase)
+                        .after(NPCSystems::FindTargets),
+                    aggression::remove_pursuit_urge
+                        .in_set(NPCSystems::StopChase)
+                        .after(NPCSystems::Chase),
+                    aggression::fair_play_wait.after(NPCSystems::StopChase),
+                    aggression::add_detection_aura.after(NPCSystems::StopChase),
+                ),
             );
     }
 }

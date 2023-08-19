@@ -48,6 +48,7 @@ impl DialogBox {
 ///     - creates a DialogBox to transfer info to the child Text
 ///     if there is none
 ///     or resets the text and dialogBox
+#[derive(Event)]
 pub struct ResetDialogBoxEvent {
     pub dialog_box: Entity,
     /// could be
