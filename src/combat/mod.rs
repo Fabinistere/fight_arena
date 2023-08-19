@@ -72,22 +72,19 @@ impl Plugin for CombatPlugin {
                 Update,
                 (
                     spawn_party_members.before(CombatState::Initiation),
-                    enter_combat
-                        .in_set(CombatState::Initiation)
-                        .in_base_set(CoreSet::Update),
+                    enter_combat.in_set(CombatState::Initiation),
                     exit_combat
                         .in_set(CombatState::Evasion)
-                        .before(CombatState::Observation)
-                        .in_base_set(CoreSet::Update),
-                    freeze_in_combat
-                        .after(CombatState::Evasion)
-                        .in_base_set(CoreSet::Update)
-                        .in_schedule(CoreSchedule::FixedUpdate),
+                        .before(CombatState::Observation),
+                ),
+            )
+            .add_systems(
+                FixedUpdate,
+                (
+                    freeze_in_combat.after(CombatState::Evasion),
                     observation
                         .in_set(CombatState::Observation)
-                        .after(CombatState::Initiation)
-                        .in_base_set(CoreSet::Update)
-                        .in_schedule(CoreSchedule::FixedUpdate),
+                        .after(CombatState::Initiation),
                 ),
             );
     }

@@ -253,7 +253,12 @@ pub fn close_dialog_panel(
                 EaseFunction::QuadraticIn,
                 Duration::from_millis(DIALOG_PANEL_ANIMATION_TIME_MS),
                 UiPositionLens {
-                    start: style.position,
+                    start: UiRect {
+                        left: style.left,
+                        right: style.right,
+                        top: style.top,
+                        bottom: style.bottom,
+                    },
                     end: UiRect {
                         left: Val::Auto,
                         top: Val::Px(0.),
@@ -427,7 +432,8 @@ pub fn create_dialog_panel(
                             image: dialog_panel_resources.scroll_animation[0].clone().into(),
                             style: Style {
                                 position_type: PositionType::Absolute,
-                                width: Val::Percent(100.),height: Val::Percent(100.),
+                                width: Val::Percent(100.),
+                                height: Val::Percent(100.),
                                 display: Display::Flex,
                                 flex_direction: FlexDirection::Column,
                                 align_items: AlignItems::FlexStart,
@@ -463,12 +469,13 @@ pub fn create_dialog_panel(
                             .with_alignment(TextAlignment::Left),
                             style: Style {
                                 flex_wrap: FlexWrap::Wrap,
-                                    top: Val::Px(375.),
+                                top: Val::Px(375.),
                                 margin: UiRect {
                                     left: Val::Percent(24.),
                                     ..UiRect::default()
                                 },
-                                width: Val::Percent(300.),
+                                // Percent ?
+                                width: Val::Px(300.),
                                 height: Val::Percent(100.),
                                 ..Style::default()
                             },
@@ -534,8 +541,9 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
-                                        width: Val::Percent(300.),
-                                        height: Val::Percent(30.),
+                                        // Percent ?
+                                        width: Val::Px(300.),
+                                        height: Val::Px(30.),
                                         margin: UiRect::all(Val::Auto),
                                         // margin: UiRect {
                                         //     top: Val::Percent(105.),
@@ -568,11 +576,7 @@ pub fn create_dialog_panel(
                                     .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
-                                        margin: UiRect {
-                                            // top: Val::Percent(10.),
-                                            ..UiRect::default()
-                                        },
-                                        max_width: Val::Percent(300.),
+                                        max_width: Val::Px(300.),
                                         max_height: Val::Percent(100.),
                                         ..Style::default()
                                     },
@@ -586,8 +590,8 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
-                                        width: Val::Percent(300.),
-                                        height: Val::Percent(30.),
+                                        width: Val::Px(300.),
+                                        height: Val::Px(30.),
                                         top: Val::Px(250.),
                                         left: Val::Px(10.),
                                         margin: UiRect::all(Val::Auto),
@@ -620,11 +624,7 @@ pub fn create_dialog_panel(
                                     .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
-                                        margin: UiRect {
-                                            // top: Val::Percent(10.),
-                                            ..UiRect::default()
-                                        },
-                                        max_width: Val::Percent(300.),
+                                        max_width: Val::Px(300.),
                                         max_height: Val::Percent(100.),
                                         ..Style::default()
                                     },
@@ -638,8 +638,8 @@ pub fn create_dialog_panel(
                                 ButtonBundle {
                                     style: Style {
                                         // TODO: custom size ? (text dependent)
-                                        width: Val::Percent(300.),
-                                        height: Val::Percent(30.),
+                                        width: Val::Px(300.),
+                                        height: Val::Px(30.),
                                         top: Val::Px(50.),
                                         left: Val::Px(10.),
                                         margin: UiRect::all(Val::Auto),
@@ -672,11 +672,7 @@ pub fn create_dialog_panel(
                                     .with_alignment(TextAlignment::Left),
                                     style: Style {
                                         flex_wrap: FlexWrap::Wrap,
-                                        margin: UiRect {
-                                            // top: Val::Percent(10.),
-                                            ..UiRect::default()
-                                        },
-                                        max_width: Val::Percent(300.),
+                                        max_width: Val::Px(300.),
                                         max_height: Val::Percent(100.),
                                         ..Style::default()
                                     },
@@ -684,35 +680,6 @@ pub fn create_dialog_panel(
                                 });
                             });
                     });
-
-                // Button
-
-                // parent
-                //     .spawn(ButtonBundle {
-                //         style: Style {
-                //             width: Val::Px(150.),
-                //             height: Val::Px(65.),
-                //             // center button
-                //             margin: UiRect::all(Val::Auto),
-                //             // horizontally center child text
-                //             justify_content: JustifyContent::Center,
-                //             // vertically center child text
-                //             align_items: AlignItems::Center,
-                //             ..default()
-                //         },
-                //         background_color: NORMAL_BUTTON.into(),
-                //         ..default()
-                //     })
-                //     .with_children(|parent| {
-                //         parent.spawn(TextBundle::from_section(
-                //             "Button",
-                //             TextStyle {
-                //                 font: asset_server.load("fonts/dpcomic.ttf"),
-                //                 font_size: 40.,
-                //                 color: Color::rgb(0.9, 0.9, 0.9),
-                //             },
-                //         ));
-                //     });
             });
 
         // check with system ordering if this event will be catch

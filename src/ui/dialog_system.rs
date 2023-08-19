@@ -19,6 +19,7 @@
 use std::{cell::RefCell, fmt, rc::Rc, str::FromStr};
 
 use bevy::prelude::{info, warn, Component};
+use bevy_ecs::event::Event;
 
 use crate::constants::character::{KARMA_MAX, KARMA_MIN};
 
@@ -171,8 +172,6 @@ impl FromStr for GameEvent {
 ///     REFACTOR: or/and TriggerEvent Handle by sending these real Event
 #[derive(Event)]
 pub struct TriggerEvent(pub Vec<ThrowableEvent>);
-// #[derive(Event)]
-// pub struct FightEvent;
 
 /// DOC
 ///

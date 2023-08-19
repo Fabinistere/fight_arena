@@ -82,7 +82,7 @@ impl Plugin for NPCPlugin {
             .add_event::<aggression::EngagePursuitEvent>()
             .add_systems(Startup, (spawn_characters, spawn_aggresives_characters))
             .add_systems(
-                Update,
+                FixedUpdate,
                 (
                     movement::just_walk.in_set(NPCSystems::Stroll),
                     idle::do_flexing
@@ -102,8 +102,7 @@ impl Plugin for NPCPlugin {
                         .after(NPCSystems::Chase),
                     aggression::fair_play_wait.after(NPCSystems::StopChase),
                     aggression::add_detection_aura.after(NPCSystems::StopChase),
-                )
-                    .in_schedule(CoreSchedule::FixedUpdate),
+                ),
             );
     }
 }

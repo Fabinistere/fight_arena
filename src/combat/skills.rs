@@ -1,13 +1,10 @@
 //! Implement SKILLS
 
-use crate::{
-    combat::stats::*,
-
-};
+use crate::combat::stats::*;
 
 /// Negative = MALUS
 /// Positive = BONUS
-/// 
+///
 /// Skills :
 /// hp: heal; dmg
 /// mana: gain; consume
@@ -22,13 +19,12 @@ pub struct Skills {
     pub defense: Defense,
     pub defense_spe: DefenseSpe,
     pub skills_queue: Vec![Skills],
-    pub description: String
+    pub description: String,
 }
 
 fn skill_caller(
     query: Query<(&NPC)>, // ??
     skill: Skills,
-    target: &Target
-){
-
+    target: &Target,
+) {
 }

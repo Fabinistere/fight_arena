@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Bevy 0.11](https://bevyengine.org/learn/migration-guides/0.10-0.11/) Migration - [0.4.2](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.2) - 2023-07-11
+## Bevy 0.11 Migration - [v0.4.2](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2) - 2023-08-19
 
-[![v0.4.2](https://img.shields.io/badge/v0.4.2-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.2)](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.2)
-[![**Full Commits History**](https://img.shields.io/badge/GitHubLog-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/fight_arena/commits/v0.4.2)](https://github.com/Fabinistere/fight_arena/commits/v0.4.2)
+[![v0.4.2](https://img.shields.io/badge/v0.4.2-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.2)
+[![**Full Commits History**](https://img.shields.io/badge/GitHubLog-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/bevy_turn-based_combat/commits/v0.4.2)](https://github.com/Fabinistere/bevy_turn-based_combat/commits/v0.4.2)
 
 - [Migration Guide Bevy 0.10 -> 0.11](https://bevyengine.org/learn/migration-guides/0.10-0.11/)
-- [Changelog Bevy Rapier 0.21 -> 0.22](https://github.com/dimforge/bevy_rapier/blob/master/CHANGELOG.md#0220-10-july-2023)
+- *not needed* [Changelog Bevy Rapier 0.21 -> 0.22](https://github.com/dimforge/bevy_rapier/blob/master/CHANGELOG.md#0220-10-july-2023)
 
 ### Changed
 
@@ -29,12 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `Style`’s position field has been removed. Its `left`, `right`, `top` and `bottom` fields have been added to `Style` directly.
     For the `size`, `margin`, `border`, and `padding` fields of `Style`, `Val::Undefined` should be replaced with `Val::Px(0.)`.
     For the `min_size`, `max_size`, `left`, `right`, `top` and `bottom` fields of `Style`, `Val::Undefined` should be replaced with `Val::Auto`
+  - `Interaction::Clicked` replaced by `Interaction::Pressed`
+  <!-- - TODO: The Y axe's inverted once again ! -->
+- Dependencies
+  - bevy_rapier_2d `0.22`
+  - bevy_tweening `0.8`
+  - bevy-inspector-egui `main tracking`
 
-- Rapier2D
-
-## [Bevy 0.10](https://bevyengine.org/learn/migration-guides/0.9-0.10/) Migration - [0.4.1](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1) - 2023-07-10
-
-[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/fight_arena/releases/tag/v0.4.1)
+## Bevy 0.10 Migration - [v0.4.1](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1) - 2023-07-10
 
 - [Migration Guide Bevy 0.9 -> 0.10](https://bevyengine.org/learn/migration-guides/0.9-0.10/)
 - [Changelog Bevy Rapier 0.20 -> 0.21](https://github.com/dimforge/bevy_rapier/blob/master/CHANGELOG.md#0210--07-march-2023)
@@ -73,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - remove no longer working (in add_systems tuple) methods
   - `ui::dialog_player::throw_trigger_event()`
 
-## Dialog Update - [0.4.0](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.0) - 2023-01-17
+## Dialog Update - [v0.4.0](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.0) - 2023-01-17
 
 [![v0.4.0](https://img.shields.io/badge/v0.4.0-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.0)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.0)
 
