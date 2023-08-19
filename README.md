@@ -34,10 +34,6 @@ Press o to see the grateful future
 
 [Release Demo](https://fabinistere.github.io/figh_arena/)
 
-<!-- TODO: Draft the github tag 0.4.1 (migration to bevy 0.10) -->
-
-[![v0.4.1](https://img.shields.io/badge/v0.4.1-gray?style=flat&logo=github&logoColor=181717&link=https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)](https://github.com/Fabinistere/figh_arena/releases/tag/v0.4.1)
-
 ### For a future
 
 - [ ] NPC will Avoid collider
