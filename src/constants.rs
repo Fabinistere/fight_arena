@@ -95,59 +95,93 @@ pub mod character {
             pub const RANDOM_DIALOG: &str = "# Fabien\n
 - Enfant, j'ai eu un poney
 - Mais j'ai toujours voulu un agneau\n";
-            pub const OLF_DIALOG: &str = "# Olf
 
-- Il faut absolument sauver les Fabien du Chien Geant
+            pub const OLF_DIALOG: &str = "1:
+  source: Olf
+  content:
+    text:
+      - Il faut absolument sauver les Fabien du Chien Geant
+    exit_state: 2
+2:
+  source: Player
+  content:
+    - text: ...
+      condition: null
+      exit_state: 3
+3:
+  source: Olf
+  content:
+    text:
+      - Il me faut donc obtenir le trone
+    exit_state: 4
+4:
+  source: Player
+  content:
+    - text: ...
+      condition: null
+      exit_state: 5
+    - text: et de l'$
+      condition: null
+      exit_state: 6
+5:
+  source: Olf
+  content:
+      text:
+      - Et de l'$
+      exit_state: 6
+6:
+  source: Olf
+  content:
+      text:
+      - C'est essentiel
+      exit_state: 7\n";
 
-## Morgan
+            pub const FABIEN_DIALOG: &str = "1:
+  source: Fabien
+  content:
+    text:
+      - Hello
+      - <3
+    exit_state: 2
+2:
+  source: Player
+  content:
+    - text: Hey
+      condition: null
+      exit_state: 3
+    - text: No Hello
+      condition: null
+      exit_state: 4
+    - text: Want to share a flat ?
+      condition: null
+      exit_state: 5
+3:
+  source: Fabien
+  content:
+    text:
+      - :)
+    exit_state: 6
+4:
+  source: Fabien
+  content:
+    text:
+      - :O
+    exit_state: 6
+5:
+  source: Fabien
+  content:
+    text:
+      - Sure
+    exit_state: 6\n";
 
-- ... | None
-
-### Olf
-
-- Il me faut donc obtenir le trone
-
-#### Morgan
-
-- ... | None
-- et de l'$ | None
-
-##### Olf
-
-- Et de l'$
-- C'est essentiel
-
-##### Olf
-
-- C'est essentiel\n";
-            pub const FABIEN_DIALOG: &str = "# Fabien
-
-- Hello
-
-## Fabien
-
-- /<3
-
-### Morgan
-
-- Hey | None
-- No Hello | None
-- Want to share a flat ? | None
-
-#### Fabien
-
-- :)
-
-#### Fabien
-
-- :O
-
-#### Fabien
-
-- Sure\n";
-
-            pub const MORGAN_DIALOG: &str =
-                "# Morgan\n\n- Bonjour Florian. /\nComment vas/-tu ? /\nJ'ai faim.\n";
+            pub const MORGAN_DIALOG: &str = "1:
+  source: Player
+  content:
+    text:
+      - Bonjour Flo.
+      - Comment vas-tu ?
+      - J'ai faim.
+    exit_state: 2\n";
         }
 
         pub mod movement {

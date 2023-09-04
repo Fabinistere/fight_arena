@@ -28,15 +28,18 @@ use player::PlayerPlugin;
 use spritesheet::{FabienPlugin, FabienSheet};
 use ui::UiPlugin;
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, Reflect, States)]
 pub enum GameState {
-    /// TODO: feat Menu - put the default on Menu
-    Menu,
+    /// is also the Team's Inventory
+    CombatWall,
+    LogCave,
+    // --- FTO related ---
+    TitleScreen,
+    DialogWall,
+    OptionsWall,
+    /// Game without any HUD
     #[default]
-    Playing,
-    Interaction,
-    Combat,
-    Discussion,
+    Exploration,
 }
 
 // #[rustfmt::skip]
@@ -55,6 +58,7 @@ fn main() {
             gravity: Vec2::ZERO,
             ..default()
         })
+        .add_state::<GameState>()
         .add_plugins((
             DefaultPlugins
                 .set(WindowPlugin {

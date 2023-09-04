@@ -2,7 +2,6 @@
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
-use log::info;
 use rand::Rng;
 use std::time::Duration;
 
@@ -213,7 +212,7 @@ pub fn pursue(
                     info!("Target Caught in 4K by {:?} {}", npc, name);
 
                     // open HUD to combat talk after chase
-                    ev_combat.send(CombatEvent { npc_entity: npc });
+                    ev_combat.send(CombatEvent { entity: npc });
 
                     ev_stop_chase.send(StopChaseEvent { npc_entity: npc });
 

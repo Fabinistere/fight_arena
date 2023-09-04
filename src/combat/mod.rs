@@ -43,7 +43,7 @@ use crate::{
 
     npc::NPC,
     player::Player,
-    ui::dialog_panel::CloseDialogPanelEvent,
+    GameState,
 };
 
 /// Just help to create a ordered system in the app builder
@@ -67,16 +67,18 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnCombatFoesEvent>()
             .add_event::<CombatEvent>()
-            .add_event::<CombatExitEvent>()
             .add_systems(
                 Update,
                 (
                     spawn_party_members.before(CombatState::Initiation),
                     enter_combat.in_set(CombatState::Initiation),
-                    exit_combat
-                        .in_set(CombatState::Evasion)
-                        .before(CombatState::Observation),
                 ),
+            )
+            .add_systems(
+                OnExit(GameState::DialogWall),
+                exit_combat
+                    .in_set(CombatState::Evasion)
+                    .before(CombatState::Observation),
             )
             .add_systems(
                 FixedUpdate,
@@ -100,22 +102,8 @@ impl Plugin for CombatPlugin {
 ///     - freeze all entities involved in the starting combat
 #[derive(Event)]
 pub struct CombatEvent {
-    pub npc_entity: Entity,
+    pub entity: Entity,
 }
-
-/// Happens when:
-///   - ui::dialog_panel::create_dialog_panel_on_key_press
-///     - combat was stoped by the player ('o')
-///   - ui::dialog_panel::update_dialog_panel
-///     - End of the dialog
-/// Read in
-///   - combat::exit_combat
-///     - Add a FairPlayTimer to all enemies involved in the fight
-///     - Remove to all entities InCombat Component
-///   - ui::dialog_panel::create_dialog_panel_on_combat_event
-///     - close the ui
-#[derive(Event)]
-pub struct CombatExitEvent;
 
 fn observation() {
     // println!("Now it's your turn...")
@@ -204,7 +192,7 @@ pub fn enter_combat(
     mut player_companie: Query<Entity, (With<NPC>, With<Recruted>)>,
     mut foes_query: Query<(Entity, &GroupSize), (With<NPC>, Without<Recruted>)>,
 ) {
-    for ev in ev_combat_enter.iter() {
+    for CombatEvent { entity } in ev_combat_enter.iter() {
         info!("Combat Event");
         let player = player_query.single_mut();
 
@@ -216,9 +204,7 @@ pub fn enter_combat(
             // display / spawn them in the ui (CANCELED)
         }
 
-        let npc = ev.npc_entity;
-
-        match foes_query.get_mut(npc) {
+        match foes_query.get_mut(*entity) {
             Ok((foe, group_size)) => {
                 commands.entity(foe).insert(InCombat);
 
@@ -274,8 +260,6 @@ pub fn spawn_party_members(
 pub fn exit_combat(
     mut commands: Commands,
 
-    mut ev_combat_exit: EventReader<CombatExitEvent>,
-
     allies_query: Query<
         (Entity, &Name),
         (
@@ -285,38 +269,29 @@ pub fn exit_combat(
     >,
 
     foes_query: Query<(Entity, &Name), (With<NPC>, With<InCombat>, Without<Recruted>)>,
-
-    mut close_dialog_panel_event: EventWriter<CloseDialogPanelEvent>,
 ) {
-    for _ev in ev_combat_exit.iter() {
-        info!("DEBUG: Combat Exit");
+    info!("DEBUG: Combat Exit");
 
-        for (allie, _name) in allies_query.iter() {
-            commands.entity(allie).remove::<InCombat>();
-        }
-
-        // foes AND being an enemy
-        // With InCombat and Without Recruted mean that these entities are enemies.
-        for (foes, _name) in foes_query.iter() {
-            commands.entity(foes).insert(FairPlayTimer {
-                timer: Timer::new(Duration::from_secs(EVASION_TIMER), TimerMode::Once),
-            });
-
-            commands.entity(foes).remove::<InCombat>();
-        }
-
-        // FIXME: case the ui is not fully open
-        // normally we cannot exit while opening (skip is block, and ... no action can yet)
-        // so is kinda secure (without certitude)
-        close_dialog_panel_event.send(CloseDialogPanelEvent);
-
-        // UI is open
-        // if let Ok((_entity, animator, _style)) = query.get_single()
-        // {
-        //     // FULLY OPEN
-        //     if animator.tweenable().unwrap().progress() >= 1. {
-        //         close_dialog_panel_event.send(CloseDialogPanelEvent);
-        //     }
-        // }
+    for (allie, _name) in allies_query.iter() {
+        commands.entity(allie).remove::<InCombat>();
     }
+
+    // foes AND being an enemy
+    // With InCombat and Without Recruted mean that these entities are enemies.
+    for (foes, _name) in foes_query.iter() {
+        commands.entity(foes).insert(FairPlayTimer {
+            timer: Timer::new(Duration::from_secs(EVASION_TIMER), TimerMode::Once),
+        });
+
+        commands.entity(foes).remove::<InCombat>();
+    }
+
+    // UI is open
+    // if let Ok((_entity, animator, _style)) = query.get_single()
+    // {
+    //     // FULLY OPEN
+    //     if animator.tweenable().unwrap().progress() >= 1. {
+    //         close_dialog_panel_event.send(CloseDialogPanelEvent);
+    //     }
+    // }
 }

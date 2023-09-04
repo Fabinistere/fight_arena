@@ -1,10 +1,12 @@
 use bevy::{prelude::*, winit::WinitSettings};
 
+use crate::GameState;
+
 mod dialog_box;
 pub mod dialog_panel;
 mod dialog_player;
-pub mod dialog_scroll;
-pub mod dialog_system;
+pub mod dialog_scrolls;
+pub mod dialog_systems;
 
 pub struct UiPlugin;
 
@@ -14,13 +16,13 @@ impl Plugin for UiPlugin {
         app
             // OPTIMIZE: Only run the app when there is user input. This will significantly reduce CPU/GPU use.
             .insert_resource(WinitSettings::game())
-            .add_event::<dialog_panel::CreateDialogPanelEvent>()
-            .add_event::<dialog_panel::CloseDialogPanelEvent>()
-            .add_event::<dialog_panel::EndNodeDialogEvent>()
-            .add_event::<dialog_scroll::UpdateScrollEvent>()
-            .add_event::<dialog_player::DialogDiveEvent>()
-            .add_event::<dialog_player::DropFirstTextUpperScroll>()
+            .insert_resource(dialog_systems::DialogMap::default())
+            .insert_resource(dialog_systems::CurrentInterlocutor::default())
+            .insert_resource(dialog_systems::ActiveWorldEvents::default())
+            .insert_resource(dialog_scrolls::Monolog::default())
             .add_event::<dialog_box::ResetDialogBoxEvent>()
+            .add_event::<dialog_systems::ChangeStateEvent>()
+            .add_event::<dialog_systems::TriggerEvents>()
             // Trigger Event
             // .add_event::<dialog_system::FightEvent>()
             // .add_event::<dialog_system::TriggerEvent>()
@@ -31,27 +33,41 @@ impl Plugin for UiPlugin {
                 (
                     dialog_panel::create_dialog_panel_on_key_press,
                     dialog_panel::create_dialog_panel_on_combat_event,
-                    dialog_panel::create_dialog_panel,
-                    dialog_panel::update_dialog_panel,
-                    dialog_panel::update_dialog_tree,
-                    dialog_scroll::animate_scroll,
-                    dialog_scroll::update_upper_scroll,
-                    dialog_scroll::update_player_scroll,
-                    dialog_box::reset_dialog_box,
-                    dialog_box::update_dialog_box,
-                    dialog_player::button_system,
-                    dialog_player::hide_empty_button,
-                    dialog_player::skip_forward_dialog,
-                    dialog_player::dialog_dive,
-                    dialog_player::drop_first_text_upper_scroll,
-                    // crash when in this big tuple: (but not when in a simple `.add_systems()`)
-                    // dialog_player::throw_trigger_event.after(dialog_player::dialog_dive),
+                    dialog_panel::despawn_dialog_panel,
                 ),
             )
-            // crash when in this big tuple: (but not when in a simple `.add_systems()`)
-            .add_systems(Update, dialog_panel::end_node_dialog)
-            .add_systems(Update, dialog_panel::close_dialog_panel)
-            .add_systems(Update, dialog_panel::despawn_dialog_panel);
+            .add_systems(
+                OnEnter(GameState::DialogWall),
+                dialog_panel::create_dialog_panel,
+            )
+            .add_systems(
+                Update,
+                (
+                    // TODO: Chain
+                    dialog_systems::change_dialog_state,
+                    dialog_systems::update_dialog_panel.after(dialog_systems::change_dialog_state),
+                    dialog_systems::update_monolog.after(dialog_systems::update_dialog_panel),
+                    // End Chain
+                    dialog_systems::trigger_event_handler
+                        .after(dialog_systems::change_dialog_state),
+                    /* -------------------------------------------------------------------------- */
+                    /*                                   Inputs                                   */
+                    /* -------------------------------------------------------------------------- */
+                    dialog_player::choose_answer,
+                    dialog_player::continue_monolog,
+                    /* -------------------------------------------------------------------------- */
+                    /*                                  Animation                                 */
+                    /* -------------------------------------------------------------------------- */
+                    dialog_scrolls::animate_scroll,
+                    dialog_box::reset_dialog_box.after(dialog_systems::update_monolog),
+                    dialog_box::update_dialog_box,
+                )
+                    .run_if(in_state(GameState::DialogWall)),
+            )
+            .add_systems(
+                OnExit(GameState::DialogWall),
+                dialog_panel::close_dialog_panel,
+            );
     }
 }
 

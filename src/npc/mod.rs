@@ -1,5 +1,8 @@
+use std::collections::BTreeMap;
+
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use yml_dialog::DialogNode;
 
 use crate::{
     combat::{stats::*, GroupSize, Leader, Recruted, Team},
@@ -20,7 +23,7 @@ use crate::{
         // idle::IdleBehavior,
         movement::{give_a_direction, DetectionBehavior, FollowupBehavior, JustWalkBehavior},
     },
-    ui::dialog_system::Dialog,
+    ui::dialog_systems::DialogMap,
     FabienSheet,
 };
 
@@ -202,11 +205,15 @@ fn spawn_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
         });
 }
 
-fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>) {
-    // let olf_dialog_tree = init_tree_flat(String::from(OLF_DIALOG));
-
-    // OLF
-    commands
+fn spawn_aggresives_characters(
+    mut commands: Commands,
+    fabien: Res<FabienSheet>,
+    mut dialogs: ResMut<DialogMap>,
+) {
+    /* -------------------------------------------------------------------------- */
+    /*                                     OLF                                    */
+    /* -------------------------------------------------------------------------- */
+    let olf = commands
         .spawn((
             SpriteSheetBundle {
                 sprite: TextureAtlasSprite::new(OLF_STARTING_ANIM),
@@ -243,9 +250,6 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 defense: Defense::default(),
                 defense_spe: DefenseSpe::default(),
             },
-            Dialog {
-                current_node: Some(String::from(OLF_DIALOG)),
-            },
             // 5 Fabicurion are hidden within Olf's silhouette
             GroupSize(5),
             DetectionBehavior,
@@ -264,13 +268,24 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 DetectionSensor,
                 Name::new("Detection Range"),
             ));
-        });
+        })
+        .id();
 
-    // Two FABICURION
+    let olf_deserialized_map: BTreeMap<usize, DialogNode> =
+        serde_yaml::from_str(OLF_DIALOG).unwrap();
+    dialogs.insert(
+        olf,
+        (
+            *olf_deserialized_map.first_key_value().unwrap().0,
+            olf_deserialized_map,
+        ),
+    );
+
+    /* -------------------------------------------------------------------------- */
+    /*                               Two FABICURION                               */
+    /* -------------------------------------------------------------------------- */
     for i in 0..2 {
-        let name = "NPC Fabicurion nmb".replace("nmb", &i.to_string());
-
-        commands
+        let fabicurion = commands
             .spawn((
                 SpriteSheetBundle {
                     sprite: TextureAtlasSprite::new(FABICURION_STARTING_ANIM),
@@ -286,7 +301,7 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                     },
                     ..default()
                 },
-                Name::new(name),
+                Name::new(format!("NPC Fabicurion {}", i)),
                 NPC,
                 Leader,
                 Team(TEAM_OLF),
@@ -314,9 +329,6 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                 // 2 Fabicurion are hidden behind the representant
                 GroupSize(2),
                 DetectionBehavior,
-                Dialog {
-                    current_node: Some(String::from(FABIEN_DIALOG)),
-                },
             ))
             .with_children(|parent| {
                 parent.spawn((
@@ -332,6 +344,17 @@ fn spawn_aggresives_characters(mut commands: Commands, fabien: Res<FabienSheet>)
                     DetectionSensor,
                     Name::new("Detection Range"),
                 ));
-            });
+            })
+            .id();
+
+        let fabicurion_deserialized_map: BTreeMap<usize, DialogNode> =
+            serde_yaml::from_str(FABIEN_DIALOG).unwrap();
+        dialogs.insert(
+            fabicurion,
+            (
+                *fabicurion_deserialized_map.first_key_value().unwrap().0,
+                fabicurion_deserialized_map,
+            ),
+        );
     }
 }

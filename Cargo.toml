@@ -28,6 +28,10 @@ image = "0.23"
 
 rand = "0.8.5"
 
+# ---------- Dialog -----------
+yml_dialog = "0.2"
+serde_yaml = "0.9"
+
 # ----- Hitbox - Velocity -----
 bevy_rapier2d = { version = "0.22", features = ["simd-stable", "debug-render-2d"] }
 
@@ -38,16 +42,11 @@ density-mesh-image = "1.5"
 # ----------- Debug -----------
 # until a clear release, we're tracking `main`
 bevy-inspector-egui = { version = "0.18", git = "https://github.com/jakobhellermann/bevy-inspector-egui", rev = "a181bdf5c5c621d524d63ee89e22570e01e1b162" }
-log = "0.4.17"
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
-# for mac...
-# incremental = false
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
-# for mac...
-# incremental = false

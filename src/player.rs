@@ -1,5 +1,8 @@
+use std::collections::BTreeMap;
+
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use yml_dialog::DialogNode;
 
 use crate::{
     // collisions::{TesselatedCollider, TesselatedColliderConfig},
@@ -12,7 +15,7 @@ use crate::{
         combat::team::TEAM_MC,
     },
     movement::*,
-    ui::dialog_system::Dialog,
+    ui::dialog_systems::DialogMap,
     FabienSheet,
 };
 
@@ -85,8 +88,8 @@ fn player_movement(
     }
 }
 
-fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
-    commands
+fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>, mut dialogs: ResMut<DialogMap>) {
+    let player = commands
         .spawn((
             SpriteSheetBundle {
                 sprite: TextureAtlasSprite::new(PLAYER_STARTING_ANIM),
@@ -109,9 +112,6 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
             },
             Name::new("Player"),
             Player,
-            Dialog {
-                current_node: Some(MORGAN_DIALOG.to_owned()),
-            },
             Karma(10),
             // Combat
             Leader,
@@ -149,5 +149,16 @@ fn spawn_player(mut commands: Commands, fabiens: Res<FabienSheet>) {
             //     .insert(ActiveEvents::COLLISION_EVENTS)
             //     .insert(ActiveCollisionTypes::STATIC_STATIC)
             //     .insert(PlayerSensor);
-        });
+        })
+        .id();
+
+    let player_deserialized_map: BTreeMap<usize, DialogNode> =
+        serde_yaml::from_str(MORGAN_DIALOG).unwrap();
+    dialogs.insert(
+        player,
+        (
+            *player_deserialized_map.first_key_value().unwrap().0,
+            player_deserialized_map,
+        ),
+    );
 }

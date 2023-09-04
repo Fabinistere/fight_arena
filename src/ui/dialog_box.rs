@@ -2,10 +2,9 @@
 
 use bevy::prelude::*;
 
-use crate::{
-    constants::ui::dialogs::DIALOG_BOX_UPDATE_DELTA_S,
-    ui::dialog_scroll::{PlayerChoice, UpperScroll},
-};
+use crate::{constants::ui::dialogs::DIALOG_BOX_UPDATE_DELTA_S, ui::dialog_scrolls::ButtonChoice};
+
+use super::dialog_scrolls::MonologPanel;
 
 /// Represents the entity containing the displayed text as first children.
 ///
@@ -37,6 +36,7 @@ impl DialogBox {
     // }
 }
 
+/// DOC: REDO the upper/player scroll doc related
 /// Happens when
 ///   - ui::dialog_panel::update_upper_scroll
 ///     - updates UpperScroll Text with the UpperScroll infos
@@ -58,6 +58,48 @@ pub struct ResetDialogBoxEvent {
     pub text: String,
 }
 
+/// Reset DialogBox on Event
+pub fn reset_dialog_box(
+    mut commands: Commands,
+
+    mut reset_event: EventReader<ResetDialogBoxEvent>,
+
+    mut dialog_box_query: Query<
+        (Option<&mut DialogBox>, &Children),
+        Or<(With<ButtonChoice>, With<MonologPanel>)>,
+    >,
+    mut text_query: Query<&mut Text>,
+) {
+    for ResetDialogBoxEvent {
+        dialog_box,
+        text: event_text,
+    } in reset_event.iter()
+    {
+        let (potential_dialog_box, children) = dialog_box_query.get_mut(*dialog_box).unwrap();
+        match potential_dialog_box {
+            None => {
+                // info!("DEBUG: no DialogBox in the UpperScroll/ButtonChoice");
+                commands.entity(*dialog_box).insert(DialogBox::new(
+                    event_text.clone(),
+                    DIALOG_BOX_UPDATE_DELTA_S,
+                ));
+                let mut text = text_query.get_mut(children[0]).unwrap();
+                text.sections[0].value.clear();
+            }
+            Some(mut dialog_box) => {
+                // FIXME: bug - Reset the text even if there is no change
+                // Clear the DialogBox Child: the Text
+                let mut text = text_query.get_mut(children[0]).unwrap();
+                if dialog_box.text != event_text.clone() {
+                    text.sections[0].value.clear();
+                    // replace current DialogBox with a brand new one
+                    *dialog_box = DialogBox::new(event_text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
+                }
+            }
+        }
+    }
+}
+
 /// Animates, letter by letter, each Text.
 /// ( being the DialogBox's 1rt child )
 pub fn update_dialog_box(
@@ -71,13 +113,22 @@ pub fn update_dialog_box(
         if dialog_box.update_timer.finished() && !dialog_box.finished {
             // let mut text = text_query.get_mut(children[0]).unwrap();
             match text_query.get_mut(children[0]) {
+                // FIXME: If there is no TEXT then insert one in it
+                // pb: on which scroll...
+                Err(e) => error!("No Text in the Dialog Wall: {:?}", e),
                 Ok(mut text) => {
                     // prompt the simple text
                     // FIXME: bug - if the given text contains a accent this will crash
                     match dialog_box.text.chars().nth(dialog_box.progress) {
                         // will ignore any louche symbol
-                        // FIXME: infinite call when there is a accent
-                        None => warn!("Accent Typical Crash"),
+                        None => {
+                            println!("text: {}", dialog_box.text);
+                            error!("Blank or Accent Typical Crash");
+                            dialog_box.progress += 1;
+                            if dialog_box.progress >= dialog_box.text.len() {
+                                dialog_box.finished = true;
+                            }
+                        }
                         Some(next_letter) => {
                             text.sections[0].value.push(next_letter);
 
@@ -85,49 +136,6 @@ pub fn update_dialog_box(
                             if dialog_box.progress >= dialog_box.text.len() {
                                 dialog_box.finished = true;
                             }
-                        }
-                    }
-                }
-                // FIXME: If there is no TEXT then insert one in it
-                // pb: on which scroll...
-                Err(e) => warn!("No Text in the Dialog Wall: {:?}", e),
-            }
-        }
-    }
-}
-
-/// Reset DialogBox on Event
-pub fn reset_dialog_box(
-    mut commands: Commands,
-
-    mut reset_event: EventReader<ResetDialogBoxEvent>,
-
-    mut dialog_box_query: Query<
-        (&mut DialogBox, &Children, Entity),
-        Or<(With<PlayerChoice>, With<UpperScroll>)>,
-    >,
-    mut text_query: Query<&mut Text>,
-) {
-    for event in reset_event.iter() {
-        match dialog_box_query.get_mut(event.dialog_box) {
-            Err(_e) => {
-                info!("DEBUG: no DialogBox in the UpperScroll");
-                commands.entity(event.dialog_box).insert(DialogBox::new(
-                    event.text.clone(),
-                    DIALOG_BOX_UPDATE_DELTA_S,
-                ));
-            }
-            Ok((mut dialog_box, children, _)) => {
-                // FIXME: bug - Reset the text even if there is no change
-                // Clear the DialogBox Child: the Text
-                match text_query.get_mut(children[0]) {
-                    Err(e) => warn!("No Text Section: {:?}", e),
-                    Ok(mut text) => {
-                        if dialog_box.text != event.text.clone() {
-                            text.sections[0].value.clear();
-                            // replace current DialogBox with a brand new one
-                            *dialog_box =
-                                DialogBox::new(event.text.clone(), DIALOG_BOX_UPDATE_DELTA_S);
                         }
                     }
                 }

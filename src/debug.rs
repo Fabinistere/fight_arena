@@ -1,40 +1,42 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::{
+    ResourceInspectorPlugin, StateInspectorPlugin, WorldInspectorPlugin,
+};
 
 use crate::{
     collisions::{TesselatedCollider, TesselatedColliderConfig},
     ui::{
-        dialog_panel::DialogPanel,
-        dialog_scroll::{PlayerScroll, UpperScroll},
+        dialog_scrolls::Monolog,
+        dialog_systems::{ActiveWorldEvents, CurrentInterlocutor},
     },
+    GameState,
 };
 
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
-    #[rustfmt::skip]
     fn build(&self, app: &mut App) {
         if cfg!(debug_assertions) {
-            app.add_plugins((
-                WorldInspectorPlugin::new(),
-            ))
-
+            app.add_plugins((WorldInspectorPlugin::new(),))
+                .register_type::<GameState>()
+                .register_type::<Monolog>()
+                .register_type::<CurrentInterlocutor>()
+                .register_type::<ActiveWorldEvents>()
+                .add_plugins((
+                    StateInspectorPlugin::<GameState>::default(),
+                    ResourceInspectorPlugin::<Monolog>::default(),
+                    ResourceInspectorPlugin::<CurrentInterlocutor>::default(),
+                    ResourceInspectorPlugin::<ActiveWorldEvents>::default(),
+                ))
                 /* -------------------------------------------------------------------------- */
                 /*                                     UI                                     */
                 /* -------------------------------------------------------------------------- */
-
-                .register_type::<DialogPanel>()
                 // .register_type::<DialogBox>()
-                .register_type::<UpperScroll>()
-                .register_type::<PlayerScroll>()
-
                 /* -------------------------------------------------------------------------- */
                 /*                                   Hitbox                                   */
                 /* -------------------------------------------------------------------------- */
-
                 .register_type::<TesselatedCollider>()
-                .register_type::<TesselatedColliderConfig>()
-                ;
+                .register_type::<TesselatedColliderConfig>();
         }
     }
 }
